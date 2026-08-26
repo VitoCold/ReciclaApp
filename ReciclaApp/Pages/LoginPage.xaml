@@ -45,7 +45,9 @@
                     </Border>
                 </VerticalStackLayout>
 
-                <Button Text="Iniciar sesión" Style="{StaticResource PrimaryButton}" />
+                <Button Text="Iniciar sesión"
+                        Style="{StaticResource PrimaryButton}"
+                        Clicked="OnLoginClicked" />
 
                 <HorizontalStackLayout HorizontalOptions="Center" Spacing="8" Margin="0,8,0,0">
                     <Label Text="🔐" FontSize="13" />
