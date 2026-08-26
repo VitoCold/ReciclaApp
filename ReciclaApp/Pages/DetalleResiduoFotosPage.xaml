@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ReciclaApp.Pages.DetalleResiduoFotosPage"
+             Style="{StaticResource BasePage}"
+             Shell.NavBarIsVisible="False">
+    <Grid RowDefinitions="Auto,Auto,*">
+        <Grid Style="{StaticResource AppHeader}" ColumnDefinitions="Auto,*,Auto">
+            <Label Text="‹" TextColor="White" FontSize="30" VerticalOptions="Center" />
+            <Label Grid.Column="1" Text="Detalle del residuo" Style="{StaticResource HeaderTitle}" />
+            <Label Grid.Column="2" Text="⋮" TextColor="White" FontSize="22" VerticalOptions="Center" />
+        </Grid>
+        <Grid Grid.Row="1" BackgroundColor="White" ColumnDefinitions="*,*" HeightRequest="48">
+            <Label Text="Detalle" Style="{StaticResource TabLabel}" />
+            <VerticalStackLayout Grid.Column="1" VerticalOptions="Fill">
+                <Label Text="Fotos" Style="{StaticResource ActiveTabLabel}" VerticalOptions="CenterAndExpand" />
+                <BoxView HeightRequest="3" Color="{StaticResource ColorPrimary}" CornerRadius="2" />
+            </VerticalStackLayout>
+        </Grid>
+        <ScrollView Grid.Row="2">
+            <VerticalStackLayout Padding="16,16,16,24" Spacing="12">
+                <Button Text="📷  Tomar foto" Style="{StaticResource PrimaryButton}" HeightRequest="44" />
+
+                <Border Style="{StaticResource SoftCard}" Padding="0">
+                    <Grid HeightRequest="120" BackgroundColor="#6B2C18" ColumnDefinitions="*,Auto">
+                        <Label Text="🧯   🧴   🛢️" FontSize="34" HorizontalOptions="Center" VerticalOptions="Center" />
+                        <Border Grid.Column="1" Margin="0,10,10,0" WidthRequest="34" HeightRequest="34" BackgroundColor="#CCFFFFFF" Stroke="Transparent" VerticalOptions="Start">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="17" /></Border.StrokeShape>
+                            <Label Text="⋮" FontSize="20" HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                    </Grid>
+                </Border>
+                <Border Style="{StaticResource SoftCard}" Padding="0">
+                    <Grid HeightRequest="120" BackgroundColor="#B91C1C" ColumnDefinitions="*,Auto">
+                        <Label Text="⚠️" FontSize="42" HorizontalOptions="Center" VerticalOptions="Center" />
+                        <Border Grid.Column="1" Margin="0,10,10,0" WidthRequest="34" HeightRequest="34" BackgroundColor="#CCFFFFFF" Stroke="Transparent" VerticalOptions="Start">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="17" /></Border.StrokeShape>
+                            <Label Text="⋮" FontSize="20" HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                    </Grid>
+                </Border>
+                <Border Style="{StaticResource SoftCard}" Padding="0">
+                    <Grid HeightRequest="120" BackgroundColor="#194B7A" ColumnDefinitions="*,Auto">
+                        <Label Text="🛢️  🧴  🪣" FontSize="36" HorizontalOptions="Center" VerticalOptions="Center" />
+                        <Border Grid.Column="1" Margin="0,10,10,0" WidthRequest="34" HeightRequest="34" BackgroundColor="#CCFFFFFF" Stroke="Transparent" VerticalOptions="Start">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="17" /></Border.StrokeShape>
+                            <Label Text="⋮" FontSize="20" HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                    </Grid>
+                </Border>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

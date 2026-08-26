@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ReciclaApp.Pages.DetalleResiduoDetallePage"
+             Style="{StaticResource BasePage}"
+             Shell.NavBarIsVisible="False">
+    <Grid RowDefinitions="Auto,Auto,*">
+        <Grid Style="{StaticResource AppHeader}" ColumnDefinitions="Auto,*,Auto">
+            <Label Text="‹" TextColor="White" FontSize="30" VerticalOptions="Center" />
+            <Label Grid.Column="1" Text="Detalle del residuo" Style="{StaticResource HeaderTitle}" />
+            <Label Grid.Column="2" Text="⋮" TextColor="White" FontSize="22" VerticalOptions="Center" />
+        </Grid>
+        <Grid Grid.Row="1" BackgroundColor="White" ColumnDefinitions="*,*" HeightRequest="48">
+            <VerticalStackLayout VerticalOptions="Fill">
+                <Label Text="Detalle" Style="{StaticResource ActiveTabLabel}" VerticalOptions="CenterAndExpand" />
+                <BoxView HeightRequest="3" Color="{StaticResource ColorPrimary}" CornerRadius="2" />
+            </VerticalStackLayout>
+            <Label Grid.Column="1" Text="Fotos" Style="{StaticResource TabLabel}" />
+        </Grid>
+        <ScrollView Grid.Row="2">
+            <VerticalStackLayout Padding="18,18,18,24">
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="18">
+                        <HorizontalStackLayout Spacing="14">
+                            <Border WidthRequest="56" HeightRequest="56" BackgroundColor="{StaticResource ColorDangerSoft}" Stroke="Transparent">
+                                <Border.StrokeShape><RoundRectangle CornerRadius="16" /></Border.StrokeShape>
+                                <Label Text="🧯" FontSize="30" HorizontalOptions="Center" VerticalOptions="Center" />
+                            </Border>
+                            <VerticalStackLayout Spacing="4" VerticalOptions="Center">
+                                <Label Text="Recipientes contaminados" Style="{StaticResource SectionTitle}" />
+                                <Border Style="{StaticResource Chip}" BackgroundColor="{StaticResource ColorDangerSoft}" HorizontalOptions="Start">
+                                    <Label Text="Peligroso" TextColor="{StaticResource ColorDanger}" FontSize="11" FontAttributes="Bold" />
+                                </Border>
+                            </VerticalStackLayout>
+                        </HorizontalStackLayout>
+                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnSpacing="24" RowSpacing="14">
+                            <Label Text="Fecha:" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                            <Label Grid.Column="1" Text="01/07/2026" TextColor="{StaticResource ColorText}" />
+                            <Label Grid.Row="1" Text="Residuo:" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                            <Label Grid.Row="1" Grid.Column="1" Text="Recipientes contaminados" TextColor="{StaticResource ColorText}" />
+                            <Label Grid.Row="2" Text="Cantidad:" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                            <Label Grid.Row="2" Grid.Column="1" Text="5 kg" TextColor="{StaticResource ColorText}" />
+                            <Label Grid.Row="3" Text="Unidad:" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                            <Label Grid.Row="3" Grid.Column="1" Text="Kilogramos (kg)" TextColor="{StaticResource ColorText}" />
+                            <Label Grid.Row="4" Text="Observación:" FontAttributes="Bold" TextColor="{StaticResource ColorText}" VerticalOptions="Start" />
+                            <Label Grid.Row="4" Grid.Column="1" Text="Envases de productos químicos utilizados en mantenimiento." TextColor="{StaticResource ColorText}" LineBreakMode="WordWrap" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

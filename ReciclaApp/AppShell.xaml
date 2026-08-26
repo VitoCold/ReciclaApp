@@ -3,12 +3,23 @@
     x:Class="ReciclaApp.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+     xmlns:pages="clr-namespace:ReciclaApp.Pages"
     xmlns:local="clr-namespace:ReciclaApp"
-    Title="ReciclaApp">
+    Title="ReciclaApp"
+         Shell.NavBarIsVisible="False"
+       Shell.TabBarIsVisible="False"
+       FlyoutBehavior="Disabled">
 
+    <!-- Pantalla inicial -->
     <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+        Title="Login"
+        Route="login"
+        ContentTemplate="{DataTemplate pages:LoginPage}" />
+
+    <!-- Raíz posterior al inicio de sesión -->
+    <ShellContent
+        Title="Registros"
+        Route="registros"
+        ContentTemplate="{DataTemplate pages:RegistrosPage}" />
 
 </Shell>

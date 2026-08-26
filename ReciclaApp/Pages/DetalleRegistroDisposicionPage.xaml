@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ReciclaApp.Pages.DetalleRegistroDisposicionPage"
+             Style="{StaticResource BasePage}"
+             Shell.NavBarIsVisible="False">
+    <Grid RowDefinitions="Auto,Auto,*">
+        <Grid Style="{StaticResource AppHeader}" ColumnDefinitions="Auto,*,Auto">
+            <Label Text="‹" TextColor="White" FontSize="30" VerticalOptions="Center" />
+            <Label Grid.Column="1" Text="Detalle del registro" Style="{StaticResource HeaderTitle}" />
+            <Label Grid.Column="2" Text="⋮" TextColor="White" FontSize="22" VerticalOptions="Center" />
+        </Grid>
+        <Grid Grid.Row="1" BackgroundColor="White" ColumnDefinitions="*,*,*" HeightRequest="48">
+            <Label Text="Detalle" Style="{StaticResource TabLabel}" />
+            <Label Grid.Column="1" Text="Residuos" Style="{StaticResource TabLabel}" />
+            <VerticalStackLayout Grid.Column="2" VerticalOptions="Fill">
+                <Label Text="Disposición" Style="{StaticResource ActiveTabLabel}" VerticalOptions="CenterAndExpand" />
+                <BoxView HeightRequest="3" Color="{StaticResource ColorPrimary}" CornerRadius="2" />
+            </VerticalStackLayout>
+        </Grid>
+        <ScrollView Grid.Row="2">
+            <VerticalStackLayout Padding="16,16,16,24" Spacing="14">
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Text="Evidencias de disposición" Style="{StaticResource SectionTitle}" FontSize="15" VerticalOptions="Center" />
+                    <Button Grid.Column="1" Text="＋ Agregar evidencia" Style="{StaticResource SmallPrimaryButton}" BackgroundColor="{StaticResource ColorSuccessSoft}" TextColor="{StaticResource ColorAccent}" />
+                </Grid>
+                <Grid ColumnDefinitions="*,*" RowDefinitions="150,150" ColumnSpacing="12" RowSpacing="12">
+                    <Border Style="{StaticResource SoftCard}" Padding="0">
+                        <Grid BackgroundColor="#E8F1FA">
+                            <Label Text="📄" FontSize="44" HorizontalOptions="Center" VerticalOptions="Center" />
+                            <Label Text="COCM 01" TextColor="{StaticResource ColorText}" BackgroundColor="#CCFFFFFF" Padding="8,3" HorizontalOptions="Start" VerticalOptions="End" Margin="8" />
+                        </Grid>
+                    </Border>
+                    <Border Grid.Column="1" Style="{StaticResource SoftCard}" Padding="0">
+                        <Grid BackgroundColor="#EDF6FF">
+                            <Label Text="🧾" FontSize="44" HorizontalOptions="Center" VerticalOptions="Center" />
+                            <Label Text="COCM 02" TextColor="{StaticResource ColorText}" BackgroundColor="#CCFFFFFF" Padding="8,3" HorizontalOptions="Start" VerticalOptions="End" Margin="8" />
+                        </Grid>
+                    </Border>
+                    <Border Grid.Row="1" Style="{StaticResource SoftCard}" Padding="0">
+                        <Grid BackgroundColor="#DDEFE5">
+                            <Label Text="🛢️" FontSize="44" HorizontalOptions="Center" VerticalOptions="Center" />
+                            <Label Text="Contenedores" TextColor="{StaticResource ColorText}" BackgroundColor="#CCFFFFFF" Padding="8,3" HorizontalOptions="Start" VerticalOptions="End" Margin="8" />
+                        </Grid>
+                    </Border>
+                    <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource SoftCard}" Padding="0">
+                        <Grid BackgroundColor="#F3EFE4">
+                            <Label Text="🧴" FontSize="44" HorizontalOptions="Center" VerticalOptions="Center" />
+                            <Label Text="Evidencia" TextColor="{StaticResource ColorText}" BackgroundColor="#CCFFFFFF" Padding="8,3" HorizontalOptions="Start" VerticalOptions="End" Margin="8" />
+                        </Grid>
+                    </Border>
+                </Grid>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

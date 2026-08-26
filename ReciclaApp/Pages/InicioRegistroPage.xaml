@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ReciclaApp.Pages.InicioRegistroPage"
+             Style="{StaticResource BasePage}"
+             Shell.NavBarIsVisible="False">
+    <Grid RowDefinitions="Auto,*">
+        <Grid Style="{StaticResource AppHeader}" ColumnDefinitions="Auto,*">
+            <Label Text="‹" TextColor="White" FontSize="30" VerticalOptions="Center" />
+            <Label Grid.Column="1" Text="Inicio de registro" Style="{StaticResource HeaderTitle}" />
+        </Grid>
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="18,34,18,24" Spacing="22">
+                <VerticalStackLayout Spacing="10" HorizontalOptions="Center">
+                    <Border Style="{StaticResource IconCircle}" HorizontalOptions="Center" WidthRequest="64" HeightRequest="64">
+                        <Label Text="📋" FontSize="32" HorizontalOptions="Center" VerticalOptions="Center" />
+                    </Border>
+                    <Label Text="Completa la información&#10;para iniciar el registro" HorizontalTextAlignment="Center" TextColor="{StaticResource ColorText}" FontAttributes="Bold" FontSize="15" />
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="12">
+                    <Border Style="{StaticResource InputBorder}">
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                            <Label Text="📁" FontSize="18" VerticalOptions="Center" />
+                            <VerticalStackLayout Grid.Column="1" Spacing="1">
+                                <Label Text="Proyecto" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                <Label Text="Selecciona un proyecto" Style="{StaticResource MutedText}" />
+                            </VerticalStackLayout>
+                            <Label Grid.Column="2" Text="⌄" FontSize="18" TextColor="{StaticResource ColorMuted}" VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
+                    <Border Style="{StaticResource InputBorder}">
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                            <Label Text="🛠" FontSize="18" VerticalOptions="Center" />
+                            <VerticalStackLayout Grid.Column="1" Spacing="1">
+                                <Label Text="Actividad" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                <Label Text="Selecciona una actividad" Style="{StaticResource MutedText}" />
+                            </VerticalStackLayout>
+                            <Label Grid.Column="2" Text="⌄" FontSize="18" TextColor="{StaticResource ColorMuted}" VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
+                    <Border Style="{StaticResource InputBorder}">
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                            <Label Text="📍" FontSize="18" VerticalOptions="Center" />
+                            <VerticalStackLayout Grid.Column="1" Spacing="1">
+                                <Label Text="Sede" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                <Label Text="Selecciona una sede" Style="{StaticResource MutedText}" />
+                            </VerticalStackLayout>
+                            <Label Grid.Column="2" Text="⌄" FontSize="18" TextColor="{StaticResource ColorMuted}" VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
+                </VerticalStackLayout>
+
+                <Button Text="Continuar  →" Style="{StaticResource PrimaryButton}" VerticalOptions="End" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

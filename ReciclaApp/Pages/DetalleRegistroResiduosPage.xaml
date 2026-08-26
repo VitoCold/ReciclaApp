@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ReciclaApp.Pages.DetalleRegistroResiduosPage"
+             Style="{StaticResource BasePage}"
+             Shell.NavBarIsVisible="False">
+    <Grid RowDefinitions="Auto,Auto,*">
+        <Grid Style="{StaticResource AppHeader}" ColumnDefinitions="Auto,*,Auto">
+            <Label Text="‹" TextColor="White" FontSize="30" VerticalOptions="Center" />
+            <Label Grid.Column="1" Text="Detalle del registro" Style="{StaticResource HeaderTitle}" />
+            <Label Grid.Column="2" Text="⋮" TextColor="White" FontSize="22" VerticalOptions="Center" />
+        </Grid>
+
+        <Grid Grid.Row="1" BackgroundColor="White" ColumnDefinitions="*,*,*" HeightRequest="48">
+            <Label Text="Detalle" Style="{StaticResource TabLabel}" />
+            <VerticalStackLayout Grid.Column="1" VerticalOptions="Fill">
+                <Label Text="Residuos" Style="{StaticResource ActiveTabLabel}" VerticalOptions="CenterAndExpand" />
+                <BoxView HeightRequest="3" Color="{StaticResource ColorPrimary}" CornerRadius="2" />
+            </VerticalStackLayout>
+            <Label Grid.Column="2" Text="Disposición" Style="{StaticResource TabLabel}" />
+        </Grid>
+
+        <ScrollView Grid.Row="2">
+            <VerticalStackLayout Padding="16,16,16,24" Spacing="12">
+                <Button Text="＋ Agregar residuo" Style="{StaticResource SmallPrimaryButton}" HorizontalOptions="Start" />
+
+                <Border Style="{StaticResource SoftCard}">
+                    <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="12">
+                        <Border WidthRequest="44" HeightRequest="44" BackgroundColor="#EEF6FF" Stroke="Transparent">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
+                            <Label Text="📦" FontSize="24" HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                            <Label Text="Papel y cartón" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                            <Label Text="No peligroso" TextColor="{StaticResource ColorAccent}" FontAttributes="Bold" FontSize="12" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="2" Text="10.5 kg" TextColor="{StaticResource ColorText}" FontAttributes="Bold" FontSize="12" VerticalOptions="Center" />
+                        <Label Grid.Column="3" Text="⋮" TextColor="{StaticResource ColorMuted}" FontSize="22" VerticalOptions="Center" />
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource SoftCard}">
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12" RowDefinitions="Auto,Auto">
+                        <Border WidthRequest="44" HeightRequest="44" BackgroundColor="{StaticResource ColorDangerSoft}" Stroke="Transparent">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
+                            <Label Text="🧯" FontSize="24" HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                            <Label Text="Recipientes contaminados" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                            <Label Text="Peligroso" TextColor="{StaticResource ColorDanger}" FontAttributes="Bold" FontSize="12" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="2" HorizontalOptions="End" Spacing="3">
+                            <Label Text="5 kg" TextColor="{StaticResource ColorText}" FontAttributes="Bold" FontSize="12" HorizontalOptions="End" />
+                            <Label Text="⋮" TextColor="{StaticResource ColorMuted}" FontSize="20" HorizontalOptions="End" />
+                        </VerticalStackLayout>
+
+                        <!-- Indicador offline/local pendiente de nube -->
+                        <Border Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,10,0,0" Padding="8,4" Stroke="#FBBF24" BackgroundColor="{StaticResource ColorWarningSoft}">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
+                            <HorizontalStackLayout Spacing="6" HorizontalOptions="Start">
+                                <Label Text="☁" TextColor="{StaticResource ColorWarning}" FontSize="12" />
+                                <Label Text="Pendiente de sincronizar" TextColor="#B45309" FontSize="11" FontAttributes="Bold" />
+                            </HorizontalStackLayout>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource SoftCard}">
+                    <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="12">
+                        <Border WidthRequest="44" HeightRequest="44" BackgroundColor="{StaticResource ColorSuccessSoft}" Stroke="Transparent">
+                            <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
+                            <Label Text="🍾" FontSize="22" HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                            <Label Text="Vidrio" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                            <Label Text="No peligroso" TextColor="{StaticResource ColorAccent}" FontAttributes="Bold" FontSize="12" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="2" Text="3 kg" TextColor="{StaticResource ColorText}" FontAttributes="Bold" FontSize="12" VerticalOptions="Center" />
+                        <Label Grid.Column="3" Text="⋮" TextColor="{StaticResource ColorMuted}" FontSize="22" VerticalOptions="Center" />
+                    </Grid>
+                </Border>
+
+                <Border Padding="12" BackgroundColor="#F8FAFC" Stroke="{StaticResource ColorBorder}">
+                    <Border.StrokeShape><RoundRectangle CornerRadius="14" /></Border.StrokeShape>
+                    <HorizontalStackLayout Spacing="8">
+                        <Label Text="☁" TextColor="{StaticResource ColorMuted}" FontSize="16" VerticalOptions="Start" />
+                        <Label Text="Este residuo fue guardado localmente y se sincronizará cuando haya conexión." Style="{StaticResource TinyMutedText}" LineBreakMode="WordWrap" />
+                    </HorizontalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>
