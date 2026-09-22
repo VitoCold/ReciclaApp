@@ -28,7 +28,10 @@
                     </Border>
                 </Grid>
 
-                <Button Text="＋ Nuevo registro" Style="{StaticResource PrimaryButton}" />
+                <Button Text="＋ Nuevo registro"
+                        Style="{StaticResource PrimaryButton}"
+                        AutomationId="NuevoRegistroButton"
+                        Clicked="OnNuevoRegistroClicked" />
 
                 <VerticalStackLayout Spacing="12">
                     <Border Style="{StaticResource SoftCard}">
@@ -42,7 +45,9 @@
                                 <Border Style="{StaticResource Chip}" BackgroundColor="{StaticResource ColorSuccessSoft}">
                                     <Label Text="Completado" TextColor="{StaticResource ColorAccent}" FontSize="10" FontAttributes="Bold" />
                                 </Border>
-                                <Label Text="Ver detalle ›" TextColor="{StaticResource ColorPrimary}" FontSize="11" FontAttributes="Bold" HorizontalOptions="End" />
+                                <Button Text="Ver detalle ›"
+                                        Style="{StaticResource LinkButton}"
+                                        Clicked="OnVerDetalleClicked" />
                             </VerticalStackLayout>
                         </Grid>
                     </Border>
@@ -58,7 +63,9 @@
                                 <Border Style="{StaticResource Chip}" BackgroundColor="{StaticResource ColorBlueSoft}">
                                     <Label Text="Completado" TextColor="{StaticResource ColorPrimary}" FontSize="10" FontAttributes="Bold" />
                                 </Border>
-                                <Label Text="Ver detalle ›" TextColor="{StaticResource ColorPrimary}" FontSize="11" FontAttributes="Bold" HorizontalOptions="End" />
+                                <Button Text="Ver detalle ›"
+                                        Style="{StaticResource LinkButton}"
+                                        Clicked="OnVerDetalleClicked" />
                             </VerticalStackLayout>
                         </Grid>
                     </Border>
@@ -74,7 +81,9 @@
                                 <Border Style="{StaticResource Chip}" BackgroundColor="{StaticResource ColorBlueSoft}">
                                     <Label Text="Completado" TextColor="{StaticResource ColorPrimary}" FontSize="10" FontAttributes="Bold" />
                                 </Border>
-                                <Label Text="Ver detalle ›" TextColor="{StaticResource ColorPrimary}" FontSize="11" FontAttributes="Bold" HorizontalOptions="End" />
+                                <Button Text="Ver detalle ›"
+                                        Style="{StaticResource LinkButton}"
+                                        Clicked="OnVerDetalleClicked" />
                             </VerticalStackLayout>
                         </Grid>
                     </Border>
@@ -90,7 +99,9 @@
                                 <Border Style="{StaticResource Chip}" BackgroundColor="{StaticResource ColorBlueSoft}">
                                     <Label Text="Completado" TextColor="{StaticResource ColorPrimary}" FontSize="10" FontAttributes="Bold" />
                                 </Border>
-                                <Label Text="Ver detalle ›" TextColor="{StaticResource ColorPrimary}" FontSize="11" FontAttributes="Bold" HorizontalOptions="End" />
+                                <Button Text="Ver detalle ›"
+                                        Style="{StaticResource LinkButton}"
+                                        Clicked="OnVerDetalleClicked" />
                             </VerticalStackLayout>
                         </Grid>
                     </Border>

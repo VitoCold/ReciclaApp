@@ -6,7 +6,11 @@
              Shell.NavBarIsVisible="False">
     <Grid RowDefinitions="Auto,*">
         <Grid Style="{StaticResource AppHeader}" ColumnDefinitions="Auto,*">
-            <Label Text="‹" TextColor="White" FontSize="30" VerticalOptions="Center" />
+            <Label Text="‹" TextColor="White" FontSize="30" VerticalOptions="Center">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </Label.GestureRecognizers>
+            </Label>
             <Label Grid.Column="1" Text="Registrar residuo" Style="{StaticResource HeaderTitle}" />
         </Grid>
         <ScrollView Grid.Row="1">
@@ -21,28 +25,53 @@
 
                 <VerticalStackLayout Spacing="12">
                     <Border Style="{StaticResource InputBorder}">
-                        <Grid ColumnDefinitions="*,Auto">
-                            <VerticalStackLayout Spacing="1">
-                                <Label Text="Tipo de residuo" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
-                                <Label Text="Selecciona el tipo" Style="{StaticResource MutedText}" />
-                            </VerticalStackLayout>
-                            <Label Grid.Column="1" Text="⌄" FontSize="18" TextColor="{StaticResource ColorMuted}" VerticalOptions="Center" />
-                        </Grid>
+                        <VerticalStackLayout Spacing="0">
+                            <Label Text="Tipo de residuo" Style="{StaticResource FieldLabel}" />
+                            <Picker x:Name="TipoResiduoPicker"
+                                    Title="Selecciona el tipo"
+                                    FontSize="12"
+                                    TextColor="{StaticResource ColorText}"
+                                    TitleColor="{StaticResource ColorMuted}"
+                                    HeightRequest="32"
+                                    MinimumHeightRequest="32">
+                                <Picker.Items>
+                                    <x:String>No peligroso</x:String>
+                                    <x:String>Peligroso</x:String>
+                                </Picker.Items>
+                            </Picker>
+                        </VerticalStackLayout>
                     </Border>
+
                     <Border Style="{StaticResource InputBorder}">
-                        <Grid ColumnDefinitions="*,Auto">
-                            <VerticalStackLayout Spacing="1">
-                                <Label Text="Residuo" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
-                                <Label Text="Selecciona el residuo" Style="{StaticResource MutedText}" />
-                            </VerticalStackLayout>
-                            <Label Grid.Column="1" Text="⌄" FontSize="18" TextColor="{StaticResource ColorMuted}" VerticalOptions="Center" />
-                        </Grid>
+                        <VerticalStackLayout Spacing="0">
+                            <Label Text="Residuo" Style="{StaticResource FieldLabel}" />
+                            <Picker x:Name="ResiduoPicker"
+                                    Title="Selecciona el residuo"
+                                    FontSize="12"
+                                    TextColor="{StaticResource ColorText}"
+                                    TitleColor="{StaticResource ColorMuted}"
+                                    HeightRequest="32"
+                                    MinimumHeightRequest="32">
+                                <Picker.Items>
+                                    <x:String>Papel y cartón</x:String>
+                                    <x:String>Recipientes contaminados</x:String>
+                                    <x:String>Vidrio</x:String>
+                                </Picker.Items>
+                            </Picker>
+                        </VerticalStackLayout>
                     </Border>
+
                     <Border Style="{StaticResource InputBorder}">
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
                             <VerticalStackLayout Spacing="1">
-                                <Label Text="Cantidad (kg)" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
-                                <Entry Placeholder="Ingresa la cantidad" Keyboard="Numeric" BackgroundColor="Transparent" FontSize="13" HeightRequest="34" />
+                                <Label Text="Cantidad (kg)" Style="{StaticResource FieldLabel}" />
+                                <Entry x:Name="CantidadEntry"
+                                       Placeholder="Ingresa la cantidad"
+                                       Keyboard="Numeric"
+                                       BackgroundColor="Transparent"
+                                       FontSize="13"
+                                       HeightRequest="34"
+                                       MinimumHeightRequest="34" />
                             </VerticalStackLayout>
                             <Border Grid.Column="1" Padding="12,8" BackgroundColor="#F1F5F9" Stroke="Transparent" VerticalOptions="Center">
                                 <Border.StrokeShape><RoundRectangle CornerRadius="10" /></Border.StrokeShape>
@@ -52,7 +81,9 @@
                     </Border>
                 </VerticalStackLayout>
 
-                <Button Text="Registrar residuo  →" Style="{StaticResource PrimaryButton}" />
+                <Button Text="Registrar residuo  →"
+                        Style="{StaticResource PrimaryButton}"
+                        Clicked="OnRegistrarResiduoClicked" />
             </VerticalStackLayout>
         </ScrollView>
     </Grid>

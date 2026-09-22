@@ -6,13 +6,25 @@
              Shell.NavBarIsVisible="False">
     <Grid RowDefinitions="Auto,Auto,*">
         <Grid Style="{StaticResource AppHeader}" ColumnDefinitions="Auto,*,Auto">
-            <Label Text="‹" TextColor="White" FontSize="30" VerticalOptions="Center" />
+            <Label Text="‹" TextColor="White" FontSize="30" VerticalOptions="Center">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </Label.GestureRecognizers>
+            </Label>
             <Label Grid.Column="1" Text="Detalle del registro" Style="{StaticResource HeaderTitle}" />
             <Label Grid.Column="2" Text="⋮" TextColor="White" FontSize="22" VerticalOptions="Center" />
         </Grid>
         <Grid Grid.Row="1" BackgroundColor="White" ColumnDefinitions="*,*,*" HeightRequest="48">
-            <Label Text="Detalle" Style="{StaticResource TabLabel}" />
-            <Label Grid.Column="1" Text="Residuos" Style="{StaticResource TabLabel}" />
+            <Label Text="Detalle" Style="{StaticResource TabLabel}">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnDetalleTapped" />
+                </Label.GestureRecognizers>
+            </Label>
+            <Label Grid.Column="1" Text="Residuos" Style="{StaticResource TabLabel}">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnResiduosTapped" />
+                </Label.GestureRecognizers>
+            </Label>
             <VerticalStackLayout Grid.Column="2" VerticalOptions="Fill">
                 <Label Text="Disposición" Style="{StaticResource ActiveTabLabel}" VerticalOptions="CenterAndExpand" />
                 <BoxView HeightRequest="3" Color="{StaticResource ColorPrimary}" CornerRadius="2" />
@@ -22,7 +34,12 @@
             <VerticalStackLayout Padding="16,16,16,24" Spacing="14">
                 <Grid ColumnDefinitions="*,Auto">
                     <Label Text="Evidencias de disposición" Style="{StaticResource SectionTitle}" FontSize="15" VerticalOptions="Center" />
-                    <Button Grid.Column="1" Text="＋ Agregar evidencia" Style="{StaticResource SmallPrimaryButton}" BackgroundColor="{StaticResource ColorSuccessSoft}" TextColor="{StaticResource ColorAccent}" />
+                    <Button Grid.Column="1"
+                            Text="＋ Agregar evidencia"
+                            Style="{StaticResource SmallPrimaryButton}"
+                            BackgroundColor="{StaticResource ColorSuccessSoft}"
+                            TextColor="{StaticResource ColorAccent}"
+                            Clicked="OnAgregarEvidenciaClicked" />
                 </Grid>
                 <Grid ColumnDefinitions="*,*" RowDefinitions="150,150" ColumnSpacing="12" RowSpacing="12">
                     <Border Style="{StaticResource SoftCard}" Padding="0">

@@ -6,7 +6,11 @@
              Shell.NavBarIsVisible="False">
     <Grid RowDefinitions="Auto,Auto,*">
         <Grid Style="{StaticResource AppHeader}" ColumnDefinitions="Auto,*,Auto">
-            <Label Text="‹" TextColor="White" FontSize="30" VerticalOptions="Center" />
+            <Label Text="‹" TextColor="White" FontSize="30" VerticalOptions="Center">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </Label.GestureRecognizers>
+            </Label>
             <Label Grid.Column="1" Text="Detalle del registro" Style="{StaticResource HeaderTitle}" />
             <Label Grid.Column="2" Text="⋮" TextColor="White" FontSize="22" VerticalOptions="Center" />
         </Grid>
@@ -16,8 +20,16 @@
                 <Label Text="Detalle" Style="{StaticResource ActiveTabLabel}" VerticalOptions="CenterAndExpand" />
                 <BoxView HeightRequest="3" Color="{StaticResource ColorPrimary}" CornerRadius="2" />
             </VerticalStackLayout>
-            <Label Grid.Column="1" Text="Residuos" Style="{StaticResource TabLabel}" />
-            <Label Grid.Column="2" Text="Disposición" Style="{StaticResource TabLabel}" />
+            <Label Grid.Column="1" Text="Residuos" Style="{StaticResource TabLabel}">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnResiduosTapped" />
+                </Label.GestureRecognizers>
+            </Label>
+            <Label Grid.Column="2" Text="Disposición" Style="{StaticResource TabLabel}">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnDisposicionTapped" />
+                </Label.GestureRecognizers>
+            </Label>
         </Grid>
 
         <ScrollView Grid.Row="2">

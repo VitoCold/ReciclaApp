@@ -6,7 +6,11 @@
              Shell.NavBarIsVisible="False">
     <Grid RowDefinitions="Auto,*">
         <Grid Style="{StaticResource AppHeader}" ColumnDefinitions="Auto,*">
-            <Label Text="‹" TextColor="White" FontSize="30" VerticalOptions="Center" />
+            <Label Text="‹" TextColor="White" FontSize="30" VerticalOptions="Center">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </Label.GestureRecognizers>
+            </Label>
             <Label Grid.Column="1" Text="Inicio de registro" Style="{StaticResource HeaderTitle}" />
         </Grid>
         <ScrollView Grid.Row="1">
@@ -20,38 +24,75 @@
 
                 <VerticalStackLayout Spacing="12">
                     <Border Style="{StaticResource InputBorder}">
-                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                             <Label Text="📁" FontSize="18" VerticalOptions="Center" />
-                            <VerticalStackLayout Grid.Column="1" Spacing="1">
-                                <Label Text="Proyecto" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
-                                <Label Text="Selecciona un proyecto" Style="{StaticResource MutedText}" />
+                            <VerticalStackLayout Grid.Column="1" Spacing="0">
+                                <Label Text="Proyecto" Style="{StaticResource FieldLabel}" />
+                                <Picker x:Name="ProyectoPicker"
+                                        Title="Selecciona un proyecto"
+                                        FontSize="12"
+                                        TextColor="{StaticResource ColorText}"
+                                        TitleColor="{StaticResource ColorMuted}"
+                                        HeightRequest="32"
+                                        MinimumHeightRequest="32">
+                                    <Picker.Items>
+                                        <x:String>DOT</x:String>
+                                        <x:String>Proyecto Norte</x:String>
+                                        <x:String>Proyecto Sur</x:String>
+                                    </Picker.Items>
+                                </Picker>
                             </VerticalStackLayout>
-                            <Label Grid.Column="2" Text="⌄" FontSize="18" TextColor="{StaticResource ColorMuted}" VerticalOptions="Center" />
                         </Grid>
                     </Border>
+
                     <Border Style="{StaticResource InputBorder}">
-                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                             <Label Text="🛠" FontSize="18" VerticalOptions="Center" />
-                            <VerticalStackLayout Grid.Column="1" Spacing="1">
-                                <Label Text="Actividad" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
-                                <Label Text="Selecciona una actividad" Style="{StaticResource MutedText}" />
+                            <VerticalStackLayout Grid.Column="1" Spacing="0">
+                                <Label Text="Actividad" Style="{StaticResource FieldLabel}" />
+                                <Picker x:Name="ActividadPicker"
+                                        Title="Selecciona una actividad"
+                                        FontSize="12"
+                                        TextColor="{StaticResource ColorText}"
+                                        TitleColor="{StaticResource ColorMuted}"
+                                        HeightRequest="32"
+                                        MinimumHeightRequest="32">
+                                    <Picker.Items>
+                                        <x:String>Mantenimiento</x:String>
+                                        <x:String>Administración</x:String>
+                                        <x:String>Limpieza</x:String>
+                                    </Picker.Items>
+                                </Picker>
                             </VerticalStackLayout>
-                            <Label Grid.Column="2" Text="⌄" FontSize="18" TextColor="{StaticResource ColorMuted}" VerticalOptions="Center" />
                         </Grid>
                     </Border>
+
                     <Border Style="{StaticResource InputBorder}">
-                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                             <Label Text="📍" FontSize="18" VerticalOptions="Center" />
-                            <VerticalStackLayout Grid.Column="1" Spacing="1">
-                                <Label Text="Sede" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
-                                <Label Text="Selecciona una sede" Style="{StaticResource MutedText}" />
+                            <VerticalStackLayout Grid.Column="1" Spacing="0">
+                                <Label Text="Sede" Style="{StaticResource FieldLabel}" />
+                                <Picker x:Name="SedePicker"
+                                        Title="Selecciona una sede"
+                                        FontSize="12"
+                                        TextColor="{StaticResource ColorText}"
+                                        TitleColor="{StaticResource ColorMuted}"
+                                        HeightRequest="32"
+                                        MinimumHeightRequest="32">
+                                    <Picker.Items>
+                                        <x:String>Pisco</x:String>
+                                        <x:String>Lima</x:String>
+                                        <x:String>Arequipa</x:String>
+                                    </Picker.Items>
+                                </Picker>
                             </VerticalStackLayout>
-                            <Label Grid.Column="2" Text="⌄" FontSize="18" TextColor="{StaticResource ColorMuted}" VerticalOptions="Center" />
                         </Grid>
                     </Border>
                 </VerticalStackLayout>
 
-                <Button Text="Continuar  →" Style="{StaticResource PrimaryButton}" VerticalOptions="End" />
+                <Button Text="Continuar  →"
+                        Style="{StaticResource PrimaryButton}"
+                        Clicked="OnContinuarClicked" />
             </VerticalStackLayout>
         </ScrollView>
     </Grid>
