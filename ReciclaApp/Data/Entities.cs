@@ -10,7 +10,7 @@ public abstract class SyncableEntity
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
     public DateTime? DeletedAtUtc { get; set; }
-    public int SyncState { get; set; } = (int)Data.SyncState.Pending;
+    public int SyncState { get; set; } = (int)global::ReciclaApp.Data.SyncState.Pending;
     public long LocalRevision { get; set; } = 1;
     public string? RemoteRevision { get; set; }
 }
