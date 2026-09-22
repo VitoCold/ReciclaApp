@@ -30,17 +30,13 @@
                                 <Label Text="Proyecto" Style="{StaticResource FieldLabel}" />
                                 <Picker x:Name="ProyectoPicker"
                                         Title="Selecciona un proyecto"
+                                        ItemDisplayBinding="{Binding Name}"
+                                        SelectedIndexChanged="OnProyectoChanged"
                                         FontSize="12"
                                         TextColor="{StaticResource ColorText}"
                                         TitleColor="{StaticResource ColorMuted}"
                                         HeightRequest="32"
-                                        MinimumHeightRequest="32">
-                                    <Picker.Items>
-                                        <x:String>DOT</x:String>
-                                        <x:String>Proyecto Norte</x:String>
-                                        <x:String>Proyecto Sur</x:String>
-                                    </Picker.Items>
-                                </Picker>
+                                        MinimumHeightRequest="32" />
                             </VerticalStackLayout>
                         </Grid>
                     </Border>
@@ -52,17 +48,12 @@
                                 <Label Text="Actividad" Style="{StaticResource FieldLabel}" />
                                 <Picker x:Name="ActividadPicker"
                                         Title="Selecciona una actividad"
+                                        ItemDisplayBinding="{Binding Name}"
                                         FontSize="12"
                                         TextColor="{StaticResource ColorText}"
                                         TitleColor="{StaticResource ColorMuted}"
                                         HeightRequest="32"
-                                        MinimumHeightRequest="32">
-                                    <Picker.Items>
-                                        <x:String>Mantenimiento</x:String>
-                                        <x:String>Administración</x:String>
-                                        <x:String>Limpieza</x:String>
-                                    </Picker.Items>
-                                </Picker>
+                                        MinimumHeightRequest="32" />
                             </VerticalStackLayout>
                         </Grid>
                     </Border>
@@ -74,23 +65,19 @@
                                 <Label Text="Sede" Style="{StaticResource FieldLabel}" />
                                 <Picker x:Name="SedePicker"
                                         Title="Selecciona una sede"
+                                        ItemDisplayBinding="{Binding Name}"
                                         FontSize="12"
                                         TextColor="{StaticResource ColorText}"
                                         TitleColor="{StaticResource ColorMuted}"
                                         HeightRequest="32"
-                                        MinimumHeightRequest="32">
-                                    <Picker.Items>
-                                        <x:String>Pisco</x:String>
-                                        <x:String>Lima</x:String>
-                                        <x:String>Arequipa</x:String>
-                                    </Picker.Items>
-                                </Picker>
+                                        MinimumHeightRequest="32" />
                             </VerticalStackLayout>
                         </Grid>
                     </Border>
                 </VerticalStackLayout>
 
-                <Button Text="Continuar  →"
+                <Button x:Name="ContinuarButton"
+                        Text="Continuar  →"
                         Style="{StaticResource PrimaryButton}"
                         Clicked="OnContinuarClicked" />
             </VerticalStackLayout>

@@ -29,16 +29,13 @@
                             <Label Text="Tipo de residuo" Style="{StaticResource FieldLabel}" />
                             <Picker x:Name="TipoResiduoPicker"
                                     Title="Selecciona el tipo"
+                                    ItemDisplayBinding="{Binding Name}"
+                                    SelectedIndexChanged="OnTipoResiduoChanged"
                                     FontSize="12"
                                     TextColor="{StaticResource ColorText}"
                                     TitleColor="{StaticResource ColorMuted}"
                                     HeightRequest="32"
-                                    MinimumHeightRequest="32">
-                                <Picker.Items>
-                                    <x:String>No peligroso</x:String>
-                                    <x:String>Peligroso</x:String>
-                                </Picker.Items>
-                            </Picker>
+                                    MinimumHeightRequest="32" />
                         </VerticalStackLayout>
                     </Border>
 
@@ -47,17 +44,12 @@
                             <Label Text="Residuo" Style="{StaticResource FieldLabel}" />
                             <Picker x:Name="ResiduoPicker"
                                     Title="Selecciona el residuo"
+                                    ItemDisplayBinding="{Binding Name}"
                                     FontSize="12"
                                     TextColor="{StaticResource ColorText}"
                                     TitleColor="{StaticResource ColorMuted}"
                                     HeightRequest="32"
-                                    MinimumHeightRequest="32">
-                                <Picker.Items>
-                                    <x:String>Papel y cartón</x:String>
-                                    <x:String>Recipientes contaminados</x:String>
-                                    <x:String>Vidrio</x:String>
-                                </Picker.Items>
-                            </Picker>
+                                    MinimumHeightRequest="32" />
                         </VerticalStackLayout>
                     </Border>
 
@@ -75,13 +67,14 @@
                             </VerticalStackLayout>
                             <Border Grid.Column="1" Padding="12,8" BackgroundColor="#F1F5F9" Stroke="Transparent" VerticalOptions="Center">
                                 <Border.StrokeShape><RoundRectangle CornerRadius="10" /></Border.StrokeShape>
-                                <Label Text="kg" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                <Label x:Name="UnidadLabel" Text="kg" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
                             </Border>
                         </Grid>
                     </Border>
                 </VerticalStackLayout>
 
-                <Button Text="Registrar residuo  →"
+                <Button x:Name="RegistrarButton"
+                        Text="Registrar residuo  →"
                         Style="{StaticResource PrimaryButton}"
                         Clicked="OnRegistrarResiduoClicked" />
             </VerticalStackLayout>
