@@ -28,7 +28,13 @@
                             <Label Text="👤" FontSize="18" VerticalOptions="Center" />
                             <VerticalStackLayout Grid.Column="1" Spacing="1">
                                 <Label Text="Usuario" FontAttributes="Bold" FontSize="12" TextColor="{StaticResource ColorText}" />
-                                <Entry Placeholder="Ingresa tu usuario" ClearButtonVisibility="WhileEditing" BackgroundColor="Transparent" FontSize="13" HeightRequest="34" />
+                                <Entry x:Name="UsuarioEntry"
+                                       Placeholder="Ingresa tu usuario"
+                                       ClearButtonVisibility="WhileEditing"
+                                       BackgroundColor="Transparent"
+                                       FontSize="13"
+                                       HeightRequest="34"
+                                       MinimumHeightRequest="34" />
                             </VerticalStackLayout>
                         </Grid>
                     </Border>
@@ -38,9 +44,19 @@
                             <Label Text="🔒" FontSize="18" VerticalOptions="Center" />
                             <VerticalStackLayout Grid.Column="1" Spacing="1">
                                 <Label Text="Clave" FontAttributes="Bold" FontSize="12" TextColor="{StaticResource ColorText}" />
-                                <Entry Placeholder="Ingresa tu clave" IsPassword="True" BackgroundColor="Transparent" FontSize="13" HeightRequest="34" />
+                                <Entry x:Name="ClaveEntry"
+                                       Placeholder="Ingresa tu clave"
+                                       IsPassword="True"
+                                       BackgroundColor="Transparent"
+                                       FontSize="13"
+                                       HeightRequest="34"
+                                       MinimumHeightRequest="34" />
                             </VerticalStackLayout>
-                            <Label Grid.Column="2" Text="◉" TextColor="{StaticResource ColorMuted}" VerticalOptions="Center" />
+                            <Label Grid.Column="2" Text="◉" TextColor="{StaticResource ColorMuted}" VerticalOptions="Center">
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnTogglePasswordTapped" />
+                                </Label.GestureRecognizers>
+                            </Label>
                         </Grid>
                     </Border>
                 </VerticalStackLayout>
