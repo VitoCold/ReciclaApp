@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using ReciclaApp.Data;
 
 namespace ReciclaApp
 {
@@ -15,8 +16,10 @@ namespace ReciclaApp
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
 
+            builder.Services.AddSingleton<AppDatabase>();
+
 #if DEBUG
-    		builder.Logging.AddDebug();
+            builder.Logging.AddDebug();
 #endif
 
             return builder.Build();
