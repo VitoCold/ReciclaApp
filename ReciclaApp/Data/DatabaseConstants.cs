@@ -7,6 +7,11 @@ public static class DatabaseConstants
     public const string DatabaseFilename = "reciclaapp.db3";
     public const int SchemaVersion = 1;
 
+    public const string SchemaVersionKey = "schema_version";
+    public const string CurrentUserIdKey = "current_user_id";
+    public const string CurrentRecordIdKey = "current_record_id";
+    public const string LastCatalogSyncUtcKey = "last_catalog_sync_utc";
+
     public static string DatabasePath =>
         Path.Combine(FileSystem.AppDataDirectory, DatabaseFilename);
 
