@@ -10,6 +10,7 @@ public static class DatabaseConstants
     public const string SchemaVersionKey = "schema_version";
     public const string CurrentUserIdKey = "current_user_id";
     public const string CurrentRecordIdKey = "current_record_id";
+    public const string CurrentRecordWasteIdKey = "current_record_waste_id";
     public const string LastCatalogSyncUtcKey = "last_catalog_sync_utc";
 
     public static string DatabasePath =>
