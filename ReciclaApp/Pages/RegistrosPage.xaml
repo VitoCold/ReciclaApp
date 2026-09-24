@@ -7,13 +7,20 @@
 
     <Grid RowDefinitions="Auto,*">
         <Grid Style="{StaticResource AppHeader}" ColumnDefinitions="Auto,*,Auto,Auto">
-            <Label Text="☰" TextColor="White" FontSize="24" VerticalOptions="Center" />
+            <Label Text="☰" TextColor="White" FontSize="24" VerticalOptions="Center">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnMenuTapped" />
+                </Label.GestureRecognizers>
+            </Label>
             <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
                 <Label Text="📅" FontSize="14" />
                 <Label Text="30/06/2026" TextColor="White" FontAttributes="Bold" FontSize="14" />
             </HorizontalStackLayout>
             <Label Grid.Column="2" Text="Juan Pérez" TextColor="White" FontSize="13" VerticalOptions="Center" />
             <Border Grid.Column="3" WidthRequest="30" HeightRequest="30" BackgroundColor="#DDEEFF" Stroke="Transparent">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnPerfilTapped" />
+                </Border.GestureRecognizers>
                 <Border.StrokeShape><RoundRectangle CornerRadius="15" /></Border.StrokeShape>
                 <Label Text="👤" FontSize="14" HorizontalOptions="Center" VerticalOptions="Center" />
             </Border>
@@ -28,7 +35,9 @@
                     </Border>
                 </Grid>
 
-                <Button Text="＋ Nuevo registro" Style="{StaticResource PrimaryButton}" />
+                <Button Text="＋ Nuevo registro"
+                        Style="{StaticResource PrimaryButton}"
+                        Clicked="OnNuevoRegistroClicked" />
 
                 <VerticalStackLayout Spacing="12">
                     <Border Style="{StaticResource SoftCard}">
