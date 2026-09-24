@@ -14,7 +14,7 @@ public sealed class CatalogosController(
     public async Task<IActionResult> Inicial(CancellationToken cancellationToken)
     {
         Logger.LogDebug("Obteniendo catálogos iniciales para {UsuarioId}", UsuarioId);
-        var result = await catalogoService.ObtenerInicialAsync(cancellationToken);
+        var result = await catalogoService.ObtenerInicialAsync(UsuarioId, cancellationToken);
         return Ok(result);
     }
 }
