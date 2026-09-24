@@ -9,13 +9,14 @@ public static class AppNavigator
     public static Task IrAPerfilAsync() => Shell.Current.GoToAsync(AppRoutes.Perfil);
 
     public static Task IrADetalleRegistroAsync(Guid registroId) =>
-        Shell.Current.GoToAsync($"{AppRoutes.DetalleRegistroDetalle}?registroId={registroId}");
+        Shell.Current.GoToAsync($"{AppRoutes.DetalleRegistro}?registroId={registroId}");
 
+    // Compatibilidad con el flujo existente: residuos y disposición vuelven al detalle unificado.
     public static Task IrAResiduosDelRegistroAsync(Guid registroId) =>
-        Shell.Current.GoToAsync($"{AppRoutes.DetalleRegistroResiduos}?registroId={registroId}");
+        IrADetalleRegistroAsync(registroId);
 
     public static Task IrADisposicionDelRegistroAsync(Guid registroId) =>
-        Shell.Current.GoToAsync($"{AppRoutes.DetalleRegistroDisposicion}?registroId={registroId}");
+        IrADetalleRegistroAsync(registroId);
 
     public static Task IrADetalleResiduoAsync() => Shell.Current.GoToAsync(AppRoutes.DetalleResiduoDetalle);
 
