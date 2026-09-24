@@ -3,6 +3,7 @@ using System.Net;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Graphics;
+using Microsoft.Maui.Storage;
 using Recicla.Shared.Contracts;
 using Recicla.Shared.Services;
 using ReciclaApp.Navigation;
@@ -17,6 +18,8 @@ public partial class DetalleRegistroDetallePage : ContentPage
     private readonly ObservableCollection<EvidenciaVisualItem> _evidencias = new();
     private bool _isLoading;
     private bool _enProceso;
+    private bool _puedeGestionarDisposicion;
+    private DisposicionDto? _disposicionActual;
 
     public string RegistroId { get; set; } = string.Empty;
 
@@ -25,6 +28,9 @@ public partial class DetalleRegistroDetallePage : ContentPage
         InitializeComponent();
         BindableLayout.SetItemsSource(ResiduosStack, _residuos);
         BindableLayout.SetItemsSource(EvidenciasStack, _evidencias);
+
+        FechaDisposicionPicker.MaximumDate = DateTime.Today;
+        FechaDisposicionPicker.Date = DateTime.Today;
     }
 
     protected override async void OnAppearing()
@@ -159,11 +165,24 @@ public partial class DetalleRegistroDetallePage : ContentPage
 
     private void CargarDisposicion(DisposicionDto? disposicion)
     {
+        _disposicionActual = disposicion;
         _evidencias.Clear();
+        DisposicionFormularioBorder.IsVisible = false;
+        DisposicionErrorBorder.IsVisible = false;
 
         var tieneDisposicion = disposicion is not null;
         SinDisposicionBorder.IsVisible = !tieneDisposicion;
         DisposicionBorder.IsVisible = tieneDisposicion;
+
+        RegistrarDisposicionButton.IsVisible = !tieneDisposicion && _puedeGestionarDisposicion;
+        EditarDisposicionButton.IsVisible = tieneDisposicion && _puedeGestionarDisposicion;
+        AdjuntarEvidenciaButton.IsVisible = tieneDisposicion && _puedeGestionarDisposicion;
+
+        SinDisposicionMensajeLabel.Text = _enProceso
+            ? "Finaliza primero el registro para habilitar la disposición final."
+            : _puedeGestionarDisposicion
+                ? "Registra el destino final del residuo y luego adjunta sus evidencias."
+                : "La disposición final no está disponible para el estado actual del registro.";
 
         if (disposicion is null)
             return;
@@ -184,7 +203,7 @@ public partial class DetalleRegistroDetallePage : ContentPage
         {
             _evidencias.Add(new EvidenciaVisualItem(
                 evidencia.NombreArchivo,
-                evidencia.TipoEvidencia,
+                FormatearTipoEvidencia(evidencia.TipoEvidencia),
                 evidencia.CreadoUtc.ToLocalTime().ToString("dd/MM/yyyy")));
         }
     }
@@ -197,6 +216,9 @@ public partial class DetalleRegistroDetallePage : ContentPage
 
         EstadoLabel.Text = estadoVisible;
         _enProceso = string.Equals(estadoVisible, "En proceso", StringComparison.OrdinalIgnoreCase);
+        _puedeGestionarDisposicion =
+            string.Equals(estadoVisible, "Completado", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(estadoVisible, "Validado", StringComparison.OrdinalIgnoreCase);
 
         AgregarResiduoButton.IsVisible = _enProceso;
         FinalizarButton.IsVisible = _enProceso;
@@ -322,7 +344,7 @@ public partial class DetalleRegistroDetallePage : ContentPage
 
         var confirmar = await DisplayAlert(
             "Finalizar registro",
-            "Al finalizar ya no podrás agregar, editar ni eliminar residuos. ¿Deseas continuar?",
+            "Al finalizar ya no podrás agregar, editar ni eliminar residuos. Luego podrás registrar la disposición final. ¿Deseas continuar?",
             "Finalizar",
             "Cancelar");
 
@@ -359,6 +381,237 @@ public partial class DetalleRegistroDetallePage : ContentPage
 
         await CargarDetalleAsync();
     }
+
+    private void OnRegistrarDisposicionClicked(object sender, EventArgs e)
+    {
+        if (!_puedeGestionarDisposicion)
+            return;
+
+        MostrarFormularioDisposicion(null);
+    }
+
+    private void OnEditarDisposicionClicked(object sender, EventArgs e)
+    {
+        if (!_puedeGestionarDisposicion || _disposicionActual is null)
+            return;
+
+        MostrarFormularioDisposicion(_disposicionActual);
+    }
+
+    private void MostrarFormularioDisposicion(DisposicionDto? disposicion)
+    {
+        DisposicionErrorBorder.IsVisible = false;
+        SinDisposicionBorder.IsVisible = false;
+        DisposicionBorder.IsVisible = false;
+        DisposicionFormularioBorder.IsVisible = true;
+
+        var esEdicion = disposicion is not null;
+        TituloDisposicionFormularioLabel.Text = esEdicion
+            ? "Editar disposición final"
+            : "Registrar disposición final";
+        GuardarDisposicionButton.Text = esEdicion
+            ? "Guardar cambios"
+            : "Guardar disposición final";
+
+        FechaDisposicionPicker.Date = disposicion?.FechaDisposicion?.Date ?? DateTime.Today;
+        EmpresaDisposicionEntry.Text = disposicion?.EmpresaDisposicion ?? string.Empty;
+        DocumentoDisposicionEntry.Text = disposicion?.CodigoDocumento ?? string.Empty;
+        ObservacionDisposicionEditor.Text = disposicion?.Observacion ?? string.Empty;
+    }
+
+    private void OnCancelarDisposicionClicked(object sender, EventArgs e)
+    {
+        CargarDisposicion(_disposicionActual);
+    }
+
+    private async void OnGuardarDisposicionClicked(object sender, EventArgs e)
+    {
+        if (!_puedeGestionarDisposicion || _isLoading ||
+            !Guid.TryParse(RegistroId, out var registroId))
+            return;
+
+        DisposicionErrorBorder.IsVisible = false;
+
+        var empresa = EmpresaDisposicionEntry.Text?.Trim();
+        if (string.IsNullOrWhiteSpace(empresa))
+        {
+            MostrarErrorDisposicion("Indica la empresa operadora o destino final de los residuos.");
+            return;
+        }
+
+        if (FechaDisposicionPicker.Date.Date > DateTime.Today)
+        {
+            MostrarErrorDisposicion("La fecha de disposición no puede ser futura.");
+            return;
+        }
+
+        _isLoading = true;
+        SetDisposicionBusy(true);
+        var guardado = false;
+
+        try
+        {
+            var apiClient = AppServices.Services.GetRequiredService<IReciclaApiClient>();
+            var request = new CrearDisposicionRequest(
+                CodigoDocumento: TextoOpcional(DocumentoDisposicionEntry.Text),
+                FechaDisposicion: FechaDisposicionPicker.Date.Date,
+                EmpresaDisposicion: empresa,
+                Observacion: TextoOpcional(ObservacionDisposicionEditor.Text));
+
+            await apiClient.GuardarDisposicionAsync(registroId, request);
+            guardado = true;
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            var session = AppServices.Services.GetRequiredService<IAuthSessionService>();
+            await session.LogoutAsync();
+            await AppNavigator.IrAlLoginAsync();
+            return;
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Conflict)
+        {
+            MostrarErrorDisposicion("Finaliza el registro antes de registrar su disposición final.");
+        }
+        catch (Exception ex)
+        {
+            AppServices.Services.GetService<ILogger<DetalleRegistroDetallePage>>()?
+                .LogError(ex, "Error guardando la disposición final del registro {RegistroId}.", registroId);
+            MostrarErrorDisposicion("No se pudo guardar la disposición final. Inténtalo nuevamente.");
+        }
+        finally
+        {
+            _isLoading = false;
+            SetDisposicionBusy(false);
+        }
+
+        if (guardado)
+            await CargarDetalleAsync();
+    }
+
+    private async void OnAdjuntarEvidenciaClicked(object sender, EventArgs e)
+    {
+        if (!_puedeGestionarDisposicion || _isLoading || _disposicionActual is null)
+            return;
+
+        var tipoSeleccionado = await DisplayActionSheet(
+            "Tipo de evidencia",
+            "Cancelar",
+            null,
+            "Documento",
+            "Certificado",
+            "Foto");
+
+        if (string.IsNullOrWhiteSpace(tipoSeleccionado) || tipoSeleccionado == "Cancelar")
+            return;
+
+        FileResult? archivo;
+        try
+        {
+            archivo = await FilePicker.Default.PickAsync(new PickOptions
+            {
+                PickerTitle = "Selecciona la evidencia de disposición final"
+            });
+        }
+        catch (Exception ex)
+        {
+            AppServices.Services.GetService<ILogger<DetalleRegistroDetallePage>>()?
+                .LogWarning(ex, "No se pudo abrir el selector de evidencias.");
+            await DisplayAlert("Evidencia", "No se pudo abrir el selector de archivos.", "Aceptar");
+            return;
+        }
+
+        if (archivo is null)
+            return;
+
+        _isLoading = true;
+        AdjuntarEvidenciaButton.IsEnabled = false;
+        DetalleActivityIndicator.IsVisible = true;
+        DetalleActivityIndicator.IsRunning = true;
+        var subida = false;
+
+        try
+        {
+            await using var stream = await archivo.OpenReadAsync();
+            var apiClient = AppServices.Services.GetRequiredService<IReciclaApiClient>();
+            var contentType = string.IsNullOrWhiteSpace(archivo.ContentType)
+                ? "application/octet-stream"
+                : archivo.ContentType;
+
+            await apiClient.SubirEvidenciaAsync(
+                _disposicionActual.DisposicionId,
+                stream,
+                archivo.FileName,
+                contentType,
+                NormalizarTipoEvidencia(tipoSeleccionado));
+
+            subida = true;
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            var session = AppServices.Services.GetRequiredService<IAuthSessionService>();
+            await session.LogoutAsync();
+            await AppNavigator.IrAlLoginAsync();
+            return;
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.RequestEntityTooLarge)
+        {
+            await DisplayAlert("Archivo demasiado grande", "La evidencia no puede superar los 15 MB.", "Aceptar");
+        }
+        catch (Exception ex)
+        {
+            AppServices.Services.GetService<ILogger<DetalleRegistroDetallePage>>()?
+                .LogError(ex, "Error subiendo evidencia para disposición {DisposicionId}.", _disposicionActual.DisposicionId);
+            await DisplayAlert("No se pudo adjuntar", "No se pudo subir la evidencia. Inténtalo nuevamente.", "Aceptar");
+        }
+        finally
+        {
+            _isLoading = false;
+            AdjuntarEvidenciaButton.IsEnabled = true;
+            DetalleActivityIndicator.IsRunning = false;
+            DetalleActivityIndicator.IsVisible = false;
+        }
+
+        if (subida)
+            await CargarDetalleAsync();
+    }
+
+    private void MostrarErrorDisposicion(string mensaje)
+    {
+        DisposicionErrorLabel.Text = mensaje;
+        DisposicionErrorBorder.IsVisible = true;
+    }
+
+    private void SetDisposicionBusy(bool busy)
+    {
+        GuardarDisposicionButton.IsEnabled = !busy;
+        GuardarDisposicionButton.Text = busy
+            ? "Guardando..."
+            : _disposicionActual is null
+                ? "Guardar disposición final"
+                : "Guardar cambios";
+        FechaDisposicionPicker.IsEnabled = !busy;
+        EmpresaDisposicionEntry.IsEnabled = !busy;
+        DocumentoDisposicionEntry.IsEnabled = !busy;
+        ObservacionDisposicionEditor.IsEnabled = !busy;
+    }
+
+    private static string? TextoOpcional(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private static string NormalizarTipoEvidencia(string value) => value switch
+    {
+        "Certificado" => "CERTIFICADO",
+        "Foto" => "FOTO",
+        _ => "DOCUMENTO"
+    };
+
+    private static string FormatearTipoEvidencia(string value) => value.ToUpperInvariant() switch
+    {
+        "CERTIFICADO" => "Certificado",
+        "FOTO" => "Foto",
+        "DOCUMENTO" => "Documento",
+        _ => value
+    };
 
     private static bool TryGetGuid(object? value, out Guid id)
     {
