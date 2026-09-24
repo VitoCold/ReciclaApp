@@ -4,90 +4,171 @@
              x:Class="ReciclaApp.Pages.DetalleRegistroResiduosPage"
              Style="{StaticResource BasePage}"
              Shell.NavBarIsVisible="False">
+
     <Grid RowDefinitions="Auto,Auto,*">
         <Grid Style="{StaticResource AppHeader}" ColumnDefinitions="Auto,*,Auto">
-            <Label Text="‹" TextColor="White" FontSize="30" VerticalOptions="Center" />
-            <Label Grid.Column="1" Text="Detalle del registro" Style="{StaticResource HeaderTitle}" />
-            <Label Grid.Column="2" Text="⋮" TextColor="White" FontSize="22" VerticalOptions="Center" />
+            <Label Text="‹"
+                   TextColor="White"
+                   FontSize="30"
+                   VerticalOptions="Center">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnVolverTapped" />
+                </Label.GestureRecognizers>
+            </Label>
+            <Label Grid.Column="1"
+                   Text="Detalle del registro"
+                   Style="{StaticResource HeaderTitle}" />
+            <Label x:Name="CantidadHeaderLabel"
+                   Grid.Column="2"
+                   Text="0 residuos"
+                   TextColor="White"
+                   FontSize="11"
+                   VerticalOptions="Center" />
         </Grid>
 
-        <Grid Grid.Row="1" BackgroundColor="White" ColumnDefinitions="*,*,*" HeightRequest="48">
-            <Label Text="Detalle" Style="{StaticResource TabLabel}" />
+        <Grid Grid.Row="1"
+              BackgroundColor="White"
+              ColumnDefinitions="*,*,*"
+              HeightRequest="48">
+            <Label Text="Detalle"
+                   Style="{StaticResource TabLabel}">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnDetalleTapped" />
+                </Label.GestureRecognizers>
+            </Label>
+
             <VerticalStackLayout Grid.Column="1" VerticalOptions="Fill">
-                <Label Text="Residuos" Style="{StaticResource ActiveTabLabel}" VerticalOptions="CenterAndExpand" />
-                <BoxView HeightRequest="3" Color="{StaticResource ColorPrimary}" CornerRadius="2" />
+                <Label Text="Residuos"
+                       Style="{StaticResource ActiveTabLabel}"
+                       VerticalOptions="CenterAndExpand" />
+                <BoxView HeightRequest="3"
+                         Color="{StaticResource ColorPrimary}"
+                         CornerRadius="2" />
             </VerticalStackLayout>
-            <Label Grid.Column="2" Text="Disposición" Style="{StaticResource TabLabel}" />
+
+            <Label Grid.Column="2"
+                   Text="Disposición"
+                   Style="{StaticResource TabLabel}">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnDisposicionTapped" />
+                </Label.GestureRecognizers>
+            </Label>
         </Grid>
 
-        <ScrollView Grid.Row="2">
-            <VerticalStackLayout Padding="16,16,16,24" Spacing="12">
-                <Button Text="＋ Agregar residuo" Style="{StaticResource SmallPrimaryButton}" HorizontalOptions="Start" />
+        <Grid Grid.Row="2"
+              Padding="16,16,16,24"
+              RowDefinitions="Auto,Auto,*"
+              RowSpacing="12">
+            <Button Grid.Row="0"
+                    Text="＋ Agregar residuo"
+                    Style="{StaticResource SmallPrimaryButton}"
+                    HorizontalOptions="Start"
+                    Clicked="OnAgregarResiduoClicked" />
 
-                <Border Style="{StaticResource SoftCard}">
-                    <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="12">
-                        <Border WidthRequest="44" HeightRequest="44" BackgroundColor="#EEF6FF" Stroke="Transparent">
-                            <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
-                            <Label Text="📦" FontSize="24" HorizontalOptions="Center" VerticalOptions="Center" />
-                        </Border>
-                        <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
-                            <Label Text="Papel y cartón" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
-                            <Label Text="No peligroso" TextColor="{StaticResource ColorAccent}" FontAttributes="Bold" FontSize="12" />
-                        </VerticalStackLayout>
-                        <Label Grid.Column="2" Text="10.5 kg" TextColor="{StaticResource ColorText}" FontAttributes="Bold" FontSize="12" VerticalOptions="Center" />
-                        <Label Grid.Column="3" Text="⋮" TextColor="{StaticResource ColorMuted}" FontSize="22" VerticalOptions="Center" />
-                    </Grid>
-                </Border>
+            <Border x:Name="ErrorBorder"
+                    Grid.Row="1"
+                    IsVisible="False"
+                    BackgroundColor="{StaticResource ColorDangerSoft}"
+                    Stroke="Transparent"
+                    StrokeShape="RoundRectangle 12"
+                    Padding="12">
+                <Label x:Name="ErrorLabel"
+                       Text="No se pudieron cargar los residuos."
+                       TextColor="{StaticResource ColorDanger}"
+                       FontSize="12" />
+            </Border>
 
-                <Border Style="{StaticResource SoftCard}">
-                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12" RowDefinitions="Auto,Auto">
-                        <Border WidthRequest="44" HeightRequest="44" BackgroundColor="{StaticResource ColorDangerSoft}" Stroke="Transparent">
-                            <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
-                            <Label Text="🧯" FontSize="24" HorizontalOptions="Center" VerticalOptions="Center" />
-                        </Border>
-                        <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
-                            <Label Text="Recipientes contaminados" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
-                            <Label Text="Peligroso" TextColor="{StaticResource ColorDanger}" FontAttributes="Bold" FontSize="12" />
-                        </VerticalStackLayout>
-                        <VerticalStackLayout Grid.Column="2" HorizontalOptions="End" Spacing="3">
-                            <Label Text="5 kg" TextColor="{StaticResource ColorText}" FontAttributes="Bold" FontSize="12" HorizontalOptions="End" />
-                            <Label Text="⋮" TextColor="{StaticResource ColorMuted}" FontSize="20" HorizontalOptions="End" />
-                        </VerticalStackLayout>
+            <Grid Grid.Row="2">
+                <RefreshView x:Name="ResiduosRefreshView"
+                             Refreshing="OnRefreshRequested">
+                    <CollectionView x:Name="ResiduosCollectionView"
+                                    SelectionMode="None">
+                        <CollectionView.EmptyView>
+                            <VerticalStackLayout Padding="20,42"
+                                                 Spacing="10"
+                                                 HorizontalOptions="Center">
+                                <Border Style="{StaticResource IconCircle}"
+                                        WidthRequest="60"
+                                        HeightRequest="60"
+                                        HorizontalOptions="Center">
+                                    <Label Text="♻"
+                                           FontSize="28"
+                                           HorizontalOptions="Center"
+                                           VerticalOptions="Center" />
+                                </Border>
+                                <Label Text="Aún no hay residuos"
+                                       FontAttributes="Bold"
+                                       FontSize="16"
+                                       TextColor="{StaticResource ColorText}"
+                                       HorizontalTextAlignment="Center" />
+                                <Label Text="Agrega al menos un residuo para completar el registro."
+                                       Style="{StaticResource MutedText}"
+                                       HorizontalTextAlignment="Center" />
+                            </VerticalStackLayout>
+                        </CollectionView.EmptyView>
 
-                        <!-- Indicador offline/local pendiente de nube -->
-                        <Border Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,10,0,0" Padding="8,4" Stroke="#FBBF24" BackgroundColor="{StaticResource ColorWarningSoft}">
-                            <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
-                            <HorizontalStackLayout Spacing="6" HorizontalOptions="Start">
-                                <Label Text="☁" TextColor="{StaticResource ColorWarning}" FontSize="12" />
-                                <Label Text="Pendiente de sincronizar" TextColor="#B45309" FontSize="11" FontAttributes="Bold" />
-                            </HorizontalStackLayout>
-                        </Border>
-                    </Grid>
-                </Border>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource SoftCard}"
+                                        Margin="0,0,0,12">
+                                    <Grid ColumnDefinitions="Auto,*,Auto"
+                                          ColumnSpacing="12">
+                                        <Border WidthRequest="44"
+                                                HeightRequest="44"
+                                                BackgroundColor="{Binding ClasificacionFondo}"
+                                                Stroke="Transparent">
+                                            <Border.StrokeShape>
+                                                <RoundRectangle CornerRadius="12" />
+                                            </Border.StrokeShape>
+                                            <Label Text="♻"
+                                                   FontSize="23"
+                                                   HorizontalOptions="Center"
+                                                   VerticalOptions="Center" />
+                                        </Border>
 
-                <Border Style="{StaticResource SoftCard}">
-                    <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="12">
-                        <Border WidthRequest="44" HeightRequest="44" BackgroundColor="{StaticResource ColorSuccessSoft}" Stroke="Transparent">
-                            <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
-                            <Label Text="🍾" FontSize="22" HorizontalOptions="Center" VerticalOptions="Center" />
-                        </Border>
-                        <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
-                            <Label Text="Vidrio" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
-                            <Label Text="No peligroso" TextColor="{StaticResource ColorAccent}" FontAttributes="Bold" FontSize="12" />
-                        </VerticalStackLayout>
-                        <Label Grid.Column="2" Text="3 kg" TextColor="{StaticResource ColorText}" FontAttributes="Bold" FontSize="12" VerticalOptions="Center" />
-                        <Label Grid.Column="3" Text="⋮" TextColor="{StaticResource ColorMuted}" FontSize="22" VerticalOptions="Center" />
-                    </Grid>
-                </Border>
+                                        <VerticalStackLayout Grid.Column="1"
+                                                             Spacing="2"
+                                                             VerticalOptions="Center">
+                                            <Label Text="{Binding Nombre}"
+                                                   FontAttributes="Bold"
+                                                   TextColor="{StaticResource ColorText}" />
+                                            <Label Text="{Binding Clasificacion}"
+                                                   TextColor="{Binding ClasificacionColor}"
+                                                   FontAttributes="Bold"
+                                                   FontSize="12" />
+                                            <Label Text="{Binding Observacion}"
+                                                   Style="{StaticResource TinyMutedText}"
+                                                   LineBreakMode="TailTruncation"
+                                                   IsVisible="{Binding TieneObservacion}" />
+                                        </VerticalStackLayout>
 
-                <Border Padding="12" BackgroundColor="#F8FAFC" Stroke="{StaticResource ColorBorder}">
-                    <Border.StrokeShape><RoundRectangle CornerRadius="14" /></Border.StrokeShape>
-                    <HorizontalStackLayout Spacing="8">
-                        <Label Text="☁" TextColor="{StaticResource ColorMuted}" FontSize="16" VerticalOptions="Start" />
-                        <Label Text="Este residuo fue guardado localmente y se sincronizará cuando haya conexión." Style="{StaticResource TinyMutedText}" LineBreakMode="WordWrap" />
-                    </HorizontalStackLayout>
-                </Border>
-            </VerticalStackLayout>
-        </ScrollView>
+                                        <VerticalStackLayout Grid.Column="2"
+                                                             Spacing="3"
+                                                             HorizontalOptions="End"
+                                                             VerticalOptions="Center">
+                                            <Label Text="{Binding CantidadTexto}"
+                                                   TextColor="{StaticResource ColorText}"
+                                                   FontAttributes="Bold"
+                                                   FontSize="12"
+                                                   HorizontalOptions="End" />
+                                            <Label Text="{Binding FotosTexto}"
+                                                   TextColor="{StaticResource ColorMuted}"
+                                                   FontSize="10"
+                                                   HorizontalOptions="End" />
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </RefreshView>
+
+                <ActivityIndicator x:Name="ResiduosActivityIndicator"
+                                   IsVisible="False"
+                                   IsRunning="False"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center" />
+            </Grid>
+        </Grid>
     </Grid>
 </ContentPage>
