@@ -11,9 +11,11 @@ public static class AppNavigator
     public static Task IrADetalleRegistroAsync(Guid registroId) =>
         Shell.Current.GoToAsync($"{AppRoutes.DetalleRegistroDetalle}?registroId={registroId}");
 
-    public static Task IrAResiduosDelRegistroAsync() => Shell.Current.GoToAsync(AppRoutes.DetalleRegistroResiduos);
+    public static Task IrAResiduosDelRegistroAsync(Guid registroId) =>
+        Shell.Current.GoToAsync($"{AppRoutes.DetalleRegistroResiduos}?registroId={registroId}");
 
-    public static Task IrADisposicionDelRegistroAsync() => Shell.Current.GoToAsync(AppRoutes.DetalleRegistroDisposicion);
+    public static Task IrADisposicionDelRegistroAsync(Guid registroId) =>
+        Shell.Current.GoToAsync($"{AppRoutes.DetalleRegistroDisposicion}?registroId={registroId}");
 
     public static Task IrADetalleResiduoAsync() => Shell.Current.GoToAsync(AppRoutes.DetalleResiduoDetalle);
 
@@ -21,7 +23,8 @@ public static class AppNavigator
 
     public static Task IrAInicioRegistroAsync() => Shell.Current.GoToAsync(AppRoutes.InicioRegistro);
 
-    public static Task IrARegistrarResiduoAsync() => Shell.Current.GoToAsync(AppRoutes.RegistrarResiduo);
+    public static Task IrARegistrarResiduoAsync(Guid registroId) =>
+        Shell.Current.GoToAsync($"{AppRoutes.RegistrarResiduo}?registroId={registroId}");
 
     public static Task VolverAsync() => Shell.Current.GoToAsync("..");
 }
