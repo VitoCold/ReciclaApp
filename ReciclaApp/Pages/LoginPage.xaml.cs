@@ -30,11 +30,10 @@ public partial class LoginPage : ContentPage
         SetBusy(true);
         ErrorLabel.IsVisible = false;
 
+        var services = AppServices.Services;
+
         try
         {
-            var services = Handler?.MauiContext?.Services
-                ?? throw new InvalidOperationException("No se pudo obtener el contenedor de servicios de MAUI.");
-
             var session = services.GetRequiredService<IAuthSessionService>();
             var logger = services.GetRequiredService<ILogger<LoginPage>>();
 
@@ -51,8 +50,7 @@ public partial class LoginPage : ContentPage
         }
         catch (Exception ex)
         {
-            var services = Handler?.MauiContext?.Services;
-            services?.GetService<ILogger<LoginPage>>()?.LogError(ex, "Error iniciando sesión.");
+            services.GetService<ILogger<LoginPage>>()?.LogError(ex, "Error iniciando sesión.");
             ShowError("Ocurrió un error al iniciar sesión.");
         }
         finally
