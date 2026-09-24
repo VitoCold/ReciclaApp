@@ -8,9 +8,7 @@ public static class AppRoutes
     public const string Perfil = "//perfil";
 
     // Rutas relativas: se apilan sobre la pantalla actual.
-    public const string DetalleRegistroDetalle = "detalle-registro-detalle";
-    public const string DetalleRegistroResiduos = "detalle-registro-residuos";
-    public const string DetalleRegistroDisposicion = "detalle-registro-disposicion";
+    public const string DetalleRegistro = "detalle-registro";
     public const string DetalleResiduoDetalle = "detalle-residuo-detalle";
     public const string DetalleResiduoFotos = "detalle-residuo-fotos";
     public const string InicioRegistro = "inicio-registro";
