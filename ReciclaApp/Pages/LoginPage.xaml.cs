@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui.Storage;
 using Recicla.Shared.Contracts;
 using Recicla.Shared.Services;
 using ReciclaApp.Navigation;
