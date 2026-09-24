@@ -15,7 +15,8 @@
                     <TapGestureRecognizer Tapped="OnVolverTapped" />
                 </Label.GestureRecognizers>
             </Label>
-            <Label Grid.Column="1"
+            <Label x:Name="TituloPageLabel"
+                   Grid.Column="1"
                    Text="Registrar residuo"
                    Style="{StaticResource HeaderTitle}" />
         </Grid>
@@ -32,12 +33,14 @@
                                HorizontalOptions="Center"
                                VerticalOptions="Center" />
                     </Border>
-                    <Label Text="Información del residuo"
+                    <Label x:Name="TituloFormularioLabel"
+                           Text="Información del residuo"
                            HorizontalTextAlignment="Center"
                            TextColor="{StaticResource ColorText}"
                            FontAttributes="Bold"
                            FontSize="17" />
-                    <Label Text="Completa los datos del residuo generado"
+                    <Label x:Name="SubtituloFormularioLabel"
+                           Text="Completa los datos del residuo generado"
                            HorizontalTextAlignment="Center"
                            Style="{StaticResource MutedText}" />
                 </VerticalStackLayout>
