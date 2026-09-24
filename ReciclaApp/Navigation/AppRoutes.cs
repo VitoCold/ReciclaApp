@@ -5,6 +5,7 @@ public static class AppRoutes
     // Rutas absolutas: reemplazan toda la pila de navegación.
     public const string Login = "//login";
     public const string Registros = "//registros";
+    public const string Perfil = "//perfil";
 
     // Rutas relativas: se apilan sobre la pantalla actual.
     public const string DetalleRegistroDetalle = "detalle-registro-detalle";
