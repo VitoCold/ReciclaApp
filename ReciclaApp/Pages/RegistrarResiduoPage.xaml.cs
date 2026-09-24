@@ -10,13 +10,18 @@ using ReciclaApp.Services;
 namespace ReciclaApp.Pages;
 
 [QueryProperty(nameof(RegistroId), "registroId")]
+[QueryProperty(nameof(RegistroResiduoId), "registroResiduoId")]
 public partial class RegistrarResiduoPage : ContentPage
 {
     private CatalogosInicialDto? _catalogos;
     private UnidadMedidaDto? _unidadSeleccionada;
     private bool _isLoading;
+    private bool _edicionCargada;
 
     public string RegistroId { get; set; } = string.Empty;
+    public string RegistroResiduoId { get; set; } = string.Empty;
+
+    private bool EsEdicion => Guid.TryParse(RegistroResiduoId, out _);
 
     public RegistrarResiduoPage()
     {
@@ -29,6 +34,9 @@ public partial class RegistrarResiduoPage : ContentPage
 
         if (_catalogos is null)
             await CargarCatalogosAsync();
+
+        if (EsEdicion && !_edicionCargada && _catalogos is not null)
+            await CargarResiduoEdicionAsync();
     }
 
     private async Task CargarCatalogosAsync()
@@ -66,6 +74,81 @@ public partial class RegistrarResiduoPage : ContentPage
             AppServices.Services.GetService<ILogger<RegistrarResiduoPage>>()?
                 .LogError(ex, "Error cargando catálogos para registrar residuos.");
             MostrarError("No se pudieron cargar los tipos y residuos disponibles.");
+        }
+        finally
+        {
+            _isLoading = false;
+            SetBusy(false);
+        }
+    }
+
+    private async Task CargarResiduoEdicionAsync()
+    {
+        if (_catalogos is null || _isLoading ||
+            !Guid.TryParse(RegistroId, out var registroId) ||
+            !Guid.TryParse(RegistroResiduoId, out var registroResiduoId))
+            return;
+
+        _isLoading = true;
+        SetBusy(true);
+        ErrorBorder.IsVisible = false;
+
+        try
+        {
+            var apiClient = AppServices.Services.GetRequiredService<IReciclaApiClient>();
+            var registro = await apiClient.ObtenerRegistroAsync(registroId);
+            var residuo = registro.Residuos.FirstOrDefault(x => x.RegistroResiduoId == registroResiduoId);
+
+            if (residuo is null)
+            {
+                MostrarError("El residuo ya no existe en este registro.");
+                return;
+            }
+
+            var estadoEditable = string.Equals(registro.Estado, "En proceso", StringComparison.OrdinalIgnoreCase) ||
+                                 string.Equals(registro.Estado, "Borrador", StringComparison.OrdinalIgnoreCase);
+            if (!estadoEditable)
+            {
+                MostrarError("Este registro ya no se encuentra en proceso y no puede modificarse.");
+                RegistrarButton.IsEnabled = false;
+                return;
+            }
+
+            var tipo = _catalogos.TiposResiduo.FirstOrDefault(x => x.TipoResiduoId == residuo.TipoResiduoId);
+            TipoResiduoPicker.SelectedItem = tipo;
+
+            var residuosDisponibles = _catalogos.Residuos
+                .Where(x => x.TipoResiduoId == residuo.TipoResiduoId)
+                .OrderBy(x => x.Nombre)
+                .ToList();
+            ResiduoPicker.ItemsSource = residuosDisponibles;
+            ResiduoPicker.SelectedItem = residuosDisponibles.FirstOrDefault(x => x.ResiduoId == residuo.ResiduoId);
+
+            _unidadSeleccionada = _catalogos.UnidadesMedida
+                .FirstOrDefault(x => x.UnidadMedidaId == residuo.UnidadMedidaId);
+            UnidadLabel.Text = _unidadSeleccionada?.Codigo ?? "-";
+
+            CantidadEntry.Text = residuo.Cantidad.ToString("0.###", CultureInfo.CurrentCulture);
+            ObservacionEditor.Text = residuo.Observacion ?? string.Empty;
+
+            TituloPageLabel.Text = "Editar residuo";
+            TituloFormularioLabel.Text = "Editar información";
+            SubtituloFormularioLabel.Text = "Actualiza la cantidad u observación del residuo";
+            RegistrarButton.Text = "Guardar cambios";
+
+            _edicionCargada = true;
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            var session = AppServices.Services.GetRequiredService<IAuthSessionService>();
+            await session.LogoutAsync();
+            await AppNavigator.IrAlLoginAsync();
+        }
+        catch (Exception ex)
+        {
+            AppServices.Services.GetService<ILogger<RegistrarResiduoPage>>()?
+                .LogError(ex, "Error cargando residuo {RegistroResiduoId} para edición.", RegistroResiduoId);
+            MostrarError("No se pudo cargar el residuo para editarlo.");
         }
         finally
         {
@@ -116,11 +199,9 @@ public partial class RegistrarResiduoPage : ContentPage
             return;
         }
 
-        if (TipoResiduoPicker.SelectedItem is not TipoResiduoDto tipo ||
-            ResiduoPicker.SelectedItem is not ResiduoCatalogoDto residuo ||
-            _unidadSeleccionada is null)
+        if (_unidadSeleccionada is null)
         {
-            MostrarError("Selecciona el tipo de residuo y el residuo generado.");
+            MostrarError("No se pudo determinar la unidad de medida del residuo.");
             return;
         }
 
@@ -139,16 +220,38 @@ public partial class RegistrarResiduoPage : ContentPage
         try
         {
             var apiClient = AppServices.Services.GetRequiredService<IReciclaApiClient>();
-            var request = new AgregarRegistroResiduoRequest(
-                TipoResiduoId: tipo.TipoResiduoId,
-                ResiduoId: residuo.ResiduoId,
-                UnidadMedidaId: _unidadSeleccionada.UnidadMedidaId,
-                Cantidad: cantidad,
-                Observacion: string.IsNullOrWhiteSpace(ObservacionEditor.Text)
-                    ? null
-                    : ObservacionEditor.Text.Trim());
+            var observacion = string.IsNullOrWhiteSpace(ObservacionEditor.Text)
+                ? null
+                : ObservacionEditor.Text.Trim();
 
-            await apiClient.AgregarResiduoAsync(registroId, request);
+            if (EsEdicion && Guid.TryParse(RegistroResiduoId, out var registroResiduoId))
+            {
+                var request = new ActualizarRegistroResiduoRequest(
+                    UnidadMedidaId: _unidadSeleccionada.UnidadMedidaId,
+                    Cantidad: cantidad,
+                    Observacion: observacion);
+
+                await apiClient.ActualizarResiduoAsync(registroId, registroResiduoId, request);
+            }
+            else
+            {
+                if (TipoResiduoPicker.SelectedItem is not TipoResiduoDto tipo ||
+                    ResiduoPicker.SelectedItem is not ResiduoCatalogoDto residuo)
+                {
+                    MostrarError("Selecciona el tipo de residuo y el residuo generado.");
+                    return;
+                }
+
+                var request = new AgregarRegistroResiduoRequest(
+                    TipoResiduoId: tipo.TipoResiduoId,
+                    ResiduoId: residuo.ResiduoId,
+                    UnidadMedidaId: _unidadSeleccionada.UnidadMedidaId,
+                    Cantidad: cantidad,
+                    Observacion: observacion);
+
+                await apiClient.AgregarResiduoAsync(registroId, request);
+            }
+
             await AppNavigator.IrAResiduosDelRegistroAsync(registroId);
         }
         catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
@@ -157,10 +260,14 @@ public partial class RegistrarResiduoPage : ContentPage
             await session.LogoutAsync();
             await AppNavigator.IrAlLoginAsync();
         }
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Conflict)
+        {
+            MostrarError("Este registro ya no se encuentra en proceso y no puede modificarse.");
+        }
         catch (Exception ex)
         {
             AppServices.Services.GetService<ILogger<RegistrarResiduoPage>>()?
-                .LogError(ex, "Error registrando residuo en {RegistroId}.", registroId);
+                .LogError(ex, "Error guardando residuo en {RegistroId}.", registroId);
             MostrarError("No se pudo guardar el residuo. Revisa los datos e inténtalo nuevamente.");
         }
         finally
@@ -179,8 +286,8 @@ public partial class RegistrarResiduoPage : ContentPage
     private void SetBusy(bool busy)
     {
         RegistrarButton.IsEnabled = !busy;
-        TipoResiduoPicker.IsEnabled = !busy;
-        ResiduoPicker.IsEnabled = !busy;
+        TipoResiduoPicker.IsEnabled = !busy && !EsEdicion;
+        ResiduoPicker.IsEnabled = !busy && !EsEdicion;
         CantidadEntry.IsEnabled = !busy;
         ObservacionEditor.IsEnabled = !busy;
         ResiduoActivityIndicator.IsVisible = busy;
