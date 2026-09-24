@@ -7,7 +7,7 @@
     Title="ReciclaApp"
     Shell.NavBarIsVisible="False"
     Shell.TabBarIsVisible="False"
-    FlyoutBehavior="Flyout"
+    FlyoutBehavior="Disabled"
     FlyoutBackgroundColor="White">
 
     <Shell.FlyoutHeader>
