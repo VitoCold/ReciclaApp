@@ -103,7 +103,7 @@ public partial class DetalleRegistroDetallePage : ContentPage
 
         switch (estado)
         {
-            case "Borrador":
+            case "En proceso":
                 EstadoBorder.BackgroundColor = Color.FromArgb("#FFF4DC");
                 EstadoLabel.TextColor = Color.FromArgb("#F59E0B");
                 break;
@@ -128,6 +128,18 @@ public partial class DetalleRegistroDetallePage : ContentPage
     {
         ErrorLabel.Text = mensaje;
         ErrorBorder.IsVisible = true;
+    }
+
+    private async void OnResiduosTapped(object sender, TappedEventArgs e)
+    {
+        if (Guid.TryParse(RegistroId, out var registroId))
+            await AppNavigator.IrAResiduosDelRegistroAsync(registroId);
+    }
+
+    private async void OnDisposicionTapped(object sender, TappedEventArgs e)
+    {
+        if (Guid.TryParse(RegistroId, out var registroId))
+            await AppNavigator.IrADisposicionDelRegistroAsync(registroId);
     }
 
     private async void OnVolverTapped(object sender, TappedEventArgs e)
