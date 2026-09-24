@@ -5,8 +5,9 @@
              Style="{StaticResource BasePage}"
              Shell.NavBarIsVisible="False">
 
-    <Grid RowDefinitions="Auto,Auto,*">
-        <Grid Style="{StaticResource AppHeader}" ColumnDefinitions="Auto,*,Auto">
+    <Grid RowDefinitions="Auto,*">
+        <Grid Style="{StaticResource AppHeader}"
+              ColumnDefinitions="Auto,*,Auto">
             <Label Text="‹"
                    TextColor="White"
                    FontSize="30"
@@ -20,8 +21,8 @@
                    Text="Detalle del registro"
                    Style="{StaticResource HeaderTitle}" />
 
-            <Border Grid.Column="2"
-                    x:Name="EstadoBorder"
+            <Border x:Name="EstadoBorder"
+                    Grid.Column="2"
                     Style="{StaticResource Chip}"
                     BackgroundColor="{StaticResource ColorBlueSoft}"
                     VerticalOptions="Center">
@@ -33,39 +34,11 @@
             </Border>
         </Grid>
 
-        <Grid Grid.Row="1"
-              BackgroundColor="White"
-              ColumnDefinitions="*,*,*"
-              HeightRequest="48">
-            <VerticalStackLayout Grid.Column="0" VerticalOptions="Fill">
-                <Label Text="Detalle"
-                       Style="{StaticResource ActiveTabLabel}"
-                       VerticalOptions="CenterAndExpand" />
-                <BoxView HeightRequest="3"
-                         Color="{StaticResource ColorPrimary}"
-                         CornerRadius="2" />
-            </VerticalStackLayout>
-
-            <Label Grid.Column="1"
-                   Text="Residuos"
-                   Style="{StaticResource TabLabel}">
-                <Label.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnResiduosTapped" />
-                </Label.GestureRecognizers>
-            </Label>
-
-            <Label Grid.Column="2"
-                   Text="Disposición"
-                   Style="{StaticResource TabLabel}">
-                <Label.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnDisposicionTapped" />
-                </Label.GestureRecognizers>
-            </Label>
-        </Grid>
-
-        <Grid Grid.Row="2">
+        <Grid Grid.Row="1">
             <ScrollView>
-                <VerticalStackLayout Padding="18,18,18,24" Spacing="16">
+                <VerticalStackLayout Padding="16,18,16,30"
+                                     Spacing="16">
+
                     <Border x:Name="ErrorBorder"
                             IsVisible="False"
                             BackgroundColor="{StaticResource ColorDangerSoft}"
@@ -79,47 +52,223 @@
                     </Border>
 
                     <Border Style="{StaticResource Card}">
-                        <VerticalStackLayout Spacing="20">
+                        <VerticalStackLayout Spacing="18">
                             <Label Text="Información general"
                                    Style="{StaticResource SectionTitle}" />
 
                             <Grid ColumnDefinitions="Auto,*,Auto"
                                   RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
                                   ColumnSpacing="12"
-                                  RowSpacing="18">
-                                <Label Text="📅" TextColor="{StaticResource ColorAccent}" FontSize="18" />
-                                <Label Grid.Column="1" Text="Fecha:" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                  RowSpacing="16">
+                                <Label Text="📅" FontSize="17" />
+                                <Label Grid.Column="1" Text="Fecha" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
                                 <Label x:Name="FechaLabel" Grid.Column="2" Text="-" TextColor="{StaticResource ColorText}" />
 
-                                <Label Grid.Row="1" Text="👤" TextColor="{StaticResource ColorAccent}" FontSize="18" />
-                                <Label Grid.Row="1" Grid.Column="1" Text="Registrado por:" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                <Label Grid.Row="1" Text="👤" FontSize="17" />
+                                <Label Grid.Row="1" Grid.Column="1" Text="Registrado por" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
                                 <Label x:Name="RegistradoPorLabel" Grid.Row="1" Grid.Column="2" Text="-" TextColor="{StaticResource ColorText}" />
 
-                                <Label Grid.Row="2" Text="📁" TextColor="{StaticResource ColorAccent}" FontSize="18" />
-                                <Label Grid.Row="2" Grid.Column="1" Text="Proyecto:" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                <Label Grid.Row="2" Text="📁" FontSize="17" />
+                                <Label Grid.Row="2" Grid.Column="1" Text="Proyecto" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
                                 <Label x:Name="ProyectoLabel" Grid.Row="2" Grid.Column="2" Text="-" TextColor="{StaticResource ColorText}" />
 
-                                <Label Grid.Row="3" Text="🛠" TextColor="{StaticResource ColorAccent}" FontSize="18" />
-                                <Label Grid.Row="3" Grid.Column="1" Text="Actividad:" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                <Label Grid.Row="3" Text="🛠" FontSize="17" />
+                                <Label Grid.Row="3" Grid.Column="1" Text="Actividad" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
                                 <Label x:Name="ActividadLabel" Grid.Row="3" Grid.Column="2" Text="-" TextColor="{StaticResource ColorText}" />
 
-                                <Label Grid.Row="4" Text="📍" TextColor="{StaticResource ColorAccent}" FontSize="18" />
-                                <Label Grid.Row="4" Grid.Column="1" Text="Sede:" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                <Label Grid.Row="4" Text="📍" FontSize="17" />
+                                <Label Grid.Row="4" Grid.Column="1" Text="Sede" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
                                 <Label x:Name="SedeLabel" Grid.Row="4" Grid.Column="2" Text="-" TextColor="{StaticResource ColorText}" />
 
-                                <Label Grid.Row="5" Text="♻" TextColor="{StaticResource ColorAccent}" FontSize="18" />
-                                <Label Grid.Row="5" Grid.Column="1" Text="Residuos:" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
-                                <Label x:Name="CantidadResiduosLabel" Grid.Row="5" Grid.Column="2" Text="0" TextColor="{StaticResource ColorText}" />
+                                <Label Grid.Row="5" Text="♻" FontSize="17" />
+                                <Label Grid.Row="5" Grid.Column="1" Text="Residuos" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                <Label x:Name="CantidadResiduosLabel" Grid.Row="5" Grid.Column="2" Text="0 residuos" TextColor="{StaticResource ColorText}" />
                             </Grid>
+
+                            <BoxView HeightRequest="1" BackgroundColor="{StaticResource ColorBorder}" />
+
+                            <VerticalStackLayout Spacing="5">
+                                <Label Text="Observación"
+                                       FontAttributes="Bold"
+                                       FontSize="12"
+                                       TextColor="{StaticResource ColorText}" />
+                                <Label x:Name="ObservacionLabel"
+                                       Text="Sin observaciones"
+                                       Style="{StaticResource MutedText}" />
+                            </VerticalStackLayout>
                         </VerticalStackLayout>
                     </Border>
 
-                    <Border Style="{StaticResource Card}">
-                        <VerticalStackLayout Spacing="8">
-                            <Label Text="Observación" Style="{StaticResource SectionTitle}" />
-                            <Label x:Name="ObservacionLabel" Text="Sin observaciones" Style="{StaticResource MutedText}" />
+                    <Grid ColumnDefinitions="*,Auto" VerticalOptions="Center">
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="Residuos"
+                                   Style="{StaticResource SectionTitle}" />
+                            <Label x:Name="ResumenResiduosLabel"
+                                   Text="0 residuos registrados"
+                                   Style="{StaticResource TinyMutedText}" />
+                        </VerticalStackLayout>
+
+                        <Button x:Name="AgregarResiduoButton"
+                                Grid.Column="1"
+                                Text="＋ Agregar"
+                                Style="{StaticResource SmallPrimaryButton}"
+                                Clicked="OnAgregarResiduoClicked" />
+                    </Grid>
+
+                    <Border x:Name="SinResiduosBorder"
+                            IsVisible="False"
+                            Style="{StaticResource SoftCard}"
+                            Padding="18">
+                        <VerticalStackLayout Spacing="7" HorizontalOptions="Center">
+                            <Label Text="♻" FontSize="30" HorizontalOptions="Center" />
+                            <Label Text="Aún no hay residuos"
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource ColorText}"
+                                   HorizontalTextAlignment="Center" />
+                            <Label Text="Agrega al menos un residuo antes de finalizar el registro."
+                                   Style="{StaticResource MutedText}"
+                                   HorizontalTextAlignment="Center" />
                         </VerticalStackLayout>
                     </Border>
+
+                    <VerticalStackLayout x:Name="ResiduosStack"
+                                         Spacing="10">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource SoftCard}">
+                                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                        <Border WidthRequest="44"
+                                                HeightRequest="44"
+                                                BackgroundColor="{Binding ClasificacionFondo}"
+                                                Stroke="Transparent">
+                                            <Border.StrokeShape>
+                                                <RoundRectangle CornerRadius="12" />
+                                            </Border.StrokeShape>
+                                            <Label Text="♻"
+                                                   FontSize="22"
+                                                   HorizontalOptions="Center"
+                                                   VerticalOptions="Center" />
+                                        </Border>
+
+                                        <VerticalStackLayout Grid.Column="1"
+                                                             Spacing="2"
+                                                             VerticalOptions="Center">
+                                            <Label Text="{Binding Nombre}"
+                                                   FontAttributes="Bold"
+                                                   TextColor="{StaticResource ColorText}" />
+                                            <Label Text="{Binding Clasificacion}"
+                                                   TextColor="{Binding ClasificacionColor}"
+                                                   FontSize="11"
+                                                   FontAttributes="Bold" />
+                                            <Label Text="{Binding Observacion}"
+                                                   Style="{StaticResource TinyMutedText}"
+                                                   IsVisible="{Binding TieneObservacion}" />
+                                        </VerticalStackLayout>
+
+                                        <VerticalStackLayout Grid.Column="2"
+                                                             Spacing="3"
+                                                             HorizontalOptions="End"
+                                                             VerticalOptions="Center">
+                                            <Label Text="{Binding CantidadTexto}"
+                                                   FontAttributes="Bold"
+                                                   FontSize="12"
+                                                   TextColor="{StaticResource ColorText}"
+                                                   HorizontalOptions="End" />
+                                            <Label Text="{Binding FotosTexto}"
+                                                   Style="{StaticResource TinyMutedText}"
+                                                   HorizontalOptions="End" />
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Spacing="2" Margin="0,4,0,0">
+                        <Label Text="Disposición"
+                               Style="{StaticResource SectionTitle}" />
+                        <Label Text="Información y evidencias asociadas al registro"
+                               Style="{StaticResource TinyMutedText}" />
+                    </VerticalStackLayout>
+
+                    <Border x:Name="SinDisposicionBorder"
+                            Style="{StaticResource SoftCard}"
+                            Padding="18">
+                        <VerticalStackLayout Spacing="7" HorizontalOptions="Center">
+                            <Label Text="📄" FontSize="28" HorizontalOptions="Center" />
+                            <Label Text="Sin disposición registrada"
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource ColorText}"
+                                   HorizontalTextAlignment="Center" />
+                            <Label Text="La disposición podrá registrarse cuando corresponda al proceso."
+                                   Style="{StaticResource MutedText}"
+                                   HorizontalTextAlignment="Center" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border x:Name="DisposicionBorder"
+                            IsVisible="False"
+                            Style="{StaticResource Card}">
+                        <VerticalStackLayout Spacing="14">
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="10">
+                                <Label Text="Documento" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                <Label x:Name="DocumentoDisposicionLabel" Grid.Column="1" Text="-" TextColor="{StaticResource ColorText}" />
+
+                                <Label Grid.Row="1" Text="Fecha" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                <Label x:Name="FechaDisposicionLabel" Grid.Row="1" Grid.Column="1" Text="-" TextColor="{StaticResource ColorText}" />
+
+                                <Label Grid.Row="2" Text="Empresa" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                <Label x:Name="EmpresaDisposicionLabel" Grid.Row="2" Grid.Column="1" Text="-" TextColor="{StaticResource ColorText}" />
+
+                                <Label Grid.Row="3" Text="Evidencias" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                <Label x:Name="CantidadEvidenciasLabel" Grid.Row="3" Grid.Column="1" Text="0" TextColor="{StaticResource ColorText}" />
+                            </Grid>
+
+                            <Label x:Name="ObservacionDisposicionLabel"
+                                   Style="{StaticResource MutedText}"
+                                   IsVisible="False" />
+
+                            <VerticalStackLayout x:Name="EvidenciasStack" Spacing="8">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BackgroundColor="#F8FAFC"
+                                                Stroke="{StaticResource ColorBorder}"
+                                                StrokeShape="RoundRectangle 12"
+                                                Padding="10">
+                                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                                <Label Text="📎" FontSize="18" />
+                                                <VerticalStackLayout Grid.Column="1" Spacing="1">
+                                                    <Label Text="{Binding NombreArchivo}"
+                                                           FontAttributes="Bold"
+                                                           FontSize="12"
+                                                           TextColor="{StaticResource ColorText}" />
+                                                    <Label Text="{Binding TipoEvidencia}"
+                                                           Style="{StaticResource TinyMutedText}" />
+                                                </VerticalStackLayout>
+                                                <Label Grid.Column="2"
+                                                       Text="{Binding FechaTexto}"
+                                                       Style="{StaticResource TinyMutedText}"
+                                                       VerticalOptions="Center" />
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Button x:Name="FinalizarButton"
+                            Text="Finalizar registro"
+                            Style="{StaticResource PrimaryButton}"
+                            IsVisible="False"
+                            Clicked="OnFinalizarClicked"
+                            Margin="0,4,0,0" />
+
+                    <Label x:Name="FinalizarAyudaLabel"
+                           IsVisible="False"
+                           Text="Agrega al menos un residuo para poder finalizar."
+                           Style="{StaticResource TinyMutedText}"
+                           HorizontalTextAlignment="Center" />
                 </VerticalStackLayout>
             </ScrollView>
 
