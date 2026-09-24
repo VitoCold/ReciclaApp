@@ -48,11 +48,19 @@
 
             <Label Grid.Column="1"
                    Text="Residuos"
-                   Style="{StaticResource TabLabel}" />
+                   Style="{StaticResource TabLabel}">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnResiduosTapped" />
+                </Label.GestureRecognizers>
+            </Label>
 
             <Label Grid.Column="2"
                    Text="Disposición"
-                   Style="{StaticResource TabLabel}" />
+                   Style="{StaticResource TabLabel}">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnDisposicionTapped" />
+                </Label.GestureRecognizers>
+            </Label>
         </Grid>
 
         <Grid Grid.Row="2">
@@ -79,103 +87,37 @@
                                   RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
                                   ColumnSpacing="12"
                                   RowSpacing="18">
-                                <Label Text="📅"
-                                       TextColor="{StaticResource ColorAccent}"
-                                       FontSize="18" />
-                                <Label Grid.Column="1"
-                                       Text="Fecha:"
-                                       FontAttributes="Bold"
-                                       TextColor="{StaticResource ColorText}" />
-                                <Label x:Name="FechaLabel"
-                                       Grid.Column="2"
-                                       Text="-"
-                                       TextColor="{StaticResource ColorText}" />
+                                <Label Text="📅" TextColor="{StaticResource ColorAccent}" FontSize="18" />
+                                <Label Grid.Column="1" Text="Fecha:" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                <Label x:Name="FechaLabel" Grid.Column="2" Text="-" TextColor="{StaticResource ColorText}" />
 
-                                <Label Grid.Row="1"
-                                       Text="👤"
-                                       TextColor="{StaticResource ColorAccent}"
-                                       FontSize="18" />
-                                <Label Grid.Row="1"
-                                       Grid.Column="1"
-                                       Text="Registrado por:"
-                                       FontAttributes="Bold"
-                                       TextColor="{StaticResource ColorText}" />
-                                <Label x:Name="RegistradoPorLabel"
-                                       Grid.Row="1"
-                                       Grid.Column="2"
-                                       Text="-"
-                                       TextColor="{StaticResource ColorText}" />
+                                <Label Grid.Row="1" Text="👤" TextColor="{StaticResource ColorAccent}" FontSize="18" />
+                                <Label Grid.Row="1" Grid.Column="1" Text="Registrado por:" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                <Label x:Name="RegistradoPorLabel" Grid.Row="1" Grid.Column="2" Text="-" TextColor="{StaticResource ColorText}" />
 
-                                <Label Grid.Row="2"
-                                       Text="📁"
-                                       TextColor="{StaticResource ColorAccent}"
-                                       FontSize="18" />
-                                <Label Grid.Row="2"
-                                       Grid.Column="1"
-                                       Text="Proyecto:"
-                                       FontAttributes="Bold"
-                                       TextColor="{StaticResource ColorText}" />
-                                <Label x:Name="ProyectoLabel"
-                                       Grid.Row="2"
-                                       Grid.Column="2"
-                                       Text="-"
-                                       TextColor="{StaticResource ColorText}" />
+                                <Label Grid.Row="2" Text="📁" TextColor="{StaticResource ColorAccent}" FontSize="18" />
+                                <Label Grid.Row="2" Grid.Column="1" Text="Proyecto:" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                <Label x:Name="ProyectoLabel" Grid.Row="2" Grid.Column="2" Text="-" TextColor="{StaticResource ColorText}" />
 
-                                <Label Grid.Row="3"
-                                       Text="🛠"
-                                       TextColor="{StaticResource ColorAccent}"
-                                       FontSize="18" />
-                                <Label Grid.Row="3"
-                                       Grid.Column="1"
-                                       Text="Actividad:"
-                                       FontAttributes="Bold"
-                                       TextColor="{StaticResource ColorText}" />
-                                <Label x:Name="ActividadLabel"
-                                       Grid.Row="3"
-                                       Grid.Column="2"
-                                       Text="-"
-                                       TextColor="{StaticResource ColorText}" />
+                                <Label Grid.Row="3" Text="🛠" TextColor="{StaticResource ColorAccent}" FontSize="18" />
+                                <Label Grid.Row="3" Grid.Column="1" Text="Actividad:" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                <Label x:Name="ActividadLabel" Grid.Row="3" Grid.Column="2" Text="-" TextColor="{StaticResource ColorText}" />
 
-                                <Label Grid.Row="4"
-                                       Text="📍"
-                                       TextColor="{StaticResource ColorAccent}"
-                                       FontSize="18" />
-                                <Label Grid.Row="4"
-                                       Grid.Column="1"
-                                       Text="Sede:"
-                                       FontAttributes="Bold"
-                                       TextColor="{StaticResource ColorText}" />
-                                <Label x:Name="SedeLabel"
-                                       Grid.Row="4"
-                                       Grid.Column="2"
-                                       Text="-"
-                                       TextColor="{StaticResource ColorText}" />
+                                <Label Grid.Row="4" Text="📍" TextColor="{StaticResource ColorAccent}" FontSize="18" />
+                                <Label Grid.Row="4" Grid.Column="1" Text="Sede:" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                <Label x:Name="SedeLabel" Grid.Row="4" Grid.Column="2" Text="-" TextColor="{StaticResource ColorText}" />
 
-                                <Label Grid.Row="5"
-                                       Text="♻"
-                                       TextColor="{StaticResource ColorAccent}"
-                                       FontSize="18" />
-                                <Label Grid.Row="5"
-                                       Grid.Column="1"
-                                       Text="Residuos:"
-                                       FontAttributes="Bold"
-                                       TextColor="{StaticResource ColorText}" />
-                                <Label x:Name="CantidadResiduosLabel"
-                                       Grid.Row="5"
-                                       Grid.Column="2"
-                                       Text="0"
-                                       TextColor="{StaticResource ColorText}" />
+                                <Label Grid.Row="5" Text="♻" TextColor="{StaticResource ColorAccent}" FontSize="18" />
+                                <Label Grid.Row="5" Grid.Column="1" Text="Residuos:" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                <Label x:Name="CantidadResiduosLabel" Grid.Row="5" Grid.Column="2" Text="0" TextColor="{StaticResource ColorText}" />
                             </Grid>
                         </VerticalStackLayout>
                     </Border>
 
                     <Border Style="{StaticResource Card}">
                         <VerticalStackLayout Spacing="8">
-                            <Label Text="Observación"
-                                   Style="{StaticResource SectionTitle}" />
-                            <Label x:Name="ObservacionLabel"
-                                   Text="Sin observaciones"
-                                   Style="{StaticResource MutedText}" />
+                            <Label Text="Observación" Style="{StaticResource SectionTitle}" />
+                            <Label x:Name="ObservacionLabel" Text="Sin observaciones" Style="{StaticResource MutedText}" />
                         </VerticalStackLayout>
                     </Border>
                 </VerticalStackLayout>
