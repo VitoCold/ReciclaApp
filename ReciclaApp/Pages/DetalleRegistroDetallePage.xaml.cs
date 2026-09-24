@@ -1,7 +1,9 @@
+using System.Collections.ObjectModel;
 using System.Net;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Graphics;
+using Recicla.Shared.Contracts;
 using Recicla.Shared.Services;
 using ReciclaApp.Navigation;
 using ReciclaApp.Services;
@@ -11,13 +13,18 @@ namespace ReciclaApp.Pages;
 [QueryProperty(nameof(RegistroId), "registroId")]
 public partial class DetalleRegistroDetallePage : ContentPage
 {
+    private readonly ObservableCollection<ResiduoVisualItem> _residuos = new();
+    private readonly ObservableCollection<EvidenciaVisualItem> _evidencias = new();
     private bool _isLoading;
+    private bool _enProceso;
 
     public string RegistroId { get; set; } = string.Empty;
 
     public DetalleRegistroDetallePage()
     {
         InitializeComponent();
+        BindableLayout.SetItemsSource(ResiduosStack, _residuos);
+        BindableLayout.SetItemsSource(EvidenciasStack, _evidencias);
     }
 
     protected override async void OnAppearing()
@@ -52,26 +59,18 @@ public partial class DetalleRegistroDetallePage : ContentPage
             }
 
             var apiClient = AppServices.Services.GetRequiredService<IReciclaApiClient>();
-            var registro = await apiClient.ObtenerRegistroAsync(registroId);
+            var detalleTask = apiClient.ObtenerRegistroAsync(registroId);
+            var catalogosTask = apiClient.ObtenerCatalogosAsync();
 
-            FechaLabel.Text = registro.FechaRegistro.ToString("dd/MM/yyyy HH:mm");
-            ProyectoLabel.Text = registro.Proyecto;
-            ActividadLabel.Text = registro.Actividad;
-            SedeLabel.Text = registro.Sede;
-            CantidadResiduosLabel.Text = registro.Residuos.Count == 1
-                ? "1 residuo"
-                : $"{registro.Residuos.Count} residuos";
-            ObservacionLabel.Text = string.IsNullOrWhiteSpace(registro.Observacion)
-                ? "Sin observaciones"
-                : registro.Observacion;
+            await Task.WhenAll(detalleTask, catalogosTask);
 
-            var usuario = session.CurrentUser;
-            RegistradoPorLabel.Text = usuario is null
-                ? "Usuario"
-                : string.Join(" ", new[] { usuario.Nombres, usuario.Apellidos }
-                    .Where(x => !string.IsNullOrWhiteSpace(x)));
+            var registro = await detalleTask;
+            var catalogos = await catalogosTask;
 
-            AplicarEstado(registro.Estado);
+            CargarInformacionGeneral(registro, session.CurrentUser);
+            CargarResiduos(registro, catalogos);
+            CargarDisposicion(registro.Disposicion);
+            AplicarEstado(registro.Estado, registro.Residuos.Count);
         }
         catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
         {
@@ -97,11 +96,109 @@ public partial class DetalleRegistroDetallePage : ContentPage
         }
     }
 
-    private void AplicarEstado(string estado)
+    private void CargarInformacionGeneral(RegistroDetalleDto registro, UsuarioDto? usuario)
     {
-        EstadoLabel.Text = estado;
+        FechaLabel.Text = registro.FechaRegistro.ToString("dd/MM/yyyy HH:mm");
+        ProyectoLabel.Text = registro.Proyecto;
+        ActividadLabel.Text = registro.Actividad;
+        SedeLabel.Text = registro.Sede;
+        CantidadResiduosLabel.Text = registro.Residuos.Count == 1
+            ? "1 residuo"
+            : $"{registro.Residuos.Count} residuos";
+        ObservacionLabel.Text = string.IsNullOrWhiteSpace(registro.Observacion)
+            ? "Sin observaciones"
+            : registro.Observacion;
 
-        switch (estado)
+        RegistradoPorLabel.Text = usuario is null
+            ? "Usuario"
+            : string.Join(" ", new[] { usuario.Nombres, usuario.Apellidos }
+                .Where(x => !string.IsNullOrWhiteSpace(x)));
+    }
+
+    private void CargarResiduos(RegistroDetalleDto registro, CatalogosInicialDto catalogos)
+    {
+        _residuos.Clear();
+
+        foreach (var residuo in registro.Residuos)
+        {
+            var catalogo = catalogos.Residuos.FirstOrDefault(x => x.ResiduoId == residuo.ResiduoId);
+            var clasificacion = catalogo is null
+                ? null
+                : catalogos.Clasificaciones.FirstOrDefault(x =>
+                    x.ClasificacionResiduoId == catalogo.ClasificacionResiduoId);
+            var unidad = catalogos.UnidadesMedida.FirstOrDefault(x =>
+                x.UnidadMedidaId == residuo.UnidadMedidaId);
+
+            var esPeligroso = string.Equals(
+                clasificacion?.Codigo,
+                "PELIGROSO",
+                StringComparison.OrdinalIgnoreCase);
+
+            _residuos.Add(new ResiduoVisualItem(
+                catalogo?.Nombre ?? "Residuo",
+                clasificacion?.Nombre ?? "Sin clasificación",
+                esPeligroso ? Color.FromArgb("#FFE9E7") : Color.FromArgb("#E8F7EE"),
+                TryColor(clasificacion?.ColorHex) ?? (esPeligroso
+                    ? Color.FromArgb("#E4312B")
+                    : Color.FromArgb("#079542")),
+                $"{residuo.Cantidad:0.###} {unidad?.Codigo ?? string.Empty}".Trim(),
+                residuo.Observacion,
+                residuo.Fotos.Count == 1 ? "1 foto" : $"{residuo.Fotos.Count} fotos"));
+        }
+
+        SinResiduosBorder.IsVisible = _residuos.Count == 0;
+        ResumenResiduosLabel.Text = _residuos.Count == 1
+            ? "1 residuo registrado"
+            : $"{_residuos.Count} residuos registrados";
+    }
+
+    private void CargarDisposicion(DisposicionDto? disposicion)
+    {
+        _evidencias.Clear();
+
+        var tieneDisposicion = disposicion is not null;
+        SinDisposicionBorder.IsVisible = !tieneDisposicion;
+        DisposicionBorder.IsVisible = tieneDisposicion;
+
+        if (disposicion is null)
+            return;
+
+        DocumentoDisposicionLabel.Text = string.IsNullOrWhiteSpace(disposicion.CodigoDocumento)
+            ? "Sin documento"
+            : disposicion.CodigoDocumento;
+        FechaDisposicionLabel.Text = disposicion.FechaDisposicion?.ToString("dd/MM/yyyy") ?? "Sin fecha";
+        EmpresaDisposicionLabel.Text = string.IsNullOrWhiteSpace(disposicion.EmpresaDisposicion)
+            ? "Sin empresa"
+            : disposicion.EmpresaDisposicion;
+        CantidadEvidenciasLabel.Text = disposicion.Evidencias.Count.ToString();
+
+        ObservacionDisposicionLabel.Text = disposicion.Observacion;
+        ObservacionDisposicionLabel.IsVisible = !string.IsNullOrWhiteSpace(disposicion.Observacion);
+
+        foreach (var evidencia in disposicion.Evidencias.OrderByDescending(x => x.CreadoUtc))
+        {
+            _evidencias.Add(new EvidenciaVisualItem(
+                evidencia.NombreArchivo,
+                evidencia.TipoEvidencia,
+                evidencia.CreadoUtc.ToLocalTime().ToString("dd/MM/yyyy")));
+        }
+    }
+
+    private void AplicarEstado(string estado, int cantidadResiduos)
+    {
+        var estadoVisible = string.Equals(estado, "Borrador", StringComparison.OrdinalIgnoreCase)
+            ? "En proceso"
+            : estado;
+
+        EstadoLabel.Text = estadoVisible;
+        _enProceso = string.Equals(estadoVisible, "En proceso", StringComparison.OrdinalIgnoreCase);
+
+        AgregarResiduoButton.IsVisible = _enProceso;
+        FinalizarButton.IsVisible = _enProceso;
+        FinalizarButton.IsEnabled = _enProceso && cantidadResiduos > 0;
+        FinalizarAyudaLabel.IsVisible = _enProceso && cantidadResiduos == 0;
+
+        switch (estadoVisible)
         {
             case "En proceso":
                 EstadoBorder.BackgroundColor = Color.FromArgb("#FFF4DC");
@@ -124,26 +221,98 @@ public partial class DetalleRegistroDetallePage : ContentPage
         }
     }
 
+    private static Color? TryColor(string? colorHex)
+    {
+        if (string.IsNullOrWhiteSpace(colorHex))
+            return null;
+
+        try
+        {
+            return Color.FromArgb(colorHex);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     private void MostrarError(string mensaje)
     {
         ErrorLabel.Text = mensaje;
         ErrorBorder.IsVisible = true;
     }
 
-    private async void OnResiduosTapped(object sender, TappedEventArgs e)
+    private async void OnAgregarResiduoClicked(object sender, EventArgs e)
     {
-        if (Guid.TryParse(RegistroId, out var registroId))
-            await AppNavigator.IrAResiduosDelRegistroAsync(registroId);
+        if (_enProceso && Guid.TryParse(RegistroId, out var registroId))
+            await AppNavigator.IrARegistrarResiduoAsync(registroId);
     }
 
-    private async void OnDisposicionTapped(object sender, TappedEventArgs e)
+    private async void OnFinalizarClicked(object sender, EventArgs e)
     {
-        if (Guid.TryParse(RegistroId, out var registroId))
-            await AppNavigator.IrADisposicionDelRegistroAsync(registroId);
+        if (!_enProceso || _residuos.Count == 0 || _isLoading ||
+            !Guid.TryParse(RegistroId, out var registroId))
+            return;
+
+        var confirmar = await DisplayAlert(
+            "Finalizar registro",
+            "Al finalizar ya no podrás agregar ni editar residuos en este registro. ¿Deseas continuar?",
+            "Finalizar",
+            "Cancelar");
+
+        if (!confirmar)
+            return;
+
+        _isLoading = true;
+        FinalizarButton.IsEnabled = false;
+        FinalizarButton.Text = "Finalizando...";
+
+        try
+        {
+            var apiClient = AppServices.Services.GetRequiredService<IReciclaApiClient>();
+            await apiClient.CompletarRegistroAsync(registroId);
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            var session = AppServices.Services.GetRequiredService<IAuthSessionService>();
+            await session.LogoutAsync();
+            await AppNavigator.IrAlLoginAsync();
+            return;
+        }
+        catch (Exception ex)
+        {
+            AppServices.Services.GetService<ILogger<DetalleRegistroDetallePage>>()?
+                .LogError(ex, "Error finalizando el registro {RegistroId}.", registroId);
+            await DisplayAlert("No se pudo finalizar", "Verifica que el registro tenga residuos y vuelve a intentarlo.", "Aceptar");
+        }
+        finally
+        {
+            _isLoading = false;
+            FinalizarButton.Text = "Finalizar registro";
+        }
+
+        await CargarDetalleAsync();
     }
 
     private async void OnVolverTapped(object sender, TappedEventArgs e)
     {
         await AppNavigator.VolverAsync();
     }
+
+    private sealed record ResiduoVisualItem(
+        string Nombre,
+        string Clasificacion,
+        Color ClasificacionFondo,
+        Color ClasificacionColor,
+        string CantidadTexto,
+        string? Observacion,
+        string FotosTexto)
+    {
+        public bool TieneObservacion => !string.IsNullOrWhiteSpace(Observacion);
+    }
+
+    private sealed record EvidenciaVisualItem(
+        string NombreArchivo,
+        string TipoEvidencia,
+        string FechaTexto);
 }
