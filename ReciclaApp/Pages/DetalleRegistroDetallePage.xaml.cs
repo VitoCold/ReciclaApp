@@ -1,6 +1,7 @@
 using System.Net;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui.Graphics;
 using Recicla.Shared.Services;
 using ReciclaApp.Navigation;
 using ReciclaApp.Services;
