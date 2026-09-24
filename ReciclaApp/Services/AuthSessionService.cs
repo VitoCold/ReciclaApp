@@ -1,6 +1,4 @@
-using System.Globalization;
 using System.Net;
-using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Storage;
 using Recicla.Shared.Contracts;
@@ -21,9 +19,7 @@ public sealed class AuthSessionService(
     IReciclaApiClient apiClient,
     ILogger<AuthSessionService> logger) : IAuthSessionService
 {
-    private const string SessionTokenKey = "recicla_session_token";
-    private const string SessionExpirationKey = "recicla_session_expiration";
-    private const string SessionUserKey = "recicla_session_user";
+    private const string SessionTokenKey = "recicla_access_token";
 
     public UsuarioDto? CurrentUser { get; private set; }
     public bool IsAuthenticated => CurrentUser is not null;
@@ -37,10 +33,6 @@ public sealed class AuthSessionService(
         try
         {
             await SecureStorage.Default.SetAsync(SessionTokenKey, response.AccessToken);
-            await SecureStorage.Default.SetAsync(
-                SessionExpirationKey,
-                response.ExpiraUtc.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture));
-            await SecureStorage.Default.SetAsync(SessionUserKey, JsonSerializer.Serialize(response.Usuario));
         }
         catch (Exception ex)
         {
@@ -55,23 +47,14 @@ public sealed class AuthSessionService(
         try
         {
             var token = await SecureStorage.Default.GetAsync(SessionTokenKey);
-            var expirationText = await SecureStorage.Default.GetAsync(SessionExpirationKey);
-
-            if (string.IsNullOrWhiteSpace(token) ||
-                !DateTime.TryParse(expirationText, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var expiration) ||
-                expiration.ToUniversalTime() <= DateTime.UtcNow.AddSeconds(30))
-            {
-                await LogoutAsync();
+            if (string.IsNullOrWhiteSpace(token))
                 return false;
-            }
 
             apiClient.SetAccessToken(token);
-            CurrentUser = await ReadCachedUserAsync();
 
             try
             {
                 CurrentUser = await apiClient.MeAsync(cancellationToken);
-                await SecureStorage.Default.SetAsync(SessionUserKey, JsonSerializer.Serialize(CurrentUser));
                 return true;
             }
             catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
@@ -79,19 +62,17 @@ public sealed class AuthSessionService(
                 await LogoutAsync();
                 return false;
             }
-            catch (HttpRequestException ex) when (CurrentUser is not null)
+            catch (HttpRequestException ex)
             {
-                logger.LogWarning(ex, "No se pudo validar la sesión contra la API; se conserva la sesión local vigente.");
-                return true;
+                logger.LogWarning(ex, "No fue posible validar la sesión almacenada contra la API.");
+                return false;
             }
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "No se pudo restaurar la sesión.");
+            logger.LogWarning(ex, "No se pudo restaurar la sesión almacenada.");
+            return false;
         }
-
-        await LogoutAsync();
-        return false;
     }
 
     public Task LogoutAsync()
@@ -102,8 +83,7 @@ public sealed class AuthSessionService(
         try
         {
             SecureStorage.Default.Remove(SessionTokenKey);
-            SecureStorage.Default.Remove(SessionExpirationKey);
-            SecureStorage.Default.Remove(SessionUserKey);
+            SecureStorage.Default.Remove("recicla_usuario");
         }
         catch (Exception ex)
         {
@@ -111,21 +91,5 @@ public sealed class AuthSessionService(
         }
 
         return Task.CompletedTask;
-    }
-
-    private static async Task<UsuarioDto?> ReadCachedUserAsync()
-    {
-        var json = await SecureStorage.Default.GetAsync(SessionUserKey);
-        if (string.IsNullOrWhiteSpace(json))
-            return null;
-
-        try
-        {
-            return JsonSerializer.Deserialize<UsuarioDto>(json);
-        }
-        catch (JsonException)
-        {
-            return null;
-        }
     }
 }
