@@ -48,7 +48,9 @@ namespace ReciclaApp
             var location = e.Current.Location.OriginalString;
             var isLogin = location.Contains("login", StringComparison.OrdinalIgnoreCase);
 
-            FlyoutBehavior = isLogin ? FlyoutBehavior.Disabled : FlyoutBehavior.Flyout;
+            FlyoutBehavior = isLogin
+                ? Microsoft.Maui.Controls.FlyoutBehavior.Disabled
+                : Microsoft.Maui.Controls.FlyoutBehavior.Flyout;
 
             if (isLogin || _checkingProtectedRoute)
                 return;
