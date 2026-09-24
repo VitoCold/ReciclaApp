@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Recicla.Shared.Services;
+using ReciclaApp.Services;
 
 namespace ReciclaApp
 {
@@ -28,6 +29,7 @@ namespace ReciclaApp
                 Timeout = TimeSpan.FromSeconds(30)
             });
             builder.Services.AddSingleton<IReciclaApiClient, ReciclaApiClient>();
+            builder.Services.AddSingleton<IAuthSessionService, AuthSessionService>();
 
 #if DEBUG
             builder.Logging.AddDebug();
