@@ -1,9 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Maui.Storage;
-using Recicla.Shared.Contracts;
-using Recicla.Shared.Services;
 using ReciclaApp.Navigation;
+using ReciclaApp.Services;
 
 namespace ReciclaApp.Pages;
 
@@ -37,24 +35,14 @@ public partial class LoginPage : ContentPage
             var services = Handler?.MauiContext?.Services
                 ?? throw new InvalidOperationException("No se pudo obtener el contenedor de servicios de MAUI.");
 
-            var apiClient = services.GetRequiredService<IReciclaApiClient>();
+            var session = services.GetRequiredService<IAuthSessionService>();
             var logger = services.GetRequiredService<ILogger<LoginPage>>();
 
-            var response = await apiClient.LoginAsync(new LoginRequest(usuario, clave));
-            apiClient.SetAccessToken(response.AccessToken);
-
-            try
-            {
-                await SecureStorage.Default.SetAsync("recicla_access_token", response.AccessToken);
-                await SecureStorage.Default.SetAsync("recicla_usuario", response.Usuario.Usuario);
-            }
-            catch (Exception ex)
-            {
-                logger.LogWarning(ex, "No se pudo persistir la sesión en SecureStorage.");
-            }
+            var response = await session.LoginAsync(usuario, clave);
 
             logger.LogInformation("Sesión iniciada para {UsuarioId}", response.Usuario.UsuarioId);
             ClaveEntry.Text = string.Empty;
+
             await AppNavigator.IrARegistrosAsync();
         }
         catch (HttpRequestException)
