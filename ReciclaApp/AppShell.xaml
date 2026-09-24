@@ -3,23 +3,50 @@
     x:Class="ReciclaApp.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-     xmlns:pages="clr-namespace:ReciclaApp.Pages"
-    xmlns:local="clr-namespace:ReciclaApp"
+    xmlns:pages="clr-namespace:ReciclaApp.Pages"
     Title="ReciclaApp"
-         Shell.NavBarIsVisible="False"
-       Shell.TabBarIsVisible="False"
-       FlyoutBehavior="Disabled">
+    Shell.NavBarIsVisible="False"
+    Shell.TabBarIsVisible="False"
+    FlyoutBehavior="Disabled"
+    FlyoutBackgroundColor="White">
 
-    <!-- Pantalla inicial -->
+    <Shell.FlyoutHeader>
+        <Grid Padding="22,28,22,20" RowDefinitions="Auto,Auto" BackgroundColor="#0B5AA5">
+            <HorizontalStackLayout Spacing="10">
+                <Border WidthRequest="38" HeightRequest="38" BackgroundColor="#DDEEFF" Stroke="Transparent">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="19" />
+                    </Border.StrokeShape>
+                    <Label Text="♻" FontSize="19" HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+                <VerticalStackLayout Spacing="0" VerticalOptions="Center">
+                    <Label Text="ReciclaApp" TextColor="White" FontSize="18" FontAttributes="Bold" />
+                    <Label Text="Gestión de residuos" TextColor="#D7E9FA" FontSize="11" />
+                </VerticalStackLayout>
+            </HorizontalStackLayout>
+            <BoxView Grid.Row="1" HeightRequest="1" BackgroundColor="#3B7BB7" Margin="0,18,0,0" />
+        </Grid>
+    </Shell.FlyoutHeader>
+
+    <!-- Login no se muestra en el menú. -->
     <ShellContent
         Title="Login"
         Route="login"
+        Shell.FlyoutItemIsVisible="False"
         ContentTemplate="{DataTemplate pages:LoginPage}" />
 
-    <!-- Raíz posterior al inicio de sesión -->
     <ShellContent
-        Title="Registros"
+        Title="Mis registros"
         Route="registros"
         ContentTemplate="{DataTemplate pages:RegistrosPage}" />
+
+    <MenuItem
+        Text="Nuevo registro"
+        Clicked="OnNuevoRegistroMenuClicked" />
+
+    <ShellContent
+        Title="Mi perfil"
+        Route="perfil"
+        ContentTemplate="{DataTemplate pages:PerfilPage}" />
 
 </Shell>

@@ -4,54 +4,131 @@
              x:Class="ReciclaApp.Pages.InicioRegistroPage"
              Style="{StaticResource BasePage}"
              Shell.NavBarIsVisible="False">
+
     <Grid RowDefinitions="Auto,*">
         <Grid Style="{StaticResource AppHeader}" ColumnDefinitions="Auto,*">
-            <Label Text="‹" TextColor="White" FontSize="30" VerticalOptions="Center" />
-            <Label Grid.Column="1" Text="Inicio de registro" Style="{StaticResource HeaderTitle}" />
+            <Label Text="‹"
+                   TextColor="White"
+                   FontSize="30"
+                   VerticalOptions="Center">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnVolverTapped" />
+                </Label.GestureRecognizers>
+            </Label>
+            <Label Grid.Column="1"
+                   Text="Inicio de registro"
+                   Style="{StaticResource HeaderTitle}" />
         </Grid>
+
         <ScrollView Grid.Row="1">
-            <VerticalStackLayout Padding="18,34,18,24" Spacing="22">
+            <VerticalStackLayout Padding="18,30,18,24" Spacing="20">
                 <VerticalStackLayout Spacing="10" HorizontalOptions="Center">
-                    <Border Style="{StaticResource IconCircle}" HorizontalOptions="Center" WidthRequest="64" HeightRequest="64">
-                        <Label Text="📋" FontSize="32" HorizontalOptions="Center" VerticalOptions="Center" />
+                    <Border Style="{StaticResource IconCircle}"
+                            HorizontalOptions="Center"
+                            WidthRequest="64"
+                            HeightRequest="64">
+                        <Label Text="📋"
+                               FontSize="32"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center" />
                     </Border>
-                    <Label Text="Completa la información&#10;para iniciar el registro" HorizontalTextAlignment="Center" TextColor="{StaticResource ColorText}" FontAttributes="Bold" FontSize="15" />
+                    <Label Text="Completa la información&#10;para iniciar el registro"
+                           HorizontalTextAlignment="Center"
+                           TextColor="{StaticResource ColorText}"
+                           FontAttributes="Bold"
+                           FontSize="15" />
                 </VerticalStackLayout>
+
+                <Border x:Name="ErrorBorder"
+                        IsVisible="False"
+                        BackgroundColor="{StaticResource ColorDangerSoft}"
+                        Stroke="Transparent"
+                        StrokeShape="RoundRectangle 12"
+                        Padding="12">
+                    <Label x:Name="ErrorLabel"
+                           Text="Completa los campos obligatorios."
+                           TextColor="{StaticResource ColorDanger}"
+                           FontSize="12" />
+                </Border>
 
                 <VerticalStackLayout Spacing="12">
                     <Border Style="{StaticResource InputBorder}">
-                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                             <Label Text="📁" FontSize="18" VerticalOptions="Center" />
-                            <VerticalStackLayout Grid.Column="1" Spacing="1">
-                                <Label Text="Proyecto" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
-                                <Label Text="Selecciona un proyecto" Style="{StaticResource MutedText}" />
+                            <VerticalStackLayout Grid.Column="1" Spacing="0">
+                                <Label Text="Proyecto"
+                                       FontSize="12"
+                                       FontAttributes="Bold"
+                                       TextColor="{StaticResource ColorText}" />
+                                <Picker x:Name="ProyectoPicker"
+                                        Title="Selecciona un proyecto"
+                                        ItemDisplayBinding="{Binding Nombre}"
+                                        BackgroundColor="Transparent"
+                                        FontSize="13"
+                                        SelectedIndexChanged="OnProyectoChanged" />
                             </VerticalStackLayout>
-                            <Label Grid.Column="2" Text="⌄" FontSize="18" TextColor="{StaticResource ColorMuted}" VerticalOptions="Center" />
                         </Grid>
                     </Border>
+
                     <Border Style="{StaticResource InputBorder}">
-                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                             <Label Text="🛠" FontSize="18" VerticalOptions="Center" />
-                            <VerticalStackLayout Grid.Column="1" Spacing="1">
-                                <Label Text="Actividad" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
-                                <Label Text="Selecciona una actividad" Style="{StaticResource MutedText}" />
+                            <VerticalStackLayout Grid.Column="1" Spacing="0">
+                                <Label Text="Actividad"
+                                       FontSize="12"
+                                       FontAttributes="Bold"
+                                       TextColor="{StaticResource ColorText}" />
+                                <Picker x:Name="ActividadPicker"
+                                        Title="Selecciona una actividad"
+                                        ItemDisplayBinding="{Binding Nombre}"
+                                        BackgroundColor="Transparent"
+                                        FontSize="13" />
                             </VerticalStackLayout>
-                            <Label Grid.Column="2" Text="⌄" FontSize="18" TextColor="{StaticResource ColorMuted}" VerticalOptions="Center" />
                         </Grid>
                     </Border>
+
                     <Border Style="{StaticResource InputBorder}">
-                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                             <Label Text="📍" FontSize="18" VerticalOptions="Center" />
-                            <VerticalStackLayout Grid.Column="1" Spacing="1">
-                                <Label Text="Sede" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
-                                <Label Text="Selecciona una sede" Style="{StaticResource MutedText}" />
+                            <VerticalStackLayout Grid.Column="1" Spacing="0">
+                                <Label Text="Sede"
+                                       FontSize="12"
+                                       FontAttributes="Bold"
+                                       TextColor="{StaticResource ColorText}" />
+                                <Picker x:Name="SedePicker"
+                                        Title="Selecciona una sede"
+                                        ItemDisplayBinding="{Binding Nombre}"
+                                        BackgroundColor="Transparent"
+                                        FontSize="13" />
                             </VerticalStackLayout>
-                            <Label Grid.Column="2" Text="⌄" FontSize="18" TextColor="{StaticResource ColorMuted}" VerticalOptions="Center" />
                         </Grid>
+                    </Border>
+
+                    <Border Style="{StaticResource InputBorder}">
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="Observación (opcional)"
+                                   FontSize="12"
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource ColorText}" />
+                            <Editor x:Name="ObservacionEditor"
+                                    Placeholder="Describe brevemente el registro"
+                                    AutoSize="TextChanges"
+                                    BackgroundColor="Transparent"
+                                    FontSize="13"
+                                    MaximumHeightRequest="100" />
+                        </VerticalStackLayout>
                     </Border>
                 </VerticalStackLayout>
 
-                <Button Text="Continuar  →" Style="{StaticResource PrimaryButton}" VerticalOptions="End" />
+                <Button x:Name="ContinuarButton"
+                        Text="Continuar  →"
+                        Style="{StaticResource PrimaryButton}"
+                        Clicked="OnContinuarClicked" />
+
+                <ActivityIndicator x:Name="RegistroActivityIndicator"
+                                   IsVisible="False"
+                                   IsRunning="False"
+                                   HorizontalOptions="Center" />
             </VerticalStackLayout>
         </ScrollView>
     </Grid>

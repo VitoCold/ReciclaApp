@@ -6,11 +6,20 @@ public static class AppNavigator
 
     public static Task IrARegistrosAsync() => Shell.Current.GoToAsync(AppRoutes.Registros);
 
-    public static Task IrADetalleRegistroAsync() => Shell.Current.GoToAsync(AppRoutes.DetalleRegistroDetalle);
+    public static Task IrAPerfilAsync() => Shell.Current.GoToAsync(AppRoutes.Perfil);
 
-    public static Task IrAResiduosDelRegistroAsync() => Shell.Current.GoToAsync(AppRoutes.DetalleRegistroResiduos);
+    public static Task IrADetalleRegistroAsync(Guid registroId) =>
+        Shell.Current.GoToAsync($"{AppRoutes.DetalleRegistro}?registroId={registroId}");
 
-    public static Task IrADisposicionDelRegistroAsync() => Shell.Current.GoToAsync(AppRoutes.DetalleRegistroDisposicion);
+    // Se usa al terminar formularios hijos. Limpia la pila para que Atrás vuelva a Mis registros.
+    public static async Task IrAResiduosDelRegistroAsync(Guid registroId)
+    {
+        await IrARegistrosAsync();
+        await IrADetalleRegistroAsync(registroId);
+    }
+
+    public static Task IrADisposicionDelRegistroAsync(Guid registroId) =>
+        IrADetalleRegistroAsync(registroId);
 
     public static Task IrADetalleResiduoAsync() => Shell.Current.GoToAsync(AppRoutes.DetalleResiduoDetalle);
 
@@ -18,7 +27,12 @@ public static class AppNavigator
 
     public static Task IrAInicioRegistroAsync() => Shell.Current.GoToAsync(AppRoutes.InicioRegistro);
 
-    public static Task IrARegistrarResiduoAsync() => Shell.Current.GoToAsync(AppRoutes.RegistrarResiduo);
+    public static Task IrARegistrarResiduoAsync(Guid registroId) =>
+        Shell.Current.GoToAsync($"{AppRoutes.RegistrarResiduo}?registroId={registroId}");
+
+    public static Task IrAEditarResiduoAsync(Guid registroId, Guid registroResiduoId) =>
+        Shell.Current.GoToAsync(
+            $"{AppRoutes.RegistrarResiduo}?registroId={registroId}&registroResiduoId={registroResiduoId}");
 
     public static Task VolverAsync() => Shell.Current.GoToAsync("..");
 }

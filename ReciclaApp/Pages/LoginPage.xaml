@@ -28,7 +28,13 @@
                             <Label Text="👤" FontSize="18" VerticalOptions="Center" />
                             <VerticalStackLayout Grid.Column="1" Spacing="1">
                                 <Label Text="Usuario" FontAttributes="Bold" FontSize="12" TextColor="{StaticResource ColorText}" />
-                                <Entry Placeholder="Ingresa tu usuario" ClearButtonVisibility="WhileEditing" BackgroundColor="Transparent" FontSize="13" HeightRequest="34" />
+                                <Entry x:Name="UsuarioEntry"
+                                       Placeholder="Ingresa tu usuario"
+                                       ClearButtonVisibility="WhileEditing"
+                                       BackgroundColor="Transparent"
+                                       FontSize="13"
+                                       HeightRequest="34"
+                                       ReturnType="Next" />
                             </VerticalStackLayout>
                         </Grid>
                     </Border>
@@ -38,16 +44,35 @@
                             <Label Text="🔒" FontSize="18" VerticalOptions="Center" />
                             <VerticalStackLayout Grid.Column="1" Spacing="1">
                                 <Label Text="Clave" FontAttributes="Bold" FontSize="12" TextColor="{StaticResource ColorText}" />
-                                <Entry Placeholder="Ingresa tu clave" IsPassword="True" BackgroundColor="Transparent" FontSize="13" HeightRequest="34" />
+                                <Entry x:Name="ClaveEntry"
+                                       Placeholder="Ingresa tu clave"
+                                       IsPassword="True"
+                                       BackgroundColor="Transparent"
+                                       FontSize="13"
+                                       HeightRequest="34"
+                                       ReturnType="Go"
+                                       Completed="OnPasswordCompleted" />
                             </VerticalStackLayout>
                             <Label Grid.Column="2" Text="◉" TextColor="{StaticResource ColorMuted}" VerticalOptions="Center" />
                         </Grid>
                     </Border>
                 </VerticalStackLayout>
 
-                <Button Text="Iniciar sesión"
+                <Label x:Name="ErrorLabel"
+                       IsVisible="False"
+                       TextColor="#C62828"
+                       FontSize="12"
+                       HorizontalTextAlignment="Center" />
+
+                <Button x:Name="LoginButton"
+                        Text="Iniciar sesión"
                         Style="{StaticResource PrimaryButton}"
                         Clicked="OnLoginClicked" />
+
+                <ActivityIndicator x:Name="LoginActivity"
+                                   IsVisible="False"
+                                   IsRunning="False"
+                                   HorizontalOptions="Center" />
 
                 <HorizontalStackLayout HorizontalOptions="Center" Spacing="8" Margin="0,8,0,0">
                     <Label Text="🔐" FontSize="13" />
