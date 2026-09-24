@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Net;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui.Graphics;
 using Recicla.Shared.Contracts;
 using Recicla.Shared.Services;
 using ReciclaApp.Navigation;
