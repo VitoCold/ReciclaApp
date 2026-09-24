@@ -12,6 +12,7 @@
                     <TapGestureRecognizer Tapped="OnMenuTapped" />
                 </Label.GestureRecognizers>
             </Label>
+
             <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
                 <Label Text="📅" FontSize="14" />
                 <Label x:Name="FechaHeaderLabel"
@@ -20,102 +21,256 @@
                        FontAttributes="Bold"
                        FontSize="14" />
             </HorizontalStackLayout>
+
             <Label x:Name="UsuarioHeaderLabel"
                    Grid.Column="2"
                    Text="Usuario"
                    TextColor="White"
                    FontSize="13"
                    VerticalOptions="Center" />
-            <Border Grid.Column="3" WidthRequest="30" HeightRequest="30" BackgroundColor="#DDEEFF" Stroke="Transparent">
+
+            <Border Grid.Column="3"
+                    WidthRequest="30"
+                    HeightRequest="30"
+                    BackgroundColor="#DDEEFF"
+                    Stroke="Transparent">
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnPerfilTapped" />
                 </Border.GestureRecognizers>
-                <Border.StrokeShape><RoundRectangle CornerRadius="15" /></Border.StrokeShape>
-                <Label Text="👤" FontSize="14" HorizontalOptions="Center" VerticalOptions="Center" />
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="15" />
+                </Border.StrokeShape>
+                <Label Text="👤"
+                       FontSize="14"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center" />
             </Border>
         </Grid>
 
-        <ScrollView Grid.Row="1">
-            <VerticalStackLayout Padding="18,18,18,24" Spacing="14">
-                <Grid ColumnDefinitions="*,Auto" VerticalOptions="Center">
-                    <Label Text="Mis registros" Style="{StaticResource PageTitle}" FontSize="22" />
-                    <Border Grid.Column="1" Style="{StaticResource Chip}" BackgroundColor="{StaticResource ColorSuccessSoft}" VerticalOptions="Center">
-                        <Label Text="8 registros" TextColor="{StaticResource ColorAccent}" FontAttributes="Bold" FontSize="12" />
-                    </Border>
+        <Grid Grid.Row="1"
+              Padding="18,18,18,24"
+              RowDefinitions="Auto,Auto,Auto,*"
+              RowSpacing="14">
+
+            <Grid Grid.Row="0" ColumnDefinitions="*,Auto" VerticalOptions="Center">
+                <Label Text="Mis registros"
+                       Style="{StaticResource PageTitle}"
+                       FontSize="22" />
+
+                <Border Grid.Column="1"
+                        Style="{StaticResource Chip}"
+                        BackgroundColor="{StaticResource ColorSuccessSoft}"
+                        VerticalOptions="Center">
+                    <Label x:Name="CantidadRegistrosLabel"
+                           Text="0 registros"
+                           TextColor="{StaticResource ColorAccent}"
+                           FontAttributes="Bold"
+                           FontSize="12" />
+                </Border>
+            </Grid>
+
+            <Button Grid.Row="1"
+                    Text="＋ Nuevo registro"
+                    Style="{StaticResource PrimaryButton}"
+                    Clicked="OnNuevoRegistroClicked" />
+
+            <Border x:Name="ErrorBorder"
+                    Grid.Row="2"
+                    IsVisible="False"
+                    BackgroundColor="{StaticResource ColorDangerSoft}"
+                    Stroke="Transparent"
+                    StrokeShape="RoundRectangle 12"
+                    Padding="12,9">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                    <Label x:Name="ErrorLabel"
+                           Text="No se pudieron cargar los registros."
+                           TextColor="{StaticResource ColorDanger}"
+                           FontSize="12"
+                           VerticalOptions="Center" />
+                    <Label Grid.Column="1"
+                           Text="Reintentar"
+                           TextColor="{StaticResource ColorPrimary}"
+                           FontAttributes="Bold"
+                           FontSize="12"
+                           VerticalOptions="Center">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnReintentarTapped" />
+                        </Label.GestureRecognizers>
+                    </Label>
                 </Grid>
+            </Border>
 
-                <Button Text="＋ Nuevo registro"
-                        Style="{StaticResource PrimaryButton}"
-                        Clicked="OnNuevoRegistroClicked" />
-
-                <VerticalStackLayout Spacing="12">
-                    <Border Style="{StaticResource SoftCard}">
-                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
-                            <Label Text="📅" FontSize="18" VerticalOptions="Start" />
-                            <VerticalStackLayout Grid.Column="1" Spacing="3">
-                                <Label Text="30/06/2026 14:01" FontAttributes="Bold" FontSize="13" TextColor="{StaticResource ColorText}" />
-                                <Label Text="Registro de residuos en mantenimiento de equipos." Style="{StaticResource MutedText}" />
-                            </VerticalStackLayout>
-                            <VerticalStackLayout Grid.Column="2" Spacing="3" HorizontalOptions="End">
-                                <Border Style="{StaticResource Chip}" BackgroundColor="{StaticResource ColorSuccessSoft}">
-                                    <Label Text="Completado" TextColor="{StaticResource ColorAccent}" FontSize="10" FontAttributes="Bold" />
+            <Grid Grid.Row="3">
+                <RefreshView x:Name="RegistrosRefreshView"
+                             Refreshing="OnRefreshRequested">
+                    <CollectionView x:Name="RegistrosCollectionView"
+                                    SelectionMode="None"
+                                    ItemsLayout="VerticalList">
+                        <CollectionView.EmptyView>
+                            <VerticalStackLayout Padding="20,44"
+                                                 Spacing="10"
+                                                 HorizontalOptions="Center">
+                                <Border Style="{StaticResource IconCircle}"
+                                        WidthRequest="64"
+                                        HeightRequest="64"
+                                        HorizontalOptions="Center">
+                                    <Label Text="📋"
+                                           FontSize="30"
+                                           HorizontalOptions="Center"
+                                           VerticalOptions="Center" />
                                 </Border>
-                                <Label Text="Ver detalle ›" TextColor="{StaticResource ColorPrimary}" FontSize="11" FontAttributes="Bold" HorizontalOptions="End" />
+                                <Label Text="Aún no tienes registros"
+                                       FontSize="16"
+                                       FontAttributes="Bold"
+                                       TextColor="{StaticResource ColorText}"
+                                       HorizontalTextAlignment="Center" />
+                                <Label Text="Crea tu primer registro de residuos para comenzar."
+                                       Style="{StaticResource MutedText}"
+                                       HorizontalTextAlignment="Center" />
                             </VerticalStackLayout>
-                        </Grid>
-                    </Border>
+                        </CollectionView.EmptyView>
 
-                    <Border Style="{StaticResource SoftCard}">
-                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
-                            <Label Text="📅" FontSize="18" VerticalOptions="Start" />
-                            <VerticalStackLayout Grid.Column="1" Spacing="3">
-                                <Label Text="28/06/2026 10:35" FontAttributes="Bold" FontSize="13" TextColor="{StaticResource ColorText}" />
-                                <Label Text="Recolección de residuos de área administrativa." Style="{StaticResource MutedText}" />
-                            </VerticalStackLayout>
-                            <VerticalStackLayout Grid.Column="2" Spacing="3" HorizontalOptions="End">
-                                <Border Style="{StaticResource Chip}" BackgroundColor="{StaticResource ColorBlueSoft}">
-                                    <Label Text="Completado" TextColor="{StaticResource ColorPrimary}" FontSize="10" FontAttributes="Bold" />
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource SoftCard}"
+                                        Margin="0,0,0,12">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnRegistroTapped"
+                                                              CommandParameter="{Binding RegistroId}" />
+                                    </Border.GestureRecognizers>
+
+                                    <Grid ColumnDefinitions="Auto,*,Auto"
+                                          ColumnSpacing="12">
+                                        <Label Text="📅"
+                                               FontSize="18"
+                                               VerticalOptions="Start" />
+
+                                        <VerticalStackLayout Grid.Column="1" Spacing="3">
+                                            <Label Text="{Binding FechaRegistro, StringFormat='{0:dd/MM/yyyy HH:mm}'}"
+                                                   FontAttributes="Bold"
+                                                   FontSize="13"
+                                                   TextColor="{StaticResource ColorText}" />
+
+                                            <Label FontSize="12"
+                                                   TextColor="{StaticResource ColorMuted}">
+                                                <Label.FormattedText>
+                                                    <FormattedString>
+                                                        <Span Text="{Binding Proyecto}" />
+                                                        <Span Text=" · " />
+                                                        <Span Text="{Binding Actividad}" />
+                                                    </FormattedString>
+                                                </Label.FormattedText>
+                                            </Label>
+
+                                            <Label FontSize="11"
+                                                   TextColor="{StaticResource ColorMuted}">
+                                                <Label.FormattedText>
+                                                    <FormattedString>
+                                                        <Span Text="{Binding Sede}" />
+                                                        <Span Text=" · " />
+                                                        <Span Text="{Binding CantidadResiduos}" />
+                                                        <Span Text=" residuos" />
+                                                    </FormattedString>
+                                                </Label.FormattedText>
+                                            </Label>
+                                        </VerticalStackLayout>
+
+                                        <VerticalStackLayout Grid.Column="2"
+                                                             Spacing="5"
+                                                             HorizontalOptions="End">
+                                            <Border Style="{StaticResource Chip}"
+                                                    BackgroundColor="{StaticResource ColorBlueSoft}">
+                                                <Border.Triggers>
+                                                    <DataTrigger TargetType="Border"
+                                                                 Binding="{Binding Estado}"
+                                                                 Value="Borrador">
+                                                        <Setter Property="BackgroundColor"
+                                                                Value="{StaticResource ColorWarningSoft}" />
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="Border"
+                                                                 Binding="{Binding Estado}"
+                                                                 Value="Completado">
+                                                        <Setter Property="BackgroundColor"
+                                                                Value="{StaticResource ColorSuccessSoft}" />
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="Border"
+                                                                 Binding="{Binding Estado}"
+                                                                 Value="Validado">
+                                                        <Setter Property="BackgroundColor"
+                                                                Value="{StaticResource ColorSuccessSoft}" />
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="Border"
+                                                                 Binding="{Binding Estado}"
+                                                                 Value="Observado">
+                                                        <Setter Property="BackgroundColor"
+                                                                Value="{StaticResource ColorDangerSoft}" />
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="Border"
+                                                                 Binding="{Binding Estado}"
+                                                                 Value="Anulado">
+                                                        <Setter Property="BackgroundColor"
+                                                                Value="{StaticResource ColorDangerSoft}" />
+                                                    </DataTrigger>
+                                                </Border.Triggers>
+
+                                                <Label Text="{Binding Estado}"
+                                                       TextColor="{StaticResource ColorPrimary}"
+                                                       FontSize="10"
+                                                       FontAttributes="Bold">
+                                                    <Label.Triggers>
+                                                        <DataTrigger TargetType="Label"
+                                                                     Binding="{Binding Estado}"
+                                                                     Value="Borrador">
+                                                            <Setter Property="TextColor"
+                                                                    Value="{StaticResource ColorWarning}" />
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label"
+                                                                     Binding="{Binding Estado}"
+                                                                     Value="Completado">
+                                                            <Setter Property="TextColor"
+                                                                    Value="{StaticResource ColorAccent}" />
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label"
+                                                                     Binding="{Binding Estado}"
+                                                                     Value="Validado">
+                                                            <Setter Property="TextColor"
+                                                                    Value="{StaticResource ColorAccent}" />
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label"
+                                                                     Binding="{Binding Estado}"
+                                                                     Value="Observado">
+                                                            <Setter Property="TextColor"
+                                                                    Value="{StaticResource ColorDanger}" />
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label"
+                                                                     Binding="{Binding Estado}"
+                                                                     Value="Anulado">
+                                                            <Setter Property="TextColor"
+                                                                    Value="{StaticResource ColorDanger}" />
+                                                        </DataTrigger>
+                                                    </Label.Triggers>
+                                                </Label>
+                                            </Border>
+
+                                            <Label Text="Ver detalle ›"
+                                                   TextColor="{StaticResource ColorPrimary}"
+                                                   FontSize="11"
+                                                   FontAttributes="Bold"
+                                                   HorizontalOptions="End" />
+                                        </VerticalStackLayout>
+                                    </Grid>
                                 </Border>
-                                <Label Text="Ver detalle ›" TextColor="{StaticResource ColorPrimary}" FontSize="11" FontAttributes="Bold" HorizontalOptions="End" />
-                            </VerticalStackLayout>
-                        </Grid>
-                    </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </RefreshView>
 
-                    <Border Style="{StaticResource SoftCard}">
-                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
-                            <Label Text="📅" FontSize="18" VerticalOptions="Start" />
-                            <VerticalStackLayout Grid.Column="1" Spacing="3">
-                                <Label Text="27/06/2026 16:45" FontAttributes="Bold" FontSize="13" TextColor="{StaticResource ColorText}" />
-                                <Label Text="Generación de residuos en taller mecánico." Style="{StaticResource MutedText}" />
-                            </VerticalStackLayout>
-                            <VerticalStackLayout Grid.Column="2" Spacing="3" HorizontalOptions="End">
-                                <Border Style="{StaticResource Chip}" BackgroundColor="{StaticResource ColorBlueSoft}">
-                                    <Label Text="Completado" TextColor="{StaticResource ColorPrimary}" FontSize="10" FontAttributes="Bold" />
-                                </Border>
-                                <Label Text="Ver detalle ›" TextColor="{StaticResource ColorPrimary}" FontSize="11" FontAttributes="Bold" HorizontalOptions="End" />
-                            </VerticalStackLayout>
-                        </Grid>
-                    </Border>
-
-                    <Border Style="{StaticResource SoftCard}">
-                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
-                            <Label Text="📅" FontSize="18" VerticalOptions="Start" />
-                            <VerticalStackLayout Grid.Column="1" Spacing="3">
-                                <Label Text="25/06/2026 09:20" FontAttributes="Bold" FontSize="13" TextColor="{StaticResource ColorText}" />
-                                <Label Text="Limpieza general de instalaciones." Style="{StaticResource MutedText}" />
-                            </VerticalStackLayout>
-                            <VerticalStackLayout Grid.Column="2" Spacing="3" HorizontalOptions="End">
-                                <Border Style="{StaticResource Chip}" BackgroundColor="{StaticResource ColorBlueSoft}">
-                                    <Label Text="Completado" TextColor="{StaticResource ColorPrimary}" FontSize="10" FontAttributes="Bold" />
-                                </Border>
-                                <Label Text="Ver detalle ›" TextColor="{StaticResource ColorPrimary}" FontSize="11" FontAttributes="Bold" HorizontalOptions="End" />
-                            </VerticalStackLayout>
-                        </Grid>
-                    </Border>
-                </VerticalStackLayout>
-
-                <Label Text="Ver más registros  ⌄" TextColor="{StaticResource ColorPrimary}" FontAttributes="Bold" HorizontalOptions="Center" />
-            </VerticalStackLayout>
-        </ScrollView>
+                <ActivityIndicator x:Name="RegistrosActivityIndicator"
+                                   IsVisible="False"
+                                   IsRunning="False"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center" />
+            </Grid>
+        </Grid>
     </Grid>
 </ContentPage>
