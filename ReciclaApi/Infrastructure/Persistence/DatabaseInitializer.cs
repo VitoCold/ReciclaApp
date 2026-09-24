@@ -8,6 +8,7 @@ public sealed class DatabaseInitializer(
     ReciclaDbContext context,
     IPasswordService passwordService,
     IConfiguration configuration,
+    IHostEnvironment environment,
     ILogger<DatabaseInitializer> logger)
 {
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
@@ -120,7 +121,19 @@ public sealed class DatabaseInitializer(
         if (await context.Usuarios.AnyAsync(x => x.UsuarioNombre == userName, cancellationToken))
             return;
 
-        var password = configuration["Seed:AdminPassword"] ?? "Recicla123!";
+        var password = configuration["Seed:AdminPassword"];
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            if (!environment.IsDevelopment())
+            {
+                logger.LogWarning("No se creó el administrador inicial porque Seed__AdminPassword no está configurado.");
+                return;
+            }
+
+            password = "Recicla123!";
+            logger.LogWarning("Usando la contraseña de desarrollo por defecto para el usuario {Usuario}. No usar en producción.", userName);
+        }
+
         var (hash, salt) = passwordService.Hash(password);
         var adminRole = await context.Roles.FirstAsync(x => x.Codigo == "ADMINISTRADOR", cancellationToken);
         var sedes = await context.Sedes.ToListAsync(cancellationToken);
