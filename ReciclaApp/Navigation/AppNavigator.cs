@@ -30,5 +30,9 @@ public static class AppNavigator
     public static Task IrARegistrarResiduoAsync(Guid registroId) =>
         Shell.Current.GoToAsync($"{AppRoutes.RegistrarResiduo}?registroId={registroId}");
 
+    public static Task IrAEditarResiduoAsync(Guid registroId, Guid registroResiduoId) =>
+        Shell.Current.GoToAsync(
+            $"{AppRoutes.RegistrarResiduo}?registroId={registroId}&registroResiduoId={registroResiduoId}");
+
     public static Task VolverAsync() => Shell.Current.GoToAsync("..");
 }
