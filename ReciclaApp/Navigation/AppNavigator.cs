@@ -11,9 +11,12 @@ public static class AppNavigator
     public static Task IrADetalleRegistroAsync(Guid registroId) =>
         Shell.Current.GoToAsync($"{AppRoutes.DetalleRegistro}?registroId={registroId}");
 
-    // Compatibilidad con el flujo existente: residuos y disposición vuelven al detalle unificado.
-    public static Task IrAResiduosDelRegistroAsync(Guid registroId) =>
-        IrADetalleRegistroAsync(registroId);
+    // Se usa al terminar formularios hijos. Limpia la pila para que Atrás vuelva a Mis registros.
+    public static async Task IrAResiduosDelRegistroAsync(Guid registroId)
+    {
+        await IrARegistrosAsync();
+        await IrADetalleRegistroAsync(registroId);
+    }
 
     public static Task IrADisposicionDelRegistroAsync(Guid registroId) =>
         IrADetalleRegistroAsync(registroId);
