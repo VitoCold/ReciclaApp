@@ -9,12 +9,14 @@ namespace ReciclaApp
     public partial class AppShell : Shell
     {
         private bool _sessionChecked;
+        private bool _checkingProtectedRoute;
 
         public AppShell()
         {
             InitializeComponent();
             RegistrarRutas();
             Loaded += OnShellLoaded;
+            Navigated += OnShellNavigated;
         }
 
         private async void OnShellLoaded(object? sender, EventArgs e)
@@ -38,6 +40,32 @@ namespace ReciclaApp
             {
                 services.GetService<ILogger<AppShell>>()?
                     .LogWarning(ex, "No se pudo restaurar la sesión al iniciar la aplicación.");
+            }
+        }
+
+        private async void OnShellNavigated(object? sender, ShellNavigatedEventArgs e)
+        {
+            if (_checkingProtectedRoute ||
+                !e.Current.Location.OriginalString.Contains("registros", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            var services = Handler?.MauiContext?.Services;
+            if (services is null)
+                return;
+
+            var session = services.GetRequiredService<IAuthSessionService>();
+            if (session.IsAuthenticated)
+                return;
+
+            _checkingProtectedRoute = true;
+            try
+            {
+                if (!await session.RestoreSessionAsync())
+                    await AppNavigator.IrAlLoginAsync();
+            }
+            finally
+            {
+                _checkingProtectedRoute = false;
             }
         }
 
