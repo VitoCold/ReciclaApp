@@ -17,17 +17,16 @@ public partial class RegistrosPage : ContentPage
 
         FechaHeaderLabel.Text = DateTime.Now.ToString("dd/MM/yyyy");
 
-        var services = Handler?.MauiContext?.Services;
-        if (services is null)
-            return;
-
-        var session = services.GetRequiredService<IAuthSessionService>();
+        var session = AppServices.Services.GetRequiredService<IAuthSessionService>();
         if (!session.IsAuthenticated)
             await session.RestoreSessionAsync();
 
         var usuario = session.CurrentUser;
         if (usuario is null)
+        {
+            UsuarioHeaderLabel.Text = "Usuario";
             return;
+        }
 
         UsuarioHeaderLabel.Text = string.Join(" ", new[] { usuario.Nombres, usuario.Apellidos }
             .Where(x => !string.IsNullOrWhiteSpace(x)));
