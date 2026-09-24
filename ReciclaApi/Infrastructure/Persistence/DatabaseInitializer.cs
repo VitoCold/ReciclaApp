@@ -33,11 +33,19 @@ public sealed class DatabaseInitializer(
         if (!await context.EstadosRegistro.AnyAsync(cancellationToken))
         {
             context.EstadosRegistro.AddRange(
-                new EstadoRegistro { Codigo = "BORRADOR", Nombre = "Borrador" },
+                new EstadoRegistro { Codigo = "BORRADOR", Nombre = "En proceso" },
                 new EstadoRegistro { Codigo = "COMPLETADO", Nombre = "Completado" },
                 new EstadoRegistro { Codigo = "OBSERVADO", Nombre = "Observado" },
                 new EstadoRegistro { Codigo = "VALIDADO", Nombre = "Validado" },
                 new EstadoRegistro { Codigo = "ANULADO", Nombre = "Anulado" });
+        }
+        else
+        {
+            var estadoEnProceso = await context.EstadosRegistro
+                .FirstOrDefaultAsync(x => x.Codigo == "BORRADOR", cancellationToken);
+
+            if (estadoEnProceso is not null && estadoEnProceso.Nombre != "En proceso")
+                estadoEnProceso.Nombre = "En proceso";
         }
 
         if (!await context.EstadosSincronizacion.AnyAsync(cancellationToken))
