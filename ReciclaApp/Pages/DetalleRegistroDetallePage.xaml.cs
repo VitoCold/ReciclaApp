@@ -68,9 +68,9 @@ public partial class DetalleRegistroDetallePage : ContentPage
             var catalogos = await catalogosTask;
 
             CargarInformacionGeneral(registro, session.CurrentUser);
-            CargarResiduos(registro, catalogos);
-            CargarDisposicion(registro.Disposicion);
             AplicarEstado(registro.Estado, registro.Residuos.Count);
+            CargarResiduos(registro, catalogos, _enProceso);
+            CargarDisposicion(registro.Disposicion);
         }
         catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
         {
@@ -115,7 +115,10 @@ public partial class DetalleRegistroDetallePage : ContentPage
                 .Where(x => !string.IsNullOrWhiteSpace(x)));
     }
 
-    private void CargarResiduos(RegistroDetalleDto registro, CatalogosInicialDto catalogos)
+    private void CargarResiduos(
+        RegistroDetalleDto registro,
+        CatalogosInicialDto catalogos,
+        bool esEditable)
     {
         _residuos.Clear();
 
@@ -135,6 +138,7 @@ public partial class DetalleRegistroDetallePage : ContentPage
                 StringComparison.OrdinalIgnoreCase);
 
             _residuos.Add(new ResiduoVisualItem(
+                residuo.RegistroResiduoId,
                 catalogo?.Nombre ?? "Residuo",
                 clasificacion?.Nombre ?? "Sin clasificación",
                 esPeligroso ? Color.FromArgb("#FFE9E7") : Color.FromArgb("#E8F7EE"),
@@ -143,7 +147,8 @@ public partial class DetalleRegistroDetallePage : ContentPage
                     : Color.FromArgb("#079542")),
                 $"{residuo.Cantidad:0.###} {unidad?.Codigo ?? string.Empty}".Trim(),
                 residuo.Observacion,
-                residuo.Fotos.Count == 1 ? "1 foto" : $"{residuo.Fotos.Count} fotos"));
+                residuo.Fotos.Count == 1 ? "1 foto" : $"{residuo.Fotos.Count} fotos",
+                esEditable));
         }
 
         SinResiduosBorder.IsVisible = _residuos.Count == 0;
@@ -248,6 +253,67 @@ public partial class DetalleRegistroDetallePage : ContentPage
             await AppNavigator.IrARegistrarResiduoAsync(registroId);
     }
 
+    private async void OnEditarResiduoClicked(object sender, EventArgs e)
+    {
+        if (!_enProceso || !Guid.TryParse(RegistroId, out var registroId) ||
+            sender is not Button button || !TryGetGuid(button.CommandParameter, out var registroResiduoId))
+            return;
+
+        await AppNavigator.IrAEditarResiduoAsync(registroId, registroResiduoId);
+    }
+
+    private async void OnEliminarResiduoClicked(object sender, EventArgs e)
+    {
+        if (!_enProceso || _isLoading || !Guid.TryParse(RegistroId, out var registroId) ||
+            sender is not Button button || !TryGetGuid(button.CommandParameter, out var registroResiduoId))
+            return;
+
+        var item = _residuos.FirstOrDefault(x => x.RegistroResiduoId == registroResiduoId);
+        var confirmar = await DisplayAlert(
+            "Eliminar residuo",
+            $"¿Deseas eliminar {item?.Nombre ?? "este residuo"} del registro?",
+            "Eliminar",
+            "Cancelar");
+
+        if (!confirmar)
+            return;
+
+        _isLoading = true;
+        DetalleActivityIndicator.IsVisible = true;
+        DetalleActivityIndicator.IsRunning = true;
+
+        try
+        {
+            var apiClient = AppServices.Services.GetRequiredService<IReciclaApiClient>();
+            await apiClient.EliminarResiduoAsync(registroId, registroResiduoId);
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            var session = AppServices.Services.GetRequiredService<IAuthSessionService>();
+            await session.LogoutAsync();
+            await AppNavigator.IrAlLoginAsync();
+            return;
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Conflict)
+        {
+            await DisplayAlert("Registro cerrado", "Este registro ya no se encuentra en proceso y no puede modificarse.", "Aceptar");
+        }
+        catch (Exception ex)
+        {
+            AppServices.Services.GetService<ILogger<DetalleRegistroDetallePage>>()?
+                .LogError(ex, "Error eliminando residuo {RegistroResiduoId} del registro {RegistroId}.", registroResiduoId, registroId);
+            await DisplayAlert("No se pudo eliminar", "No se pudo eliminar el residuo. Inténtalo nuevamente.", "Aceptar");
+        }
+        finally
+        {
+            _isLoading = false;
+            DetalleActivityIndicator.IsRunning = false;
+            DetalleActivityIndicator.IsVisible = false;
+        }
+
+        await CargarDetalleAsync();
+    }
+
     private async void OnFinalizarClicked(object sender, EventArgs e)
     {
         if (!_enProceso || _residuos.Count == 0 || _isLoading ||
@@ -256,7 +322,7 @@ public partial class DetalleRegistroDetallePage : ContentPage
 
         var confirmar = await DisplayAlert(
             "Finalizar registro",
-            "Al finalizar ya no podrás agregar ni editar residuos en este registro. ¿Deseas continuar?",
+            "Al finalizar ya no podrás agregar, editar ni eliminar residuos. ¿Deseas continuar?",
             "Finalizar",
             "Cancelar");
 
@@ -294,19 +360,32 @@ public partial class DetalleRegistroDetallePage : ContentPage
         await CargarDetalleAsync();
     }
 
+    private static bool TryGetGuid(object? value, out Guid id)
+    {
+        if (value is Guid guid)
+        {
+            id = guid;
+            return true;
+        }
+
+        return Guid.TryParse(value?.ToString(), out id);
+    }
+
     private async void OnVolverTapped(object sender, TappedEventArgs e)
     {
         await AppNavigator.VolverAsync();
     }
 
     private sealed record ResiduoVisualItem(
+        Guid RegistroResiduoId,
         string Nombre,
         string Clasificacion,
         Color ClasificacionFondo,
         Color ClasificacionColor,
         string CantidadTexto,
         string? Observacion,
-        string FotosTexto)
+        string FotosTexto,
+        bool EsEditable)
     {
         public bool TieneObservacion => !string.IsNullOrWhiteSpace(Observacion);
     }
