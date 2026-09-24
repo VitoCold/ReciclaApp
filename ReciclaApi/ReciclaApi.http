@@ -1,6 +1,26 @@
 @ReciclaApi_HostAddress = http://localhost:5298
+@token = PEGA_AQUI_EL_ACCESS_TOKEN
 
-GET {{ReciclaApi_HostAddress}}/weatherforecast/
+### Login
+POST {{ReciclaApi_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "usuario": "admin",
+  "password": "CAMBIA_POR_TU_PASSWORD_DE_DESARROLLO"
+}
+
+### Usuario actual
+GET {{ReciclaApi_HostAddress}}/api/auth/me
+Authorization: Bearer {{token}}
 Accept: application/json
 
-###
+### Catálogos iniciales
+GET {{ReciclaApi_HostAddress}}/api/catalogos/inicial
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### Registros del usuario
+GET {{ReciclaApi_HostAddress}}/api/registros
+Authorization: Bearer {{token}}
+Accept: application/json
