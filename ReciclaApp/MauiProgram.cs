@@ -35,7 +35,9 @@ namespace ReciclaApp
             builder.Logging.AddDebug();
 #endif
 
-            return builder.Build();
+            var app = builder.Build();
+            AppServices.Initialize(app.Services);
+            return app;
         }
     }
 }
