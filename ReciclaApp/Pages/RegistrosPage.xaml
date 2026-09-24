@@ -183,7 +183,7 @@
                                                 <Border.Triggers>
                                                     <DataTrigger TargetType="Border"
                                                                  Binding="{Binding Estado}"
-                                                                 Value="Borrador">
+                                                                 Value="En proceso">
                                                         <Setter Property="BackgroundColor"
                                                                 Value="{StaticResource ColorWarningSoft}" />
                                                     </DataTrigger>
@@ -220,7 +220,7 @@
                                                     <Label.Triggers>
                                                         <DataTrigger TargetType="Label"
                                                                      Binding="{Binding Estado}"
-                                                                     Value="Borrador">
+                                                                     Value="En proceso">
                                                             <Setter Property="TextColor"
                                                                     Value="{StaticResource ColorWarning}" />
                                                         </DataTrigger>
