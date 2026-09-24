@@ -136,49 +136,69 @@
                         <BindableLayout.ItemTemplate>
                             <DataTemplate>
                                 <Border Style="{StaticResource SoftCard}">
-                                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
-                                        <Border WidthRequest="44"
-                                                HeightRequest="44"
-                                                BackgroundColor="{Binding ClasificacionFondo}"
-                                                Stroke="Transparent">
-                                            <Border.StrokeShape>
-                                                <RoundRectangle CornerRadius="12" />
-                                            </Border.StrokeShape>
-                                            <Label Text="♻"
-                                                   FontSize="22"
-                                                   HorizontalOptions="Center"
-                                                   VerticalOptions="Center" />
-                                        </Border>
+                                    <VerticalStackLayout Spacing="10">
+                                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                            <Border WidthRequest="44"
+                                                    HeightRequest="44"
+                                                    BackgroundColor="{Binding ClasificacionFondo}"
+                                                    Stroke="Transparent">
+                                                <Border.StrokeShape>
+                                                    <RoundRectangle CornerRadius="12" />
+                                                </Border.StrokeShape>
+                                                <Label Text="♻"
+                                                       FontSize="22"
+                                                       HorizontalOptions="Center"
+                                                       VerticalOptions="Center" />
+                                            </Border>
 
-                                        <VerticalStackLayout Grid.Column="1"
-                                                             Spacing="2"
-                                                             VerticalOptions="Center">
-                                            <Label Text="{Binding Nombre}"
-                                                   FontAttributes="Bold"
-                                                   TextColor="{StaticResource ColorText}" />
-                                            <Label Text="{Binding Clasificacion}"
-                                                   TextColor="{Binding ClasificacionColor}"
-                                                   FontSize="11"
-                                                   FontAttributes="Bold" />
-                                            <Label Text="{Binding Observacion}"
-                                                   Style="{StaticResource TinyMutedText}"
-                                                   IsVisible="{Binding TieneObservacion}" />
-                                        </VerticalStackLayout>
+                                            <VerticalStackLayout Grid.Column="1"
+                                                                 Spacing="2"
+                                                                 VerticalOptions="Center">
+                                                <Label Text="{Binding Nombre}"
+                                                       FontAttributes="Bold"
+                                                       TextColor="{StaticResource ColorText}" />
+                                                <Label Text="{Binding Clasificacion}"
+                                                       TextColor="{Binding ClasificacionColor}"
+                                                       FontSize="11"
+                                                       FontAttributes="Bold" />
+                                                <Label Text="{Binding Observacion}"
+                                                       Style="{StaticResource TinyMutedText}"
+                                                       IsVisible="{Binding TieneObservacion}" />
+                                            </VerticalStackLayout>
 
-                                        <VerticalStackLayout Grid.Column="2"
-                                                             Spacing="3"
-                                                             HorizontalOptions="End"
-                                                             VerticalOptions="Center">
-                                            <Label Text="{Binding CantidadTexto}"
-                                                   FontAttributes="Bold"
-                                                   FontSize="12"
-                                                   TextColor="{StaticResource ColorText}"
-                                                   HorizontalOptions="End" />
-                                            <Label Text="{Binding FotosTexto}"
-                                                   Style="{StaticResource TinyMutedText}"
-                                                   HorizontalOptions="End" />
-                                        </VerticalStackLayout>
-                                    </Grid>
+                                            <VerticalStackLayout Grid.Column="2"
+                                                                 Spacing="3"
+                                                                 HorizontalOptions="End"
+                                                                 VerticalOptions="Center">
+                                                <Label Text="{Binding CantidadTexto}"
+                                                       FontAttributes="Bold"
+                                                       FontSize="12"
+                                                       TextColor="{StaticResource ColorText}"
+                                                       HorizontalOptions="End" />
+                                                <Label Text="{Binding FotosTexto}"
+                                                       Style="{StaticResource TinyMutedText}"
+                                                       HorizontalOptions="End" />
+                                            </VerticalStackLayout>
+                                        </Grid>
+
+                                        <HorizontalStackLayout IsVisible="{Binding EsEditable}"
+                                                               HorizontalOptions="End"
+                                                               Spacing="14">
+                                            <Button Text="Editar"
+                                                    Style="{StaticResource LinkButton}"
+                                                    CommandParameter="{Binding RegistroResiduoId}"
+                                                    Clicked="OnEditarResiduoClicked" />
+                                            <Button Text="Eliminar"
+                                                    BackgroundColor="Transparent"
+                                                    TextColor="{StaticResource ColorDanger}"
+                                                    FontAttributes="Bold"
+                                                    FontSize="12"
+                                                    Padding="0"
+                                                    HeightRequest="28"
+                                                    CommandParameter="{Binding RegistroResiduoId}"
+                                                    Clicked="OnEliminarResiduoClicked" />
+                                        </HorizontalStackLayout>
+                                    </VerticalStackLayout>
                                 </Border>
                             </DataTemplate>
                         </BindableLayout.ItemTemplate>
