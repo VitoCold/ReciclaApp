@@ -25,10 +25,7 @@ namespace ReciclaApp
                 return;
 
             _sessionChecked = true;
-
-            var services = Handler?.MauiContext?.Services;
-            if (services is null)
-                return;
+            var services = AppServices.Services;
 
             try
             {
@@ -55,10 +52,7 @@ namespace ReciclaApp
             if (isLogin || _checkingProtectedRoute)
                 return;
 
-            var services = Handler?.MauiContext?.Services;
-            if (services is null)
-                return;
-
+            var services = AppServices.Services;
             var session = services.GetRequiredService<IAuthSessionService>();
             if (session.IsAuthenticated)
                 return;
