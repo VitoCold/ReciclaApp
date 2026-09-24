@@ -45,8 +45,12 @@ namespace ReciclaApp
 
         private async void OnShellNavigated(object? sender, ShellNavigatedEventArgs e)
         {
-            if (_checkingProtectedRoute ||
-                !e.Current.Location.OriginalString.Contains("registros", StringComparison.OrdinalIgnoreCase))
+            var location = e.Current.Location.OriginalString;
+            var isLogin = location.Contains("login", StringComparison.OrdinalIgnoreCase);
+
+            FlyoutBehavior = isLogin ? FlyoutBehavior.Disabled : FlyoutBehavior.Flyout;
+
+            if (isLogin || _checkingProtectedRoute)
                 return;
 
             var services = Handler?.MauiContext?.Services;
@@ -67,6 +71,12 @@ namespace ReciclaApp
             {
                 _checkingProtectedRoute = false;
             }
+        }
+
+        private async void OnNuevoRegistroMenuClicked(object? sender, EventArgs e)
+        {
+            FlyoutIsPresented = false;
+            await AppNavigator.IrAInicioRegistroAsync();
         }
 
         private static void RegistrarRutas()
