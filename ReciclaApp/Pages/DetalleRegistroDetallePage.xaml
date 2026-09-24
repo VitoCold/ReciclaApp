@@ -4,51 +4,188 @@
              x:Class="ReciclaApp.Pages.DetalleRegistroDetallePage"
              Style="{StaticResource BasePage}"
              Shell.NavBarIsVisible="False">
+
     <Grid RowDefinitions="Auto,Auto,*">
         <Grid Style="{StaticResource AppHeader}" ColumnDefinitions="Auto,*,Auto">
-            <Label Text="‹" TextColor="White" FontSize="30" VerticalOptions="Center" />
-            <Label Grid.Column="1" Text="Detalle del registro" Style="{StaticResource HeaderTitle}" />
-            <Label Grid.Column="2" Text="⋮" TextColor="White" FontSize="22" VerticalOptions="Center" />
+            <Label Text="‹"
+                   TextColor="White"
+                   FontSize="30"
+                   VerticalOptions="Center">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnVolverTapped" />
+                </Label.GestureRecognizers>
+            </Label>
+
+            <Label Grid.Column="1"
+                   Text="Detalle del registro"
+                   Style="{StaticResource HeaderTitle}" />
+
+            <Border Grid.Column="2"
+                    x:Name="EstadoBorder"
+                    Style="{StaticResource Chip}"
+                    BackgroundColor="{StaticResource ColorBlueSoft}"
+                    VerticalOptions="Center">
+                <Label x:Name="EstadoLabel"
+                       Text="-"
+                       TextColor="{StaticResource ColorPrimary}"
+                       FontSize="10"
+                       FontAttributes="Bold" />
+            </Border>
         </Grid>
 
-        <Grid Grid.Row="1" BackgroundColor="White" ColumnDefinitions="*,*,*" HeightRequest="48">
+        <Grid Grid.Row="1"
+              BackgroundColor="White"
+              ColumnDefinitions="*,*,*"
+              HeightRequest="48">
             <VerticalStackLayout Grid.Column="0" VerticalOptions="Fill">
-                <Label Text="Detalle" Style="{StaticResource ActiveTabLabel}" VerticalOptions="CenterAndExpand" />
-                <BoxView HeightRequest="3" Color="{StaticResource ColorPrimary}" CornerRadius="2" />
+                <Label Text="Detalle"
+                       Style="{StaticResource ActiveTabLabel}"
+                       VerticalOptions="CenterAndExpand" />
+                <BoxView HeightRequest="3"
+                         Color="{StaticResource ColorPrimary}"
+                         CornerRadius="2" />
             </VerticalStackLayout>
-            <Label Grid.Column="1" Text="Residuos" Style="{StaticResource TabLabel}" />
-            <Label Grid.Column="2" Text="Disposición" Style="{StaticResource TabLabel}" />
+
+            <Label Grid.Column="1"
+                   Text="Residuos"
+                   Style="{StaticResource TabLabel}" />
+
+            <Label Grid.Column="2"
+                   Text="Disposición"
+                   Style="{StaticResource TabLabel}" />
         </Grid>
 
-        <ScrollView Grid.Row="2">
-            <VerticalStackLayout Padding="18,18,18,24" Spacing="16">
-                <Border Style="{StaticResource Card}">
-                    <VerticalStackLayout Spacing="20">
-                        <Label Text="Información general" Style="{StaticResource SectionTitle}" />
-                        <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="18">
-                            <Label Text="📅" TextColor="{StaticResource ColorAccent}" FontSize="18" />
-                            <Label Grid.Column="1" Text="Fecha:" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
-                            <Label Grid.Column="2" Text="30/06/2026 14:01" TextColor="{StaticResource ColorText}" />
+        <Grid Grid.Row="2">
+            <ScrollView>
+                <VerticalStackLayout Padding="18,18,18,24" Spacing="16">
+                    <Border x:Name="ErrorBorder"
+                            IsVisible="False"
+                            BackgroundColor="{StaticResource ColorDangerSoft}"
+                            Stroke="Transparent"
+                            StrokeShape="RoundRectangle 12"
+                            Padding="12">
+                        <Label x:Name="ErrorLabel"
+                               Text="No se pudo cargar el registro."
+                               TextColor="{StaticResource ColorDanger}"
+                               FontSize="12" />
+                    </Border>
 
-                            <Label Grid.Row="1" Text="👤" TextColor="{StaticResource ColorAccent}" FontSize="18" />
-                            <Label Grid.Row="1" Grid.Column="1" Text="Registrado por:" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
-                            <Label Grid.Row="1" Grid.Column="2" Text="Juan Pérez" TextColor="{StaticResource ColorText}" />
+                    <Border Style="{StaticResource Card}">
+                        <VerticalStackLayout Spacing="20">
+                            <Label Text="Información general"
+                                   Style="{StaticResource SectionTitle}" />
 
-                            <Label Grid.Row="2" Text="📁" TextColor="{StaticResource ColorAccent}" FontSize="18" />
-                            <Label Grid.Row="2" Grid.Column="1" Text="Proyecto:" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
-                            <Label Grid.Row="2" Grid.Column="2" Text="DOT" TextColor="{StaticResource ColorText}" />
+                            <Grid ColumnDefinitions="Auto,*,Auto"
+                                  RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
+                                  ColumnSpacing="12"
+                                  RowSpacing="18">
+                                <Label Text="📅"
+                                       TextColor="{StaticResource ColorAccent}"
+                                       FontSize="18" />
+                                <Label Grid.Column="1"
+                                       Text="Fecha:"
+                                       FontAttributes="Bold"
+                                       TextColor="{StaticResource ColorText}" />
+                                <Label x:Name="FechaLabel"
+                                       Grid.Column="2"
+                                       Text="-"
+                                       TextColor="{StaticResource ColorText}" />
 
-                            <Label Grid.Row="3" Text="🛠" TextColor="{StaticResource ColorAccent}" FontSize="18" />
-                            <Label Grid.Row="3" Grid.Column="1" Text="Actividad:" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
-                            <Label Grid.Row="3" Grid.Column="2" Text="Mantenimiento" TextColor="{StaticResource ColorText}" />
+                                <Label Grid.Row="1"
+                                       Text="👤"
+                                       TextColor="{StaticResource ColorAccent}"
+                                       FontSize="18" />
+                                <Label Grid.Row="1"
+                                       Grid.Column="1"
+                                       Text="Registrado por:"
+                                       FontAttributes="Bold"
+                                       TextColor="{StaticResource ColorText}" />
+                                <Label x:Name="RegistradoPorLabel"
+                                       Grid.Row="1"
+                                       Grid.Column="2"
+                                       Text="-"
+                                       TextColor="{StaticResource ColorText}" />
 
-                            <Label Grid.Row="4" Text="📍" TextColor="{StaticResource ColorAccent}" FontSize="18" />
-                            <Label Grid.Row="4" Grid.Column="1" Text="Sede:" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
-                            <Label Grid.Row="4" Grid.Column="2" Text="Pisco" TextColor="{StaticResource ColorText}" />
-                        </Grid>
-                    </VerticalStackLayout>
-                </Border>
-            </VerticalStackLayout>
-        </ScrollView>
+                                <Label Grid.Row="2"
+                                       Text="📁"
+                                       TextColor="{StaticResource ColorAccent}"
+                                       FontSize="18" />
+                                <Label Grid.Row="2"
+                                       Grid.Column="1"
+                                       Text="Proyecto:"
+                                       FontAttributes="Bold"
+                                       TextColor="{StaticResource ColorText}" />
+                                <Label x:Name="ProyectoLabel"
+                                       Grid.Row="2"
+                                       Grid.Column="2"
+                                       Text="-"
+                                       TextColor="{StaticResource ColorText}" />
+
+                                <Label Grid.Row="3"
+                                       Text="🛠"
+                                       TextColor="{StaticResource ColorAccent}"
+                                       FontSize="18" />
+                                <Label Grid.Row="3"
+                                       Grid.Column="1"
+                                       Text="Actividad:"
+                                       FontAttributes="Bold"
+                                       TextColor="{StaticResource ColorText}" />
+                                <Label x:Name="ActividadLabel"
+                                       Grid.Row="3"
+                                       Grid.Column="2"
+                                       Text="-"
+                                       TextColor="{StaticResource ColorText}" />
+
+                                <Label Grid.Row="4"
+                                       Text="📍"
+                                       TextColor="{StaticResource ColorAccent}"
+                                       FontSize="18" />
+                                <Label Grid.Row="4"
+                                       Grid.Column="1"
+                                       Text="Sede:"
+                                       FontAttributes="Bold"
+                                       TextColor="{StaticResource ColorText}" />
+                                <Label x:Name="SedeLabel"
+                                       Grid.Row="4"
+                                       Grid.Column="2"
+                                       Text="-"
+                                       TextColor="{StaticResource ColorText}" />
+
+                                <Label Grid.Row="5"
+                                       Text="♻"
+                                       TextColor="{StaticResource ColorAccent}"
+                                       FontSize="18" />
+                                <Label Grid.Row="5"
+                                       Grid.Column="1"
+                                       Text="Residuos:"
+                                       FontAttributes="Bold"
+                                       TextColor="{StaticResource ColorText}" />
+                                <Label x:Name="CantidadResiduosLabel"
+                                       Grid.Row="5"
+                                       Grid.Column="2"
+                                       Text="0"
+                                       TextColor="{StaticResource ColorText}" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Observación"
+                                   Style="{StaticResource SectionTitle}" />
+                            <Label x:Name="ObservacionLabel"
+                                   Text="Sin observaciones"
+                                   Style="{StaticResource MutedText}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+            </ScrollView>
+
+            <ActivityIndicator x:Name="DetalleActivityIndicator"
+                               IsVisible="False"
+                               IsRunning="False"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center" />
+        </Grid>
     </Grid>
 </ContentPage>
