@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Recicla.Shared.Services;
 
 namespace ReciclaApp
 {
@@ -15,8 +16,21 @@ namespace ReciclaApp
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
 
+#if ANDROID
+            var apiBaseUrl = "http://10.0.2.2:5298/";
+#else
+            var apiBaseUrl = "http://localhost:5298/";
+#endif
+
+            builder.Services.AddSingleton(new HttpClient
+            {
+                BaseAddress = new Uri(apiBaseUrl),
+                Timeout = TimeSpan.FromSeconds(30)
+            });
+            builder.Services.AddSingleton<IReciclaApiClient, ReciclaApiClient>();
+
 #if DEBUG
-    		builder.Logging.AddDebug();
+            builder.Logging.AddDebug();
 #endif
 
             return builder.Build();
