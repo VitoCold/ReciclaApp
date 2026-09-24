@@ -14,9 +14,18 @@
             </Label>
             <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
                 <Label Text="📅" FontSize="14" />
-                <Label Text="30/06/2026" TextColor="White" FontAttributes="Bold" FontSize="14" />
+                <Label x:Name="FechaHeaderLabel"
+                       Text="--/--/----"
+                       TextColor="White"
+                       FontAttributes="Bold"
+                       FontSize="14" />
             </HorizontalStackLayout>
-            <Label Grid.Column="2" Text="Juan Pérez" TextColor="White" FontSize="13" VerticalOptions="Center" />
+            <Label x:Name="UsuarioHeaderLabel"
+                   Grid.Column="2"
+                   Text="Usuario"
+                   TextColor="White"
+                   FontSize="13"
+                   VerticalOptions="Center" />
             <Border Grid.Column="3" WidthRequest="30" HeightRequest="30" BackgroundColor="#DDEEFF" Stroke="Transparent">
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnPerfilTapped" />
