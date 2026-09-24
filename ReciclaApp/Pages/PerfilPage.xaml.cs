@@ -16,10 +16,7 @@ public partial class PerfilPage : ContentPage
     {
         base.OnAppearing();
 
-        var services = Handler?.MauiContext?.Services;
-        if (services is null)
-            return;
-
+        var services = AppServices.Services;
         var session = services.GetRequiredService<IAuthSessionService>();
         if (!session.IsAuthenticated && !await session.RestoreSessionAsync())
         {
@@ -65,9 +62,7 @@ public partial class PerfilPage : ContentPage
         if (!confirm)
             return;
 
-        var services = Handler?.MauiContext?.Services;
-        if (services is null)
-            return;
+        var services = AppServices.Services;
 
         try
         {
