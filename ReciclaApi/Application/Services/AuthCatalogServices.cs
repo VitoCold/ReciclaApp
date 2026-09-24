@@ -76,15 +76,22 @@ public sealed class AuthService(
 
 public interface ICatalogoService
 {
-    Task<CatalogosInicialDto> ObtenerInicialAsync(CancellationToken cancellationToken = default);
+    Task<CatalogosInicialDto> ObtenerInicialAsync(Guid usuarioId, CancellationToken cancellationToken = default);
 }
 
 public sealed class CatalogoService(IUnitOfWork unitOfWork) : ICatalogoService
 {
-    public async Task<CatalogosInicialDto> ObtenerInicialAsync(CancellationToken cancellationToken = default)
+    public async Task<CatalogosInicialDto> ObtenerInicialAsync(
+        Guid usuarioId,
+        CancellationToken cancellationToken = default)
     {
+        var sedeIds = await unitOfWork.Repository<UsuarioSede>().Query()
+            .Where(x => x.UsuarioId == usuarioId)
+            .Select(x => x.SedeId)
+            .ToListAsync(cancellationToken);
+
         var sedes = await unitOfWork.Repository<Sede>().Query()
-            .Where(x => x.EsActivo)
+            .Where(x => x.EsActivo && sedeIds.Contains(x.SedeId))
             .OrderBy(x => x.Nombre)
             .Select(x => new SedeDto(x.SedeId, x.Codigo, x.Nombre))
             .ToListAsync(cancellationToken);
