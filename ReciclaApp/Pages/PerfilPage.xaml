@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ReciclaApp.Pages.PerfilPage"
+             Style="{StaticResource BasePage}"
+             Shell.NavBarIsVisible="False">
+
+    <Grid RowDefinitions="Auto,*">
+        <Grid Style="{StaticResource AppHeader}" ColumnDefinitions="Auto,*,Auto">
+            <Label Text="☰"
+                   TextColor="White"
+                   FontSize="24"
+                   VerticalOptions="Center">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnMenuTapped" />
+                </Label.GestureRecognizers>
+            </Label>
+
+            <Label Grid.Column="1"
+                   Text="Mi perfil"
+                   TextColor="White"
+                   FontSize="18"
+                   FontAttributes="Bold"
+                   VerticalOptions="Center"
+                   Margin="12,0,0,0" />
+
+            <Border Grid.Column="2"
+                    WidthRequest="34"
+                    HeightRequest="34"
+                    BackgroundColor="#DDEEFF"
+                    Stroke="Transparent">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="17" />
+                </Border.StrokeShape>
+                <Label Text="👤"
+                       FontSize="16"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center" />
+            </Border>
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="20,22,20,30" Spacing="18">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Perfil" Style="{StaticResource PageTitle}" FontSize="24" />
+                    <Label Text="Información de tu sesión y acceso a la aplicación."
+                           Style="{StaticResource MutedText}" />
+                </VerticalStackLayout>
+
+                <Border Style="{StaticResource SoftCard}">
+                    <VerticalStackLayout Spacing="16">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                            <Border WidthRequest="64"
+                                    HeightRequest="64"
+                                    BackgroundColor="{StaticResource ColorBlueSoft}"
+                                    Stroke="Transparent">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="32" />
+                                </Border.StrokeShape>
+                                <Label x:Name="InitialsLabel"
+                                       Text="US"
+                                       TextColor="{StaticResource ColorPrimary}"
+                                       FontAttributes="Bold"
+                                       FontSize="20"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center" />
+                            </Border>
+
+                            <VerticalStackLayout Grid.Column="1" Spacing="3" VerticalOptions="Center">
+                                <Label x:Name="NombreLabel"
+                                       Text="Usuario"
+                                       TextColor="{StaticResource ColorText}"
+                                       FontAttributes="Bold"
+                                       FontSize="18" />
+                                <Label x:Name="UsuarioLabel"
+                                       Text="@usuario"
+                                       Style="{StaticResource MutedText}" />
+                                <Border Style="{StaticResource Chip}"
+                                        BackgroundColor="{StaticResource ColorSuccessSoft}"
+                                        HorizontalOptions="Start">
+                                    <Label Text="Sesión activa"
+                                           TextColor="{StaticResource ColorAccent}"
+                                           FontAttributes="Bold"
+                                           FontSize="10" />
+                                </Border>
+                            </VerticalStackLayout>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource SoftCard}">
+                    <VerticalStackLayout Spacing="14">
+                        <Label Text="Datos de acceso"
+                               TextColor="{StaticResource ColorText}"
+                               FontAttributes="Bold"
+                               FontSize="15" />
+
+                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="12">
+                            <Label Text="✉" FontSize="16" VerticalOptions="Center" />
+                            <VerticalStackLayout Grid.Column="1" Spacing="1">
+                                <Label Text="Correo" FontSize="11" Style="{StaticResource MutedText}" />
+                                <Label x:Name="EmailLabel" Text="Sin correo registrado" TextColor="{StaticResource ColorText}" FontSize="13" />
+                            </VerticalStackLayout>
+
+                            <Label Grid.Row="1" Text="🛡" FontSize="16" VerticalOptions="Center" />
+                            <VerticalStackLayout Grid.Row="1" Grid.Column="1" Spacing="1">
+                                <Label Text="Rol" FontSize="11" Style="{StaticResource MutedText}" />
+                                <Label x:Name="RolesLabel" Text="General" TextColor="{StaticResource ColorText}" FontSize="13" />
+                            </VerticalStackLayout>
+
+                            <Label Grid.Row="2" Text="📍" FontSize="16" VerticalOptions="Center" />
+                            <VerticalStackLayout Grid.Row="2" Grid.Column="1" Spacing="1">
+                                <Label Text="Sedes asignadas" FontSize="11" Style="{StaticResource MutedText}" />
+                                <Label x:Name="SedesLabel" Text="0 sedes" TextColor="{StaticResource ColorText}" FontSize="13" />
+                            </VerticalStackLayout>
+
+                            <Label Grid.Row="3" Text="🔑" FontSize="16" VerticalOptions="Center" />
+                            <VerticalStackLayout Grid.Row="3" Grid.Column="1" Spacing="1">
+                                <Label Text="Usuario" FontSize="11" Style="{StaticResource MutedText}" />
+                                <Label x:Name="LoginLabel" Text="usuario" TextColor="{StaticResource ColorText}" FontSize="13" />
+                            </VerticalStackLayout>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Button Text="Cerrar sesión"
+                        BackgroundColor="#FFF0F0"
+                        TextColor="#B42318"
+                        BorderColor="#F4B4B0"
+                        BorderWidth="1"
+                        CornerRadius="10"
+                        HeightRequest="48"
+                        FontAttributes="Bold"
+                        Clicked="OnLogoutClicked" />
+
+                <Label Text="Al cerrar sesión tendrás que ingresar nuevamente tus credenciales."
+                       Style="{StaticResource MutedText}"
+                       FontSize="11"
+                       HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>
