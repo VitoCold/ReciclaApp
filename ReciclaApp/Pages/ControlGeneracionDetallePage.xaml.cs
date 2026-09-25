@@ -13,6 +13,7 @@ public partial class ControlGeneracionDetallePage : ContentPage
     private Guid _controlId;
     private bool _isLoading;
     private ControlGeneracionDetalleDto? _control;
+    private IReadOnlyCollection<RegistroControlListItemDto> _registros = Array.Empty<RegistroControlListItemDto>();
 
     public string ControlId
     {
@@ -55,11 +56,17 @@ public partial class ControlGeneracionDetallePage : ContentPage
         {
             var api = AppServices.Services.GetRequiredService<IReciclaApiClient>();
             _control = await api.ObtenerControlGeneracionAsync(_controlId);
-            var registros = await api.ListarRegistrosControlAsync(_controlId);
+            _registros = await api.ListarRegistrosControlAsync(_controlId);
 
-            PintarControl(_control, registros);
+            // Un registro sin residuos todavía es un borrador técnico. No debe
+            // mostrarse como un registro real del control hasta tener contenido.
+            var registrosVisibles = _registros
+                .Where(x => x.CantidadResiduos > 0)
+                .ToArray();
+
+            PintarControl(_control, registrosVisibles);
             ConfigurarAcciones(_control);
-            BindingContext = new DetailBinding(_control.Usuarios, registros);
+            BindingContext = new DetailBinding(_control.Usuarios, registrosVisibles);
             ContenidoLayout.IsVisible = true;
         }
         catch (Exception ex)
@@ -167,6 +174,28 @@ public partial class ControlGeneracionDetallePage : ContentPage
     {
         try
         {
+            var session = AppServices.Services.GetRequiredService<IAuthSessionService>();
+            var usuario = session.CurrentUser;
+
+            // Si el usuario abandonó anteriormente la captura antes de guardar
+            // el primer residuo, reutilizamos ese borrador en vez de crear otro.
+            var borradorVacio = usuario is null
+                ? null
+                : _registros
+                    .Where(x =>
+                        x.RegistradoPorUsuarioId == usuario.UsuarioId &&
+                        x.CantidadResiduos == 0 &&
+                        (string.Equals(x.Estado, "En proceso", StringComparison.OrdinalIgnoreCase) ||
+                         string.Equals(x.Estado, "Borrador", StringComparison.OrdinalIgnoreCase)))
+                    .OrderByDescending(x => x.CreadoUtc)
+                    .FirstOrDefault();
+
+            if (borradorVacio is not null)
+            {
+                await AppNavigator.IrARegistrarResiduoAsync(borradorVacio.RegistroId);
+                return;
+            }
+
             var api = AppServices.Services.GetRequiredService<IReciclaApiClient>();
             var creado = await api.CrearRegistroEnControlAsync(_controlId, new CrearRegistroEnControlRequest(
                 $"MOB-{Guid.NewGuid():N}"[..12],
