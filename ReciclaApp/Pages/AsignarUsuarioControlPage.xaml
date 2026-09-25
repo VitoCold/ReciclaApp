@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ReciclaApp.Pages.AsignarUsuarioControlPage"
+             Style="{StaticResource BasePage}"
+             Shell.NavBarIsVisible="False">
+
+    <Grid RowDefinitions="Auto,*">
+        <Grid Style="{StaticResource AppHeader}" ColumnDefinitions="Auto,*">
+            <Label Text="‹" TextColor="White" FontSize="34" VerticalOptions="Center">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </Label.GestureRecognizers>
+            </Label>
+            <Label Grid.Column="1" Text="Asignar persona" Style="{StaticResource HeaderTitle}" />
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="18,18,18,30" Spacing="14">
+                <VerticalStackLayout Spacing="3">
+                    <Label Text="Equipo del control" Style="{StaticResource PageTitle}" FontSize="22" />
+                    <Label Text="Agrega registradores o un responsable sustituto con una vigencia definida." Style="{StaticResource MutedText}" />
+                </VerticalStackLayout>
+
+                <Border x:Name="ErrorBorder" IsVisible="False" BackgroundColor="{StaticResource ColorDangerSoft}" Stroke="Transparent" StrokeShape="RoundRectangle 12" Padding="12,9">
+                    <Label x:Name="ErrorLabel" TextColor="{StaticResource ColorDanger}" FontSize="12" />
+                </Border>
+
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Rol dentro del control" Style="{StaticResource FieldLabel}" />
+                    <Border Style="{StaticResource InputBorder}">
+                        <Picker x:Name="RolPicker" Title="Selecciona un rol" SelectedIndexChanged="OnRolChanged">
+                            <Picker.Items>
+                                <x:String>REGISTRADOR</x:String>
+                                <x:String>RESPONSABLE</x:String>
+                            </Picker.Items>
+                        </Picker>
+                    </Border>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Persona" Style="{StaticResource FieldLabel}" />
+                    <Border Style="{StaticResource InputBorder}">
+                        <Picker x:Name="UsuarioPicker" Title="Selecciona una persona" ItemDisplayBinding="{Binding Nombre}" />
+                    </Border>
+                </VerticalStackLayout>
+
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="Desde" Style="{StaticResource FieldLabel}" />
+                        <Border Style="{StaticResource InputBorder}">
+                            <DatePicker x:Name="FechaDesdePicker" />
+                        </Border>
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="1" Spacing="6">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="Hasta" Style="{StaticResource FieldLabel}" VerticalOptions="Center" />
+                            <Switch x:Name="TieneFechaHastaSwitch" Grid.Column="1" Toggled="OnFechaHastaToggled" />
+                        </Grid>
+                        <Border Style="{StaticResource InputBorder}">
+                            <DatePicker x:Name="FechaHastaPicker" IsEnabled="False" Opacity="0.45" />
+                        </Border>
+                    </VerticalStackLayout>
+                </Grid>
+
+                <Grid x:Name="PrincipalRow" IsVisible="False" ColumnDefinitions="*,Auto">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Responsable principal" Style="{StaticResource FieldLabel}" />
+                        <Label Text="Si se activa, reemplaza la marca de principal del responsable actual." Style="{StaticResource MutedText}" />
+                    </VerticalStackLayout>
+                    <Switch x:Name="PrincipalSwitch" Grid.Column="1" VerticalOptions="Center" />
+                </Grid>
+
+                <Button x:Name="GuardarButton" Text="Asignar al control" Style="{StaticResource PrimaryButton}" Clicked="OnGuardarClicked" />
+                <ActivityIndicator x:Name="ActivityIndicator" IsVisible="False" IsRunning="False" HorizontalOptions="Center" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>
