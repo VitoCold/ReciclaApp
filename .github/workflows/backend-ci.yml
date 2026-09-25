@@ -1,0 +1,27 @@
+name: Backend CI
+
+on:
+  pull_request:
+    paths:
+      - 'ReciclaApi/**'
+      - 'Recicla.Shared/**'
+      - '.github/workflows/backend-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  build-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore
+        run: dotnet restore ReciclaApi/ReciclaApi.csproj
+
+      - name: Build
+        run: dotnet build ReciclaApi/ReciclaApi.csproj --configuration Release --no-restore
