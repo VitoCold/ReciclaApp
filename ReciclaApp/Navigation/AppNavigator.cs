@@ -4,9 +4,19 @@ public static class AppNavigator
 {
     public static Task IrAlLoginAsync() => Shell.Current.GoToAsync(AppRoutes.Login);
 
+    public static Task IrAControlesGeneracionAsync() => Shell.Current.GoToAsync(AppRoutes.ControlesGeneracion);
+
     public static Task IrARegistrosAsync() => Shell.Current.GoToAsync(AppRoutes.Registros);
 
     public static Task IrAPerfilAsync() => Shell.Current.GoToAsync(AppRoutes.Perfil);
+
+    public static Task IrANuevoControlGeneracionAsync() => Shell.Current.GoToAsync(AppRoutes.NuevoControlGeneracion);
+
+    public static Task IrADetalleControlGeneracionAsync(Guid controlId) =>
+        Shell.Current.GoToAsync($"{AppRoutes.DetalleControlGeneracion}?controlId={controlId}");
+
+    public static Task IrAAsignarUsuarioControlAsync(Guid controlId) =>
+        Shell.Current.GoToAsync($"{AppRoutes.AsignarUsuarioControl}?controlId={controlId}");
 
     public static Task IrADetalleRegistroAsync(Guid registroId) =>
         Shell.Current.GoToAsync($"{AppRoutes.DetalleRegistro}?registroId={registroId}");
