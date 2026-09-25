@@ -102,6 +102,17 @@ public sealed record RegistroControlListItemDto(
     int CantidadResiduos,
     DateTime CreadoUtc);
 
+public sealed record RegistroControlDetalleDto(
+    Guid RegistroId,
+    Guid ControlGeneracionId,
+    string? CodigoLocal,
+    DateTime FechaRegistro,
+    Guid RegistradoPorUsuarioId,
+    string RegistradoPor,
+    string Estado,
+    string? Observacion,
+    IReadOnlyCollection<RegistroResiduoDto> Residuos);
+
 public sealed record RegistroControlCreadoDto(
     Guid RegistroId,
     Guid ControlGeneracionId,
