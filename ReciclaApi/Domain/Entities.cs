@@ -134,6 +134,8 @@ public sealed class Registro
     public Guid ProyectoId { get; set; }
     public Guid ActividadId { get; set; }
     public Guid SedeId { get; set; }
+    public Guid? PuntoGeneracionId { get; set; }
+    public Guid? EmpresaResponsableId { get; set; }
     public int EstadoRegistroId { get; set; }
     public int EstadoSincronizacionId { get; set; }
     public string? Observacion { get; set; }
@@ -145,6 +147,8 @@ public sealed class Registro
     public Proyecto Proyecto { get; set; } = null!;
     public Actividad Actividad { get; set; } = null!;
     public Sede Sede { get; set; } = null!;
+    public PuntoResiduo? PuntoGeneracion { get; set; }
+    public Empresa? EmpresaResponsable { get; set; }
     public EstadoRegistro EstadoRegistro { get; set; } = null!;
     public EstadoSincronizacion EstadoSincronizacion { get; set; } = null!;
     public ICollection<RegistroResiduo> Residuos { get; set; } = new List<RegistroResiduo>();
@@ -193,6 +197,7 @@ public sealed class RegistroResiduoFoto
     public Usuario TomadaPorUsuario { get; set; } = null!;
 }
 
+// Modelo legado. Se mantiene temporalmente mientras la API y la app migran al flujo Retiro -> DisposicionFinal.
 public sealed class Disposicion
 {
     public Guid DisposicionId { get; set; } = Guid.NewGuid();
