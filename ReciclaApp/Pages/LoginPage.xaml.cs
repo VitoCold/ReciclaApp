@@ -42,7 +42,7 @@ public partial class LoginPage : ContentPage
             logger.LogInformation("Sesión iniciada para {UsuarioId}", response.Usuario.UsuarioId);
             ClaveEntry.Text = string.Empty;
 
-            await AppNavigator.IrARegistrosAsync();
+            await AppNavigator.IrAControlesGeneracionAsync();
         }
         catch (HttpRequestException)
         {
