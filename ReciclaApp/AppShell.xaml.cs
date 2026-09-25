@@ -31,7 +31,7 @@ namespace ReciclaApp
             {
                 var session = services.GetRequiredService<IAuthSessionService>();
                 if (await session.RestoreSessionAsync())
-                    await AppNavigator.IrARegistrosAsync();
+                    await AppNavigator.IrAControlesGeneracionAsync();
             }
             catch (Exception ex)
             {
@@ -69,14 +69,11 @@ namespace ReciclaApp
             }
         }
 
-        private async void OnNuevoRegistroMenuClicked(object? sender, EventArgs e)
-        {
-            FlyoutIsPresented = false;
-            await AppNavigator.IrAInicioRegistroAsync();
-        }
-
         private static void RegistrarRutas()
         {
+            Routing.RegisterRoute(AppRoutes.NuevoControlGeneracion, typeof(NuevoControlGeneracionPage));
+            Routing.RegisterRoute(AppRoutes.DetalleControlGeneracion, typeof(ControlGeneracionDetallePage));
+            Routing.RegisterRoute(AppRoutes.AsignarUsuarioControl, typeof(AsignarUsuarioControlPage));
             Routing.RegisterRoute(AppRoutes.DetalleRegistro, typeof(DetalleRegistroDetallePage));
             Routing.RegisterRoute(AppRoutes.DetalleResiduoDetalle, typeof(DetalleResiduoDetallePage));
             Routing.RegisterRoute(AppRoutes.DetalleResiduoFotos, typeof(DetalleResiduoFotosPage));
