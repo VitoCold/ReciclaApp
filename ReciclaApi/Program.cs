@@ -82,6 +82,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICatalogoService, CatalogoService>();
 builder.Services.AddScoped<IRegistroService, RegistroService>();
 builder.Services.AddScoped<IControlGeneracionService, ControlGeneracionService>();
+builder.Services.AddScoped<IControlGeneracionRegistroConsultaService, ControlGeneracionRegistroConsultaService>();
 builder.Services.AddScoped<DatabaseInitializer>();
 
 var app = builder.Build();
