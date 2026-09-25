@@ -10,6 +10,23 @@ public interface IReciclaApiClient
     Task<LoginResponse> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default);
     Task<UsuarioDto> MeAsync(CancellationToken cancellationToken = default);
     Task<CatalogosInicialDto> ObtenerCatalogosAsync(CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyCollection<ControlGeneracionListItemDto>> ListarControlesGeneracionAsync(CancellationToken cancellationToken = default);
+    Task<ControlGeneracionDetalleDto> ObtenerControlGeneracionAsync(Guid controlId, CancellationToken cancellationToken = default);
+    Task<ControlGeneracionDetalleDto> CrearControlGeneracionAsync(CrearControlGeneracionRequest request, CancellationToken cancellationToken = default);
+    Task<ControlGeneracionDetalleDto> ActualizarControlGeneracionAsync(Guid controlId, ActualizarControlGeneracionRequest request, CancellationToken cancellationToken = default);
+    Task<ControlGeneracionDetalleDto> AprobarControlGeneracionAsync(Guid controlId, CancellationToken cancellationToken = default);
+    Task<ControlGeneracionDetalleDto> RechazarControlGeneracionAsync(Guid controlId, RechazarControlGeneracionRequest request, CancellationToken cancellationToken = default);
+    Task<ControlGeneracionDetalleDto> SuspenderControlGeneracionAsync(Guid controlId, CambiarEstadoControlGeneracionRequest request, CancellationToken cancellationToken = default);
+    Task<ControlGeneracionDetalleDto> ReactivarControlGeneracionAsync(Guid controlId, CambiarEstadoControlGeneracionRequest request, CancellationToken cancellationToken = default);
+    Task<ControlGeneracionDetalleDto> CerrarControlGeneracionAsync(Guid controlId, CambiarEstadoControlGeneracionRequest request, CancellationToken cancellationToken = default);
+    Task<ControlGeneracionDetalleDto> AnularControlGeneracionAsync(Guid controlId, CambiarEstadoControlGeneracionRequest request, CancellationToken cancellationToken = default);
+    Task<ControlGeneracionDetalleDto> AsignarUsuarioControlGeneracionAsync(Guid controlId, AsignarControlGeneracionUsuarioRequest request, CancellationToken cancellationToken = default);
+    Task DesasignarUsuarioControlGeneracionAsync(Guid controlId, Guid asignacionId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyCollection<RegistroControlListItemDto>> ListarRegistrosControlAsync(Guid controlId, CancellationToken cancellationToken = default);
+    Task<RegistroControlDetalleDto> ObtenerRegistroControlAsync(Guid controlId, Guid registroId, CancellationToken cancellationToken = default);
+    Task<RegistroControlCreadoDto> CrearRegistroEnControlAsync(Guid controlId, CrearRegistroEnControlRequest request, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyCollection<RegistroListItemDto>> ListarRegistrosAsync(CancellationToken cancellationToken = default);
     Task<RegistroDetalleDto> ObtenerRegistroAsync(Guid registroId, CancellationToken cancellationToken = default);
     Task<RegistroDetalleDto> CrearRegistroAsync(CrearRegistroRequest request, CancellationToken cancellationToken = default);
@@ -43,6 +60,72 @@ public sealed class ReciclaApiClient(HttpClient httpClient) : IReciclaApiClient
 
     public async Task<CatalogosInicialDto> ObtenerCatalogosAsync(CancellationToken cancellationToken = default) =>
         await GetAsync<CatalogosInicialDto>("api/catalogos/inicial", cancellationToken);
+
+    public async Task<IReadOnlyCollection<ControlGeneracionListItemDto>> ListarControlesGeneracionAsync(CancellationToken cancellationToken = default) =>
+        await GetAsync<List<ControlGeneracionListItemDto>>("api/controles-generacion", cancellationToken);
+
+    public async Task<ControlGeneracionDetalleDto> ObtenerControlGeneracionAsync(Guid controlId, CancellationToken cancellationToken = default) =>
+        await GetAsync<ControlGeneracionDetalleDto>($"api/controles-generacion/{controlId}", cancellationToken);
+
+    public async Task<ControlGeneracionDetalleDto> CrearControlGeneracionAsync(CrearControlGeneracionRequest request, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PostAsJsonAsync("api/controles-generacion", request, cancellationToken);
+        return await ReadAsync<ControlGeneracionDetalleDto>(response, cancellationToken);
+    }
+
+    public async Task<ControlGeneracionDetalleDto> ActualizarControlGeneracionAsync(Guid controlId, ActualizarControlGeneracionRequest request, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PutAsJsonAsync($"api/controles-generacion/{controlId}", request, cancellationToken);
+        return await ReadAsync<ControlGeneracionDetalleDto>(response, cancellationToken);
+    }
+
+    public async Task<ControlGeneracionDetalleDto> AprobarControlGeneracionAsync(Guid controlId, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PostAsync($"api/controles-generacion/{controlId}/aprobar", null, cancellationToken);
+        return await ReadAsync<ControlGeneracionDetalleDto>(response, cancellationToken);
+    }
+
+    public async Task<ControlGeneracionDetalleDto> RechazarControlGeneracionAsync(Guid controlId, RechazarControlGeneracionRequest request, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PostAsJsonAsync($"api/controles-generacion/{controlId}/rechazar", request, cancellationToken);
+        return await ReadAsync<ControlGeneracionDetalleDto>(response, cancellationToken);
+    }
+
+    public Task<ControlGeneracionDetalleDto> SuspenderControlGeneracionAsync(Guid controlId, CambiarEstadoControlGeneracionRequest request, CancellationToken cancellationToken = default) =>
+        CambiarEstadoControlAsync(controlId, "suspender", request, cancellationToken);
+
+    public Task<ControlGeneracionDetalleDto> ReactivarControlGeneracionAsync(Guid controlId, CambiarEstadoControlGeneracionRequest request, CancellationToken cancellationToken = default) =>
+        CambiarEstadoControlAsync(controlId, "reactivar", request, cancellationToken);
+
+    public Task<ControlGeneracionDetalleDto> CerrarControlGeneracionAsync(Guid controlId, CambiarEstadoControlGeneracionRequest request, CancellationToken cancellationToken = default) =>
+        CambiarEstadoControlAsync(controlId, "cerrar", request, cancellationToken);
+
+    public Task<ControlGeneracionDetalleDto> AnularControlGeneracionAsync(Guid controlId, CambiarEstadoControlGeneracionRequest request, CancellationToken cancellationToken = default) =>
+        CambiarEstadoControlAsync(controlId, "anular", request, cancellationToken);
+
+    public async Task<ControlGeneracionDetalleDto> AsignarUsuarioControlGeneracionAsync(Guid controlId, AsignarControlGeneracionUsuarioRequest request, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PostAsJsonAsync($"api/controles-generacion/{controlId}/usuarios", request, cancellationToken);
+        return await ReadAsync<ControlGeneracionDetalleDto>(response, cancellationToken);
+    }
+
+    public async Task DesasignarUsuarioControlGeneracionAsync(Guid controlId, Guid asignacionId, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.DeleteAsync($"api/controles-generacion/{controlId}/usuarios/{asignacionId}", cancellationToken);
+        await EnsureSuccessAsync(response, cancellationToken);
+    }
+
+    public async Task<IReadOnlyCollection<RegistroControlListItemDto>> ListarRegistrosControlAsync(Guid controlId, CancellationToken cancellationToken = default) =>
+        await GetAsync<List<RegistroControlListItemDto>>($"api/controles-generacion/{controlId}/registros", cancellationToken);
+
+    public async Task<RegistroControlDetalleDto> ObtenerRegistroControlAsync(Guid controlId, Guid registroId, CancellationToken cancellationToken = default) =>
+        await GetAsync<RegistroControlDetalleDto>($"api/controles-generacion/{controlId}/registros/{registroId}", cancellationToken);
+
+    public async Task<RegistroControlCreadoDto> CrearRegistroEnControlAsync(Guid controlId, CrearRegistroEnControlRequest request, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PostAsJsonAsync($"api/controles-generacion/{controlId}/registros", request, cancellationToken);
+        return await ReadAsync<RegistroControlCreadoDto>(response, cancellationToken);
+    }
 
     public async Task<IReadOnlyCollection<RegistroListItemDto>> ListarRegistrosAsync(CancellationToken cancellationToken = default) =>
         await GetAsync<List<RegistroListItemDto>>("api/registros", cancellationToken);
@@ -128,6 +211,16 @@ public sealed class ReciclaApiClient(HttpClient httpClient) : IReciclaApiClient
 
         var response = await httpClient.PostAsync($"api/disposiciones/{disposicionId}/evidencias", multipart, cancellationToken);
         return await ReadAsync<DisposicionEvidenciaDto>(response, cancellationToken);
+    }
+
+    private async Task<ControlGeneracionDetalleDto> CambiarEstadoControlAsync(
+        Guid controlId,
+        string accion,
+        CambiarEstadoControlGeneracionRequest request,
+        CancellationToken cancellationToken)
+    {
+        var response = await httpClient.PostAsJsonAsync($"api/controles-generacion/{controlId}/{accion}", request, cancellationToken);
+        return await ReadAsync<ControlGeneracionDetalleDto>(response, cancellationToken);
     }
 
     private async Task<T> GetAsync<T>(string uri, CancellationToken cancellationToken)
