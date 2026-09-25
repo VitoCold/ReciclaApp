@@ -17,6 +17,7 @@ public sealed class DatabaseInitializer(
             await context.Database.EnsureCreatedAsync(cancellationToken);
 
         await SeedCatalogosAsync(cancellationToken);
+        await TraceabilitySeeder.SeedAsync(context, cancellationToken);
         await SeedAdminAsync(cancellationToken);
     }
 
