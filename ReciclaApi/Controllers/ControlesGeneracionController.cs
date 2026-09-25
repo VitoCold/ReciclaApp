@@ -9,6 +9,7 @@ namespace ReciclaApi.Controllers;
 [Route("api/controles-generacion")]
 public sealed class ControlesGeneracionController(
     IControlGeneracionService controlService,
+    IControlGeneracionRegistroConsultaService registroConsultaService,
     ILogger<ControlesGeneracionController> logger) : BaseController<ControlesGeneracionController>(logger)
 {
     [HttpGet]
@@ -115,6 +116,17 @@ public sealed class ControlesGeneracionController(
     public async Task<IActionResult> ListarRegistros(Guid id, CancellationToken cancellationToken)
     {
         var result = await controlService.ListarRegistrosAsync(id, UsuarioId, cancellationToken);
+        return FromResult(result);
+    }
+
+    [HttpGet("{id:guid}/registros/{registroId:guid}")]
+    [Authorize(Roles = "ADMINISTRADOR,AMBIENTAL,RESPONSABLE_OPERATIVO,REGISTRADOR")]
+    public async Task<IActionResult> ObtenerRegistro(
+        Guid id,
+        Guid registroId,
+        CancellationToken cancellationToken)
+    {
+        var result = await registroConsultaService.ObtenerAsync(id, registroId, UsuarioId, cancellationToken);
         return FromResult(result);
     }
 
