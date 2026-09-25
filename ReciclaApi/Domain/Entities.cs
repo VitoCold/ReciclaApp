@@ -128,6 +128,7 @@ public sealed class EstadoSincronizacion
 public sealed class Registro
 {
     public Guid RegistroId { get; set; } = Guid.NewGuid();
+    public Guid? ControlGeneracionId { get; set; }
     public string? CodigoLocal { get; set; }
     public DateTime FechaRegistro { get; set; }
     public Guid RegistradoPorUsuarioId { get; set; }
@@ -143,6 +144,7 @@ public sealed class Registro
     public DateTime CreadoUtc { get; set; } = DateTime.UtcNow;
     public DateTime? ActualizadoUtc { get; set; }
     public bool Eliminado { get; set; }
+    public ControlGeneracion? ControlGeneracion { get; set; }
     public Usuario RegistradoPorUsuario { get; set; } = null!;
     public Proyecto Proyecto { get; set; } = null!;
     public Actividad Actividad { get; set; } = null!;
