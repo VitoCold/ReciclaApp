@@ -34,7 +34,8 @@ public sealed class DatabaseInitializer(
         {
             context.EstadosRegistro.AddRange(
                 new EstadoRegistro { Codigo = "BORRADOR", Nombre = "En proceso" },
-                new EstadoRegistro { Codigo = "COMPLETADO", Nombre = "Completado" },
+                new EstadoRegistro { Codigo = "REGISTRADO", Nombre = "Registrado" },
+                new EstadoRegistro { Codigo = "COMPLETADO", Nombre = "Completado (legado)" },
                 new EstadoRegistro { Codigo = "OBSERVADO", Nombre = "Observado" },
                 new EstadoRegistro { Codigo = "VALIDADO", Nombre = "Validado" },
                 new EstadoRegistro { Codigo = "ANULADO", Nombre = "Anulado" });
@@ -46,6 +47,37 @@ public sealed class DatabaseInitializer(
 
             if (estadoEnProceso is not null && estadoEnProceso.Nombre != "En proceso")
                 estadoEnProceso.Nombre = "En proceso";
+        }
+
+        if (!await context.EstadosRetiro.AnyAsync(cancellationToken))
+        {
+            context.EstadosRetiro.AddRange(
+                new EstadoRetiro { Codigo = "PROGRAMADO", Nombre = "Programado" },
+                new EstadoRetiro { Codigo = "EN_RETIRO", Nombre = "En retiro" },
+                new EstadoRetiro { Codigo = "RETIRADO", Nombre = "Retirado" },
+                new EstadoRetiro { Codigo = "ANULADO", Nombre = "Anulado" });
+        }
+
+        if (!await context.EstadosDisposicion.AnyAsync(cancellationToken))
+        {
+            context.EstadosDisposicion.AddRange(
+                new EstadoDisposicion { Codigo = "PENDIENTE", Nombre = "Pendiente" },
+                new EstadoDisposicion { Codigo = "DOCUMENTADA", Nombre = "Documentada" },
+                new EstadoDisposicion { Codigo = "VALIDADA", Nombre = "Validada" },
+                new EstadoDisposicion { Codigo = "OBSERVADA", Nombre = "Observada" },
+                new EstadoDisposicion { Codigo = "ANULADA", Nombre = "Anulada" });
+        }
+
+        if (!await context.TiposTratamiento.AnyAsync(cancellationToken))
+        {
+            context.TiposTratamiento.AddRange(
+                new TipoTratamiento { Codigo = "VALORIZACION", Nombre = "Valorización" },
+                new TipoTratamiento { Codigo = "RECICLAJE", Nombre = "Reciclaje" },
+                new TipoTratamiento { Codigo = "REUSO", Nombre = "Reúso" },
+                new TipoTratamiento { Codigo = "TRATAMIENTO", Nombre = "Tratamiento" },
+                new TipoTratamiento { Codigo = "RELLENO_SEGURIDAD", Nombre = "Relleno de seguridad" },
+                new TipoTratamiento { Codigo = "RELLENO_SANITARIO", Nombre = "Relleno sanitario" },
+                new TipoTratamiento { Codigo = "OTRO", Nombre = "Otro" });
         }
 
         if (!await context.EstadosSincronizacion.AnyAsync(cancellationToken))
@@ -117,7 +149,14 @@ public sealed class DatabaseInitializer(
             context.ResiduosCatalogo.AddRange(
                 new ResiduoCatalogo { TipoResiduoId = tipo.TipoResiduoId, ClasificacionResiduoId = noPeligroso.ClasificacionResiduoId, Codigo = "PAPEL_CARTON", Nombre = "Papel y cartón", UnidadMedidaDefaultId = kg.UnidadMedidaId },
                 new ResiduoCatalogo { TipoResiduoId = tipo.TipoResiduoId, ClasificacionResiduoId = peligroso.ClasificacionResiduoId, Codigo = "RECIPIENTES_CONTAMINADOS", Nombre = "Recipientes contaminados", UnidadMedidaDefaultId = kg.UnidadMedidaId },
-                new ResiduoCatalogo { TipoResiduoId = tipo.TipoResiduoId, ClasificacionResiduoId = noPeligroso.ClasificacionResiduoId, Codigo = "VIDRIO", Nombre = "Vidrio", UnidadMedidaDefaultId = kg.UnidadMedidaId });
+                new ResiduoCatalogo { TipoResiduoId = tipo.TipoResiduoId, ClasificacionResiduoId = noPeligroso.ClasificacionResiduoId, Codigo = "VIDRIO", Nombre = "Vidrio", UnidadMedidaDefaultId = kg.UnidadMedidaId },
+                new ResiduoCatalogo { TipoResiduoId = tipo.TipoResiduoId, ClasificacionResiduoId = noPeligroso.ClasificacionResiduoId, Codigo = "PLASTICO", Nombre = "Plástico", UnidadMedidaDefaultId = kg.UnidadMedidaId },
+                new ResiduoCatalogo { TipoResiduoId = tipo.TipoResiduoId, ClasificacionResiduoId = noPeligroso.ClasificacionResiduoId, Codigo = "METALES", Nombre = "Metales", UnidadMedidaDefaultId = kg.UnidadMedidaId },
+                new ResiduoCatalogo { TipoResiduoId = tipo.TipoResiduoId, ClasificacionResiduoId = noPeligroso.ClasificacionResiduoId, Codigo = "ORGANICOS", Nombre = "Orgánicos", UnidadMedidaDefaultId = kg.UnidadMedidaId },
+                new ResiduoCatalogo { TipoResiduoId = tipo.TipoResiduoId, ClasificacionResiduoId = noPeligroso.ClasificacionResiduoId, Codigo = "GENERALES", Nombre = "Residuos generales", UnidadMedidaDefaultId = kg.UnidadMedidaId },
+                new ResiduoCatalogo { TipoResiduoId = tipo.TipoResiduoId, ClasificacionResiduoId = peligroso.ClasificacionResiduoId, Codigo = "TRAPOS_CONTAMINADOS", Nombre = "Trapos contaminados", UnidadMedidaDefaultId = kg.UnidadMedidaId },
+                new ResiduoCatalogo { TipoResiduoId = tipo.TipoResiduoId, ClasificacionResiduoId = noPeligroso.ClasificacionResiduoId, Codigo = "OTRO_NO_PELIGROSO", Nombre = "Otro no peligroso", UnidadMedidaDefaultId = kg.UnidadMedidaId },
+                new ResiduoCatalogo { TipoResiduoId = tipo.TipoResiduoId, ClasificacionResiduoId = peligroso.ClasificacionResiduoId, Codigo = "OTRO_PELIGROSO", Nombre = "Otro peligroso", UnidadMedidaDefaultId = kg.UnidadMedidaId });
         }
 
         await context.SaveChangesAsync(cancellationToken);
