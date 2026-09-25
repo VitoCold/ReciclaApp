@@ -9,6 +9,7 @@ public static class ControlGeneracionSeeder
     {
         await EnsureRolesAsync(context, cancellationToken);
         await EnsureStatesAsync(context, cancellationToken);
+        await EnsureBaseCompanyAsync(context, cancellationToken);
         await MigrateLegacyRoleAssignmentsAsync(context, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
     }
@@ -41,6 +42,21 @@ public static class ControlGeneracionSeeder
         AddStateIfMissing(context, states, "SUSPENDIDO", "Suspendido");
         AddStateIfMissing(context, states, "CERRADO", "Cerrado");
         AddStateIfMissing(context, states, "ANULADO", "Anulado");
+    }
+
+    private static async Task EnsureBaseCompanyAsync(ReciclaDbContext context, CancellationToken cancellationToken)
+    {
+        if (await context.Empresas.AnyAsync(x => x.Codigo == "CONTUGAS", cancellationToken))
+            return;
+
+        context.Empresas.Add(new Empresa
+        {
+            Codigo = "CONTUGAS",
+            RazonSocial = "Contugas S.A.C.",
+            NombreComercial = "Contugas",
+            EsGestoraResiduos = false,
+            EsActivo = true
+        });
     }
 
     private static void AddStateIfMissing(
