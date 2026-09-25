@@ -84,6 +84,7 @@ builder.Services.AddScoped<IRegistroService, RegistroService>();
 builder.Services.AddScoped<IControlGeneracionService, ControlGeneracionService>();
 builder.Services.AddScoped<IControlGeneracionRegistroConsultaService, ControlGeneracionRegistroConsultaService>();
 builder.Services.AddScoped<DatabaseInitializer>();
+builder.Services.AddScoped<DevelopmentDataSeeder>();
 
 var app = builder.Build();
 
@@ -91,6 +92,9 @@ using (var scope = app.Services.CreateScope())
 {
     var initializer = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
     await initializer.InitializeAsync();
+
+    var developmentSeeder = scope.ServiceProvider.GetRequiredService<DevelopmentDataSeeder>();
+    await developmentSeeder.SeedAsync();
 }
 
 app.UseExceptionHandler();
