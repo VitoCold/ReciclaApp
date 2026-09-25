@@ -21,6 +21,19 @@ public sealed class ReciclaDbContext(DbContextOptions<ReciclaDbContext> options)
     public DbSet<Registro> Registros => Set<Registro>();
     public DbSet<RegistroResiduo> RegistroResiduos => Set<RegistroResiduo>();
     public DbSet<RegistroResiduoFoto> RegistroResiduoFotos => Set<RegistroResiduoFoto>();
+
+    public DbSet<Empresa> Empresas => Set<Empresa>();
+    public DbSet<PuntoResiduo> PuntosResiduo => Set<PuntoResiduo>();
+    public DbSet<EstadoRetiro> EstadosRetiro => Set<EstadoRetiro>();
+    public DbSet<EstadoDisposicion> EstadosDisposicion => Set<EstadoDisposicion>();
+    public DbSet<TipoTratamiento> TiposTratamiento => Set<TipoTratamiento>();
+    public DbSet<MovimientoResiduo> MovimientosResiduo => Set<MovimientoResiduo>();
+    public DbSet<Retiro> Retiros => Set<Retiro>();
+    public DbSet<RetiroDetalle> RetiroDetalles => Set<RetiroDetalle>();
+    public DbSet<DisposicionFinal> DisposicionesFinales => Set<DisposicionFinal>();
+    public DbSet<DisposicionFinalEvidencia> DisposicionFinalEvidencias => Set<DisposicionFinalEvidencia>();
+
+    // Legado: se conserva mientras API y app migran al flujo Retiro -> DisposicionFinal.
     public DbSet<Disposicion> Disposiciones => Set<Disposicion>();
     public DbSet<DisposicionEvidencia> DisposicionEvidencias => Set<DisposicionEvidencia>();
     public DbSet<SyncOutbox> SyncOutbox => Set<SyncOutbox>();
@@ -251,5 +264,7 @@ public sealed class ReciclaDbContext(DbContextOptions<ReciclaDbContext> options)
             entity.Property(x => x.Dispositivo).HasMaxLength(120);
             entity.HasOne(x => x.Usuario).WithMany().HasForeignKey(x => x.UsuarioId).OnDelete(DeleteBehavior.Restrict);
         });
+
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ReciclaDbContext).Assembly);
     }
 }
