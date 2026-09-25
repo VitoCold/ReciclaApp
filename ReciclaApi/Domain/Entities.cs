@@ -128,12 +128,15 @@ public sealed class EstadoSincronizacion
 public sealed class Registro
 {
     public Guid RegistroId { get; set; } = Guid.NewGuid();
+    public Guid? ControlGeneracionId { get; set; }
     public string? CodigoLocal { get; set; }
     public DateTime FechaRegistro { get; set; }
     public Guid RegistradoPorUsuarioId { get; set; }
     public Guid ProyectoId { get; set; }
     public Guid ActividadId { get; set; }
     public Guid SedeId { get; set; }
+    public Guid? PuntoGeneracionId { get; set; }
+    public Guid? EmpresaResponsableId { get; set; }
     public int EstadoRegistroId { get; set; }
     public int EstadoSincronizacionId { get; set; }
     public string? Observacion { get; set; }
@@ -141,10 +144,13 @@ public sealed class Registro
     public DateTime CreadoUtc { get; set; } = DateTime.UtcNow;
     public DateTime? ActualizadoUtc { get; set; }
     public bool Eliminado { get; set; }
+    public ControlGeneracion? ControlGeneracion { get; set; }
     public Usuario RegistradoPorUsuario { get; set; } = null!;
     public Proyecto Proyecto { get; set; } = null!;
     public Actividad Actividad { get; set; } = null!;
     public Sede Sede { get; set; } = null!;
+    public PuntoResiduo? PuntoGeneracion { get; set; }
+    public Empresa? EmpresaResponsable { get; set; }
     public EstadoRegistro EstadoRegistro { get; set; } = null!;
     public EstadoSincronizacion EstadoSincronizacion { get; set; } = null!;
     public ICollection<RegistroResiduo> Residuos { get; set; } = new List<RegistroResiduo>();
@@ -193,6 +199,7 @@ public sealed class RegistroResiduoFoto
     public Usuario TomadaPorUsuario { get; set; } = null!;
 }
 
+// Modelo legado. Se mantiene temporalmente mientras la API y la app migran al flujo Retiro -> DisposicionFinal.
 public sealed class Disposicion
 {
     public Guid DisposicionId { get; set; } = Guid.NewGuid();
