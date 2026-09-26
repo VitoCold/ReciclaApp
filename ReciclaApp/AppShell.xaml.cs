@@ -31,7 +31,10 @@ namespace ReciclaApp
             {
                 var session = services.GetRequiredService<IAuthSessionService>();
                 if (await session.RestoreSessionAsync())
+                {
+                    ActualizarVisibilidadPorRol(session.CurrentUser);
                     await AppNavigator.IrAControlesGeneracionAsync();
+                }
             }
             catch (Exception ex)
             {
@@ -55,18 +58,37 @@ namespace ReciclaApp
             var services = AppServices.Services;
             var session = services.GetRequiredService<IAuthSessionService>();
             if (session.IsAuthenticated)
+            {
+                ActualizarVisibilidadPorRol(session.CurrentUser);
                 return;
+            }
 
             _checkingProtectedRoute = true;
             try
             {
                 if (!await session.RestoreSessionAsync())
+                {
                     await AppNavigator.IrAlLoginAsync();
+                }
+                else
+                {
+                    ActualizarVisibilidadPorRol(session.CurrentUser);
+                }
             }
             finally
             {
                 _checkingProtectedRoute = false;
             }
+        }
+
+        private void ActualizarVisibilidadPorRol(Recicla.Shared.Contracts.UsuarioDto? usuario)
+        {
+            var puedeVerRetiros = usuario is not null &&
+                (usuario.Roles.Contains("ADMINISTRADOR") ||
+                 usuario.Roles.Contains("AMBIENTAL") ||
+                 usuario.Roles.Contains("RESPONSABLE_OPERATIVO"));
+
+            Shell.SetFlyoutItemIsVisible(RetirosShellContent, puedeVerRetiros);
         }
 
         private static void RegistrarRutas()
