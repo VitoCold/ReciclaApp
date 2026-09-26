@@ -12,6 +12,7 @@ public static class AppRoutes
     public const string NuevoControlGeneracion = "nuevo-control-generacion";
     public const string DetalleControlGeneracion = "detalle-control-generacion";
     public const string AsignarUsuarioControl = "asignar-usuario-control";
+    public const string DetalleRegistroControl = "detalle-registro-control";
     public const string DetalleRegistro = "detalle-registro";
     public const string DetalleResiduoDetalle = "detalle-residuo-detalle";
     public const string DetalleResiduoFotos = "detalle-residuo-fotos";
