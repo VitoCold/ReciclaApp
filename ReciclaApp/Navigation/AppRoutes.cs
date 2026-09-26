@@ -6,6 +6,7 @@ public static class AppRoutes
     public const string Login = "//login";
     public const string ControlesGeneracion = "//controles-generacion";
     public const string StockResiduos = "//stock-residuos";
+    public const string Retiros = "//retiros";
     public const string Registros = "//registros";
     public const string Perfil = "//perfil";
 
@@ -14,6 +15,8 @@ public static class AppRoutes
     public const string DetalleControlGeneracion = "detalle-control-generacion";
     public const string AsignarUsuarioControl = "asignar-usuario-control";
     public const string DetalleRegistroControl = "detalle-registro-control";
+    public const string NuevoRetiro = "nuevo-retiro";
+    public const string DetalleRetiro = "detalle-retiro";
     public const string DetalleRegistro = "detalle-registro";
     public const string DetalleResiduoDetalle = "detalle-residuo-detalle";
     public const string DetalleResiduoFotos = "detalle-residuo-fotos";
