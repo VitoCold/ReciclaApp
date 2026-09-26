@@ -86,7 +86,7 @@
                                                 StrokeThickness="1"
                                                 Padding="12"
                                                 Margin="0,0,0,8">
-                                            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="4">
+                                            <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="5">
                                                 <VerticalStackLayout Spacing="1">
                                                     <Label Text="{Binding Nombre}" FontSize="13" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
                                                     <Label Text="{Binding Clasificacion}" FontSize="10" TextColor="{StaticResource ColorMuted}" />
@@ -103,12 +103,30 @@
                                                        Text="{Binding ObservacionTexto}"
                                                        Style="{StaticResource TinyMutedText}" />
 
-                                                <HorizontalStackLayout Grid.Row="2"
+                                                <Border Grid.Row="2"
+                                                        Grid.ColumnSpan="2"
+                                                        BackgroundColor="{StaticResource ColorBlueSoft}"
+                                                        Stroke="Transparent"
+                                                        StrokeShape="RoundRectangle 10"
+                                                        Padding="9,7">
+                                                    <VerticalStackLayout Spacing="3">
+                                                        <Label Text="{Binding EvidenciaEstadoTexto}"
+                                                               FontSize="10"
+                                                               FontAttributes="Bold"
+                                                               TextColor="{StaticResource ColorPrimary}" />
+                                                        <Label Text="{Binding UbicacionTexto}"
+                                                               Style="{StaticResource TinyMutedText}" />
+                                                        <Label Text="{Binding FotosTexto}"
+                                                               Style="{StaticResource TinyMutedText}" />
+                                                    </VerticalStackLayout>
+                                                </Border>
+
+                                                <HorizontalStackLayout Grid.Row="3"
                                                                        Grid.ColumnSpan="2"
                                                                        Spacing="8"
                                                                        Margin="0,5,0,0"
                                                                        IsVisible="{Binding PuedeEditar}">
-                                                    <Button Text="Editar"
+                                                    <Button Text="Editar / evidencia"
                                                             Style="{StaticResource LinkButton}"
                                                             CommandParameter="{Binding RegistroResiduoId}"
                                                             Clicked="OnEditarResiduoClicked" />
@@ -131,6 +149,16 @@
                     </Border>
 
                     <VerticalStackLayout x:Name="FinalizarLayout" IsVisible="False" Spacing="7">
+                        <Border x:Name="EvidenciaPendienteLabel"
+                                IsVisible="False"
+                                BackgroundColor="{StaticResource ColorWarningSoft}"
+                                Stroke="Transparent"
+                                StrokeShape="RoundRectangle 12"
+                                Padding="12,9">
+                            <Label Text="Completa la ubicación GPS y al menos una foto en cada residuo para habilitar la finalización."
+                                   TextColor="{StaticResource ColorWarning}"
+                                   FontSize="11" />
+                        </Border>
                         <Button x:Name="FinalizarButton"
                                 Text="Finalizar registro"
                                 Style="{StaticResource PrimaryButton}"
