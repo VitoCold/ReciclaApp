@@ -4,6 +4,10 @@
 <dict>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>La cámara se usa para registrar evidencia fotográfica de cada residuo.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>La ubicación se usa para guardar las coordenadas donde se registra cada residuo.</string>
 	<key>UIDeviceFamily</key>
 	<array>
 		<integer>1</integer>
