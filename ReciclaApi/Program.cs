@@ -84,6 +84,7 @@ builder.Services.AddScoped<IRegistroService, RegistroService>();
 builder.Services.AddScoped<IControlGeneracionService, ControlGeneracionService>();
 builder.Services.AddScoped<IControlGeneracionRegistroConsultaService, ControlGeneracionRegistroConsultaService>();
 builder.Services.AddScoped<IInventarioResiduoService, InventarioResiduoService>();
+builder.Services.AddScoped<IRetiroService, RetiroService>();
 builder.Services.AddScoped<DatabaseInitializer>();
 builder.Services.AddScoped<DevelopmentDataSeeder>();
 
