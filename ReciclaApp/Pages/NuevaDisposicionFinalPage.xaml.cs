@@ -149,6 +149,10 @@ public partial class NuevaDisposicionFinalPage : ContentPage
             return;
         }
 
+        var fechaDisposicion = FechaPicker.Date.Date == _retiro.FechaRetiro.Date
+            ? FechaPicker.Date.Date + _retiro.FechaRetiro.TimeOfDay
+            : FechaPicker.Date.Date;
+
         try
         {
             _isLoading = true;
@@ -160,7 +164,7 @@ public partial class NuevaDisposicionFinalPage : ContentPage
             var api = AppServices.Services.GetRequiredService<IDisposicionFinalApiClient>();
             await api.CrearAsync(_retiroId, new CrearDisposicionFinalRequest(
                 gestor.EmpresaId,
-                FechaPicker.Date,
+                fechaDisposicion,
                 tratamiento.TipoTratamientoId,
                 Limpiar(DocumentoEntry.Text),
                 Limpiar(ObservacionEditor.Text)));
