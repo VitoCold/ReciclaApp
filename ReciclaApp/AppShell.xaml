@@ -45,6 +45,11 @@
         ContentTemplate="{DataTemplate pages:StockResiduosPage}" />
 
     <ShellContent
+        Title="Retiros"
+        Route="retiros"
+        ContentTemplate="{DataTemplate pages:RetirosPage}" />
+
+    <ShellContent
         Title="Mis registros"
         Route="registros"
         ContentTemplate="{DataTemplate pages:RegistrosPage}" />
