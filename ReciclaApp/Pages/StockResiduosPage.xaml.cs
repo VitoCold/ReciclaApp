@@ -149,11 +149,6 @@ public partial class StockResiduosPage : ContentPage
             item);
     }
 
-    private static void PintarResumen(IReadOnlyCollection<StockVisualItem> items)
-    {
-        // Se implementa en la sobrecarga de instancia para mantener el cálculo junto a la vista.
-    }
-
     private void PintarResumen(StockVisualItem[] items)
     {
         if (items.Length == 0)
