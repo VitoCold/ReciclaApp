@@ -46,8 +46,8 @@ public partial class RetirosPage : ContentPage
         NuevoRetiroButton.IsVisible = puedeCrear;
         if (!puedeVer)
         {
+            _retiros.Clear();
             MostrarError("Tu rol no tiene acceso a la gestión de retiros.");
-            RetirosCollectionView.ItemsSource = Array.Empty<RetiroVisualItem>();
             return;
         }
 
