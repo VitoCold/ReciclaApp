@@ -312,9 +312,17 @@ public partial class NuevoRetiroPage : ContentPage
         CantidadSeleccionLabel.Text = cantidad == 1 ? "1 seleccionado" : $"{cantidad} seleccionados";
     }
 
-    private static bool TryParseDecimal(string? value, out decimal cantidad) =>
-        decimal.TryParse(value, NumberStyles.Number, CultureInfo.CurrentCulture, out cantidad) ||
-        decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out cantidad);
+    private static bool TryParseDecimal(string? value, out decimal cantidad)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            cantidad = 0;
+            return false;
+        }
+
+        return decimal.TryParse(value, NumberStyles.Number, CultureInfo.CurrentCulture, out cantidad) ||
+               decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out cantidad);
+    }
 
     private static string NombreEmpresa(EmpresaDto empresa) =>
         string.IsNullOrWhiteSpace(empresa.NombreComercial) ? empresa.RazonSocial : empresa.NombreComercial;
