@@ -28,7 +28,6 @@
         </Grid>
     </Shell.FlyoutHeader>
 
-    <!-- Login no se muestra en el menú. -->
     <ShellContent
         Title="Login"
         Route="login"
@@ -36,13 +35,25 @@
         ContentTemplate="{DataTemplate pages:LoginPage}" />
 
     <ShellContent
+        Title="Controles de generación"
+        Route="controles-generacion"
+        ContentTemplate="{DataTemplate pages:ControlesGeneracionPage}" />
+
+    <ShellContent
+        Title="Stock de residuos"
+        Route="stock-residuos"
+        ContentTemplate="{DataTemplate pages:StockResiduosPage}" />
+
+    <ShellContent
+        x:Name="RetirosShellContent"
+        Title="Retiros"
+        Route="retiros"
+        ContentTemplate="{DataTemplate pages:RetirosPage}" />
+
+    <ShellContent
         Title="Mis registros"
         Route="registros"
         ContentTemplate="{DataTemplate pages:RegistrosPage}" />
-
-    <MenuItem
-        Text="Nuevo registro"
-        Clicked="OnNuevoRegistroMenuClicked" />
 
     <ShellContent
         Title="Mi perfil"

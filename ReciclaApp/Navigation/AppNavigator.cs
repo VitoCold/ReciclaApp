@@ -4,9 +4,37 @@ public static class AppNavigator
 {
     public static Task IrAlLoginAsync() => Shell.Current.GoToAsync(AppRoutes.Login);
 
+    public static Task IrAControlesGeneracionAsync() => Shell.Current.GoToAsync(AppRoutes.ControlesGeneracion);
+
+    public static Task IrAStockResiduosAsync() => Shell.Current.GoToAsync(AppRoutes.StockResiduos);
+
+    public static Task IrARetirosAsync() => Shell.Current.GoToAsync(AppRoutes.Retiros);
+
     public static Task IrARegistrosAsync() => Shell.Current.GoToAsync(AppRoutes.Registros);
 
     public static Task IrAPerfilAsync() => Shell.Current.GoToAsync(AppRoutes.Perfil);
+
+    public static Task IrANuevoControlGeneracionAsync() => Shell.Current.GoToAsync(AppRoutes.NuevoControlGeneracion);
+
+    public static Task IrADetalleControlGeneracionAsync(Guid controlId) =>
+        Shell.Current.GoToAsync($"{AppRoutes.DetalleControlGeneracion}?controlId={controlId}");
+
+    public static Task IrAAsignarUsuarioControlAsync(Guid controlId) =>
+        Shell.Current.GoToAsync($"{AppRoutes.AsignarUsuarioControl}?controlId={controlId}");
+
+    public static Task IrADetalleRegistroControlAsync(Guid controlId, Guid registroId) =>
+        Shell.Current.GoToAsync($"{AppRoutes.DetalleRegistroControl}?controlId={controlId}&registroId={registroId}");
+
+    public static Task IrANuevoRetiroAsync() => Shell.Current.GoToAsync(AppRoutes.NuevoRetiro);
+
+    public static Task IrADetalleRetiroAsync(Guid retiroId) =>
+        Shell.Current.GoToAsync($"{AppRoutes.DetalleRetiro}?retiroId={retiroId}");
+
+    public static async Task IrADetalleRetiroDesdeCreacionAsync(Guid retiroId)
+    {
+        await IrARetirosAsync();
+        await IrADetalleRetiroAsync(retiroId);
+    }
 
     public static Task IrADetalleRegistroAsync(Guid registroId) =>
         Shell.Current.GoToAsync($"{AppRoutes.DetalleRegistro}?registroId={registroId}");
@@ -30,9 +58,16 @@ public static class AppNavigator
     public static Task IrARegistrarResiduoAsync(Guid registroId) =>
         Shell.Current.GoToAsync($"{AppRoutes.RegistrarResiduo}?registroId={registroId}");
 
+    public static Task IrARegistrarResiduoDesdeControlAsync(Guid controlId, Guid registroId) =>
+        Shell.Current.GoToAsync($"{AppRoutes.RegistrarResiduo}?controlId={controlId}&registroId={registroId}");
+
     public static Task IrAEditarResiduoAsync(Guid registroId, Guid registroResiduoId) =>
         Shell.Current.GoToAsync(
             $"{AppRoutes.RegistrarResiduo}?registroId={registroId}&registroResiduoId={registroResiduoId}");
+
+    public static Task IrAEditarResiduoDesdeControlAsync(Guid controlId, Guid registroId, Guid registroResiduoId) =>
+        Shell.Current.GoToAsync(
+            $"{AppRoutes.RegistrarResiduo}?controlId={controlId}&registroId={registroId}&registroResiduoId={registroResiduoId}");
 
     public static Task VolverAsync() => Shell.Current.GoToAsync("..");
 }

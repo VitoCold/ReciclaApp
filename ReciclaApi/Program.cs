@@ -81,9 +81,14 @@ builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICatalogoService, CatalogoService>();
 builder.Services.AddScoped<IRegistroService, RegistroService>();
+builder.Services.AddScoped<IRegistroResiduoEvidenciaService, RegistroResiduoEvidenciaService>();
 builder.Services.AddScoped<IControlGeneracionService, ControlGeneracionService>();
 builder.Services.AddScoped<IControlGeneracionRegistroConsultaService, ControlGeneracionRegistroConsultaService>();
+builder.Services.AddScoped<IInventarioResiduoService, InventarioResiduoService>();
+builder.Services.AddScoped<IRetiroService, RetiroService>();
 builder.Services.AddScoped<DatabaseInitializer>();
+builder.Services.AddScoped<RegistroResiduoUbicacionSchemaInitializer>();
+builder.Services.AddScoped<DevelopmentDataSeeder>();
 
 var app = builder.Build();
 
@@ -91,6 +96,12 @@ using (var scope = app.Services.CreateScope())
 {
     var initializer = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
     await initializer.InitializeAsync();
+
+    var ubicacionSchema = scope.ServiceProvider.GetRequiredService<RegistroResiduoUbicacionSchemaInitializer>();
+    await ubicacionSchema.InitializeAsync();
+
+    var developmentSeeder = scope.ServiceProvider.GetRequiredService<DevelopmentDataSeeder>();
+    await developmentSeeder.SeedAsync();
 }
 
 app.UseExceptionHandler();

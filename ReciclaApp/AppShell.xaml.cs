@@ -31,7 +31,10 @@ namespace ReciclaApp
             {
                 var session = services.GetRequiredService<IAuthSessionService>();
                 if (await session.RestoreSessionAsync())
-                    await AppNavigator.IrARegistrosAsync();
+                {
+                    ActualizarVisibilidadPorRol(session.CurrentUser);
+                    await AppNavigator.IrAControlesGeneracionAsync();
+                }
             }
             catch (Exception ex)
             {
@@ -55,13 +58,22 @@ namespace ReciclaApp
             var services = AppServices.Services;
             var session = services.GetRequiredService<IAuthSessionService>();
             if (session.IsAuthenticated)
+            {
+                ActualizarVisibilidadPorRol(session.CurrentUser);
                 return;
+            }
 
             _checkingProtectedRoute = true;
             try
             {
                 if (!await session.RestoreSessionAsync())
+                {
                     await AppNavigator.IrAlLoginAsync();
+                }
+                else
+                {
+                    ActualizarVisibilidadPorRol(session.CurrentUser);
+                }
             }
             finally
             {
@@ -69,14 +81,24 @@ namespace ReciclaApp
             }
         }
 
-        private async void OnNuevoRegistroMenuClicked(object? sender, EventArgs e)
+        private void ActualizarVisibilidadPorRol(Recicla.Shared.Contracts.UsuarioDto? usuario)
         {
-            FlyoutIsPresented = false;
-            await AppNavigator.IrAInicioRegistroAsync();
+            var puedeVerRetiros = usuario is not null &&
+                (usuario.Roles.Contains("ADMINISTRADOR") ||
+                 usuario.Roles.Contains("AMBIENTAL") ||
+                 usuario.Roles.Contains("RESPONSABLE_OPERATIVO"));
+
+            Shell.SetFlyoutItemIsVisible(RetirosShellContent, puedeVerRetiros);
         }
 
         private static void RegistrarRutas()
         {
+            Routing.RegisterRoute(AppRoutes.NuevoControlGeneracion, typeof(NuevoControlGeneracionPage));
+            Routing.RegisterRoute(AppRoutes.DetalleControlGeneracion, typeof(ControlGeneracionDetallePage));
+            Routing.RegisterRoute(AppRoutes.AsignarUsuarioControl, typeof(AsignarUsuarioControlPage));
+            Routing.RegisterRoute(AppRoutes.DetalleRegistroControl, typeof(RegistroControlDetallePage));
+            Routing.RegisterRoute(AppRoutes.NuevoRetiro, typeof(NuevoRetiroPage));
+            Routing.RegisterRoute(AppRoutes.DetalleRetiro, typeof(RetiroDetallePage));
             Routing.RegisterRoute(AppRoutes.DetalleRegistro, typeof(DetalleRegistroDetallePage));
             Routing.RegisterRoute(AppRoutes.DetalleResiduoDetalle, typeof(DetalleResiduoDetallePage));
             Routing.RegisterRoute(AppRoutes.DetalleResiduoFotos, typeof(DetalleResiduoFotosPage));
