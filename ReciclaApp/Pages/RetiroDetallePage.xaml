@@ -57,6 +57,67 @@
                     <Border Style="{StaticResource SoftCard}">
                         <VerticalStackLayout Spacing="10">
                             <Grid ColumnDefinitions="*,Auto">
+                                <Label Text="Destino final" Style="{StaticResource SectionTitle}" />
+                                <Border Grid.Column="1" Style="{StaticResource Chip}" BackgroundColor="{StaticResource ColorBlueSoft}">
+                                    <Label x:Name="DestinoEstadoLabel" Text="Pendiente" FontSize="10" FontAttributes="Bold" TextColor="{StaticResource ColorPrimary}" />
+                                </Border>
+                            </Grid>
+
+                            <VerticalStackLayout x:Name="DestinoDetalleLayout" IsVisible="False" Spacing="5">
+                                <Label x:Name="DestinoTipoLabel" FontSize="13" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                <Label x:Name="DestinoGestorLabel" FontSize="12" TextColor="{StaticResource ColorText}" />
+                                <Label x:Name="DestinoFechaLabel" FontSize="12" TextColor="{StaticResource ColorMuted}" />
+                                <Label x:Name="DestinoDocumentoLabel" FontSize="12" TextColor="{StaticResource ColorMuted}" />
+                                <Label x:Name="DestinoObservacionLabel" FontSize="12" TextColor="{StaticResource ColorMuted}" />
+
+                                <BoxView HeightRequest="1" BackgroundColor="#E5E7EB" Margin="0,4" />
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Label Text="Evidencias" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                    <Label x:Name="CantidadEvidenciasLabel" Grid.Column="1" Style="{StaticResource TinyMutedText}" />
+                                </Grid>
+                                <Label x:Name="SinEvidenciasLabel" Text="Aún no hay archivos adjuntos." Style="{StaticResource TinyMutedText}" />
+                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Evidencias}" Spacing="4">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border BackgroundColor="{StaticResource ColorBlueSoft}" Stroke="Transparent" StrokeShape="RoundRectangle 10" Padding="9,7">
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <VerticalStackLayout Spacing="1">
+                                                        <Label Text="{Binding NombreArchivo}" FontSize="11" FontAttributes="Bold" TextColor="{StaticResource ColorText}" LineBreakMode="TailTruncation" />
+                                                        <Label Text="{Binding TipoTexto}" FontSize="10" TextColor="{StaticResource ColorMuted}" />
+                                                    </VerticalStackLayout>
+                                                    <Label Grid.Column="1" Text="📎" FontSize="14" VerticalOptions="Center" />
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </VerticalStackLayout>
+                            </VerticalStackLayout>
+
+                            <Label x:Name="DestinoPendienteLabel"
+                                   Text="El retiro aún no tiene documentado su tratamiento, valorización o disposición final."
+                                   Style="{StaticResource MutedText}" />
+
+                            <Button x:Name="DocumentarDestinoButton"
+                                    Text="Documentar destino final"
+                                    Style="{StaticResource SmallPrimaryButton}"
+                                    IsVisible="False"
+                                    Clicked="OnDocumentarDestinoClicked" />
+                            <Button x:Name="AdjuntarEvidenciaButton"
+                                    Text="Adjuntar evidencia"
+                                    Style="{StaticResource SmallPrimaryButton}"
+                                    IsVisible="False"
+                                    Clicked="OnAdjuntarEvidenciaClicked" />
+                            <Button x:Name="ValidarDestinoButton"
+                                    Text="Validar documentación"
+                                    Style="{StaticResource SmallPrimaryButton}"
+                                    IsVisible="False"
+                                    Clicked="OnValidarDestinoClicked" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Style="{StaticResource SoftCard}">
+                        <VerticalStackLayout Spacing="10">
+                            <Grid ColumnDefinitions="*,Auto">
                                 <Label Text="Residuos retirados" Style="{StaticResource SectionTitle}" />
                                 <Label x:Name="CantidadLabel" Grid.Column="1" Style="{StaticResource TinyMutedText}" />
                             </Grid>
