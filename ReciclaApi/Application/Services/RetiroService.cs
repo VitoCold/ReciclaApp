@@ -124,7 +124,7 @@ public sealed class RetiroService(ReciclaDbContext context) : IRetiroService
 
             if (!esAmbiental)
             {
-                var autorizado = await context.ControlGeneracionUsuarios
+                var autorizado = await context.Set<ControlGeneracionUsuario>()
                     .AsNoTracking()
                     .AnyAsync(x =>
                         x.ControlGeneracionId == residuo.Registro.ControlGeneracionId.Value &&
