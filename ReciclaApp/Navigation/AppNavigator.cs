@@ -18,6 +18,9 @@ public static class AppNavigator
     public static Task IrAAsignarUsuarioControlAsync(Guid controlId) =>
         Shell.Current.GoToAsync($"{AppRoutes.AsignarUsuarioControl}?controlId={controlId}");
 
+    public static Task IrADetalleRegistroControlAsync(Guid controlId, Guid registroId) =>
+        Shell.Current.GoToAsync($"{AppRoutes.DetalleRegistroControl}?controlId={controlId}&registroId={registroId}");
+
     public static Task IrADetalleRegistroAsync(Guid registroId) =>
         Shell.Current.GoToAsync($"{AppRoutes.DetalleRegistro}?registroId={registroId}");
 
@@ -40,9 +43,16 @@ public static class AppNavigator
     public static Task IrARegistrarResiduoAsync(Guid registroId) =>
         Shell.Current.GoToAsync($"{AppRoutes.RegistrarResiduo}?registroId={registroId}");
 
+    public static Task IrARegistrarResiduoDesdeControlAsync(Guid controlId, Guid registroId) =>
+        Shell.Current.GoToAsync($"{AppRoutes.RegistrarResiduo}?controlId={controlId}&registroId={registroId}");
+
     public static Task IrAEditarResiduoAsync(Guid registroId, Guid registroResiduoId) =>
         Shell.Current.GoToAsync(
             $"{AppRoutes.RegistrarResiduo}?registroId={registroId}&registroResiduoId={registroResiduoId}");
+
+    public static Task IrAEditarResiduoDesdeControlAsync(Guid controlId, Guid registroId, Guid registroResiduoId) =>
+        Shell.Current.GoToAsync(
+            $"{AppRoutes.RegistrarResiduo}?controlId={controlId}&registroId={registroId}&registroResiduoId={registroResiduoId}");
 
     public static Task VolverAsync() => Shell.Current.GoToAsync("..");
 }
