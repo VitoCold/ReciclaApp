@@ -110,7 +110,10 @@
                                 </BindableLayout.EmptyView>
                                 <BindableLayout.ItemTemplate>
                                     <DataTemplate>
-                                        <Grid ColumnDefinitions="*,Auto" Padding="0,8">
+                                        <Grid ColumnDefinitions="*,Auto" Padding="0,9">
+                                            <Grid.GestureRecognizers>
+                                                <TapGestureRecognizer Tapped="OnRegistroTapped" CommandParameter="{Binding RegistroId}" />
+                                            </Grid.GestureRecognizers>
                                             <VerticalStackLayout Spacing="2">
                                                 <Label Text="{Binding FechaRegistro, StringFormat='{0:dd/MM/yyyy HH:mm}'}" FontSize="13" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
                                                 <Label FontSize="11" TextColor="{StaticResource ColorMuted}">
@@ -124,7 +127,10 @@
                                                     </Label.FormattedText>
                                                 </Label>
                                             </VerticalStackLayout>
-                                            <Label Grid.Column="1" Text="{Binding Estado}" TextColor="{StaticResource ColorPrimary}" FontSize="10" FontAttributes="Bold" VerticalOptions="Center" />
+                                            <VerticalStackLayout Grid.Column="1" Spacing="2" HorizontalOptions="End" VerticalOptions="Center">
+                                                <Label Text="{Binding Estado}" TextColor="{StaticResource ColorPrimary}" FontSize="10" FontAttributes="Bold" HorizontalTextAlignment="End" />
+                                                <Label Text="Ver ›" TextColor="{StaticResource ColorMuted}" FontSize="10" HorizontalTextAlignment="End" />
+                                            </VerticalStackLayout>
                                         </Grid>
                                     </DataTemplate>
                                 </BindableLayout.ItemTemplate>
