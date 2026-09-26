@@ -37,6 +37,8 @@ public partial class StockResiduosPage : ContentPage
         {
             UsuarioHeaderLabel.Text = string.Join(" ", new[] { _usuario.Nombres, _usuario.Apellidos }
                 .Where(x => !string.IsNullOrWhiteSpace(x)));
+            CrearRetiroButton.IsVisible = _usuario.Roles.Contains("AMBIENTAL") ||
+                                          _usuario.Roles.Contains("RESPONSABLE_OPERATIVO");
         }
 
         await CargarAsync(_inventario is null);
@@ -288,6 +290,8 @@ public partial class StockResiduosPage : ContentPage
     private void OnMenuTapped(object sender, TappedEventArgs e) => Shell.Current.FlyoutIsPresented = true;
 
     private async void OnPerfilTapped(object sender, TappedEventArgs e) => await AppNavigator.IrAPerfilAsync();
+
+    private async void OnCrearRetiroClicked(object sender, EventArgs e) => await AppNavigator.IrANuevoRetiroAsync();
 
     private async void OnRefreshRequested(object sender, EventArgs e) => await CargarAsync(false);
 
