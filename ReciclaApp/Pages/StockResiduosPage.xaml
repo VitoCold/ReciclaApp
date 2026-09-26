@@ -24,10 +24,19 @@
 
         <Grid Grid.Row="1" Padding="18,18,18,24" RowDefinitions="Auto,Auto,Auto,*" RowSpacing="12">
             <VerticalStackLayout Grid.Row="0" Spacing="10">
-                <VerticalStackLayout Spacing="2">
-                    <Label Text="Inventario disponible" Style="{StaticResource PageTitle}" FontSize="22" />
-                    <Label Text="Residuos registrados pendientes de retiro" Style="{StaticResource MutedText}" />
-                </VerticalStackLayout>
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Inventario disponible" Style="{StaticResource PageTitle}" FontSize="22" />
+                        <Label Text="Residuos registrados pendientes de retiro" Style="{StaticResource MutedText}" />
+                    </VerticalStackLayout>
+                    <Button x:Name="CrearRetiroButton"
+                            Grid.Column="1"
+                            Text="Crear retiro"
+                            Style="{StaticResource SmallPrimaryButton}"
+                            VerticalOptions="Center"
+                            IsVisible="False"
+                            Clicked="OnCrearRetiroClicked" />
+                </Grid>
 
                 <Border Style="{StaticResource SoftCard}" Padding="12,8">
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
