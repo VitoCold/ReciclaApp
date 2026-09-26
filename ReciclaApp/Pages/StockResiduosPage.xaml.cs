@@ -247,6 +247,10 @@ public partial class StockResiduosPage : ContentPage
         {
             await DisplayAlert("Saldo actualizado", "El saldo cambió mientras registrabas el traslado. Actualiza el inventario e inténtalo nuevamente.", "Aceptar");
         }
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Forbidden)
+        {
+            await DisplayAlert("Sin permiso", "Solo el responsable vigente del control o Ambiental puede registrar el traslado a almacenamiento.", "Aceptar");
+        }
         catch (Exception ex)
         {
             AppServices.Services.GetService<ILogger<StockResiduosPage>>()?
