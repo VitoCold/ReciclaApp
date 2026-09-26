@@ -29,8 +29,8 @@
                             <Label x:Name="CodigoLabel" Text="RET-000" Style="{StaticResource PageTitle}" FontSize="22" />
                             <Label x:Name="FechaLabel" Style="{StaticResource MutedText}" />
                         </VerticalStackLayout>
-                        <Border Grid.Column="1" Style="{StaticResource Chip}" BackgroundColor="{StaticResource ColorGreenSoft}" VerticalOptions="Center">
-                            <Label x:Name="EstadoLabel" Text="Retirado" TextColor="{StaticResource ColorSuccess}" FontSize="11" FontAttributes="Bold" />
+                        <Border Grid.Column="1" Style="{StaticResource Chip}" BackgroundColor="{StaticResource ColorSuccessSoft}" VerticalOptions="Center">
+                            <Label x:Name="EstadoLabel" Text="Retirado" TextColor="{StaticResource ColorAccent}" FontSize="11" FontAttributes="Bold" />
                         </Border>
                     </Grid>
 
