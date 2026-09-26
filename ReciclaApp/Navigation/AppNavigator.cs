@@ -8,6 +8,8 @@ public static class AppNavigator
 
     public static Task IrAStockResiduosAsync() => Shell.Current.GoToAsync(AppRoutes.StockResiduos);
 
+    public static Task IrARetirosAsync() => Shell.Current.GoToAsync(AppRoutes.Retiros);
+
     public static Task IrARegistrosAsync() => Shell.Current.GoToAsync(AppRoutes.Registros);
 
     public static Task IrAPerfilAsync() => Shell.Current.GoToAsync(AppRoutes.Perfil);
@@ -22,6 +24,17 @@ public static class AppNavigator
 
     public static Task IrADetalleRegistroControlAsync(Guid controlId, Guid registroId) =>
         Shell.Current.GoToAsync($"{AppRoutes.DetalleRegistroControl}?controlId={controlId}&registroId={registroId}");
+
+    public static Task IrANuevoRetiroAsync() => Shell.Current.GoToAsync(AppRoutes.NuevoRetiro);
+
+    public static Task IrADetalleRetiroAsync(Guid retiroId) =>
+        Shell.Current.GoToAsync($"{AppRoutes.DetalleRetiro}?retiroId={retiroId}");
+
+    public static async Task IrADetalleRetiroDesdeCreacionAsync(Guid retiroId)
+    {
+        await IrARetirosAsync();
+        await IrADetalleRetiroAsync(retiroId);
+    }
 
     public static Task IrADetalleRegistroAsync(Guid registroId) =>
         Shell.Current.GoToAsync($"{AppRoutes.DetalleRegistro}?registroId={registroId}");
