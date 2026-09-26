@@ -9,6 +9,7 @@ using ReciclaApp.Services;
 
 namespace ReciclaApp.Pages;
 
+[QueryProperty(nameof(ControlId), "controlId")]
 [QueryProperty(nameof(RegistroId), "registroId")]
 [QueryProperty(nameof(RegistroResiduoId), "registroResiduoId")]
 public partial class RegistrarResiduoPage : ContentPage
@@ -18,10 +19,12 @@ public partial class RegistrarResiduoPage : ContentPage
     private bool _isLoading;
     private bool _edicionCargada;
 
+    public string ControlId { get; set; } = string.Empty;
     public string RegistroId { get; set; } = string.Empty;
     public string RegistroResiduoId { get; set; } = string.Empty;
 
     private bool EsEdicion => Guid.TryParse(RegistroResiduoId, out _);
+    private bool VieneDeControl => Guid.TryParse(ControlId, out _);
 
     public RegistrarResiduoPage()
     {
@@ -252,7 +255,10 @@ public partial class RegistrarResiduoPage : ContentPage
                 await apiClient.AgregarResiduoAsync(registroId, request);
             }
 
-            await AppNavigator.IrAResiduosDelRegistroAsync(registroId);
+            if (VieneDeControl)
+                await AppNavigator.VolverAsync();
+            else
+                await AppNavigator.IrAResiduosDelRegistroAsync(registroId);
         }
         catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
         {
