@@ -45,6 +45,7 @@
         ContentTemplate="{DataTemplate pages:StockResiduosPage}" />
 
     <ShellContent
+        x:Name="RetirosShellContent"
         Title="Retiros"
         Route="retiros"
         ContentTemplate="{DataTemplate pages:RetirosPage}" />
