@@ -32,6 +32,7 @@ namespace ReciclaApp
             builder.Services.AddSingleton<IControlGeneracionWorkflowClient, ControlGeneracionWorkflowClient>();
             builder.Services.AddSingleton<IInventarioApiClient, InventarioApiClient>();
             builder.Services.AddSingleton<IRetiroApiClient, RetiroApiClient>();
+            builder.Services.AddSingleton<IRegistroResiduoEvidenciaApiClient, RegistroResiduoEvidenciaApiClient>();
             builder.Services.AddSingleton<IAuthSessionService, AuthSessionService>();
 
 #if DEBUG
