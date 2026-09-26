@@ -190,25 +190,43 @@ public partial class ControlGeneracionDetallePage : ContentPage
                     .OrderByDescending(x => x.CreadoUtc)
                     .FirstOrDefault();
 
+            Guid registroId;
             if (borradorVacio is not null)
             {
-                await AppNavigator.IrARegistrarResiduoAsync(borradorVacio.RegistroId);
-                return;
+                registroId = borradorVacio.RegistroId;
+            }
+            else
+            {
+                var api = AppServices.Services.GetRequiredService<IReciclaApiClient>();
+                var creado = await api.CrearRegistroEnControlAsync(_controlId, new CrearRegistroEnControlRequest(
+                    $"MOB-{Guid.NewGuid():N}"[..12],
+                    DateTime.Now,
+                    null,
+                    DeviceInfo.Current.Platform.ToString()));
+                registroId = creado.RegistroId;
             }
 
-            var api = AppServices.Services.GetRequiredService<IReciclaApiClient>();
-            var creado = await api.CrearRegistroEnControlAsync(_controlId, new CrearRegistroEnControlRequest(
-                $"MOB-{Guid.NewGuid():N}"[..12],
-                DateTime.Now,
-                null,
-                DeviceInfo.Current.Platform.ToString()));
-
-            await AppNavigator.IrARegistrarResiduoAsync(creado.RegistroId);
+            // Dejamos el detalle del registro debajo del formulario para que
+            // guardar o cancelar vuelva al contexto del control y no a Mis registros.
+            await AppNavigator.IrADetalleRegistroControlAsync(_controlId, registroId);
+            await AppNavigator.IrARegistrarResiduoDesdeControlAsync(_controlId, registroId);
         }
         catch (Exception ex)
         {
             MostrarError("No se pudo iniciar el registro. " + MensajeHttp(ex));
         }
+    }
+
+    private async void OnRegistroTapped(object sender, TappedEventArgs e)
+    {
+        if (e.Parameter is Guid registroId)
+        {
+            await AppNavigator.IrADetalleRegistroControlAsync(_controlId, registroId);
+            return;
+        }
+
+        if (Guid.TryParse(e.Parameter?.ToString(), out registroId))
+            await AppNavigator.IrADetalleRegistroControlAsync(_controlId, registroId);
     }
 
     private static string MensajeHttp(Exception ex) => ex is HttpRequestException http && !string.IsNullOrWhiteSpace(http.Message)
