@@ -222,7 +222,7 @@ public partial class RetiroDetallePage : ContentPage
                 string.IsNullOrWhiteSpace(archivo.ContentType) ? "application/octet-stream" : archivo.ContentType,
                 tipo);
 
-            await CargarAsync();
+            RefrescarDestinoEnVista();
         }
         catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.RequestEntityTooLarge)
         {
@@ -265,7 +265,7 @@ public partial class RetiroDetallePage : ContentPage
 
             var api = AppServices.Services.GetRequiredService<IDisposicionFinalApiClient>();
             _disposicion = await api.ValidarAsync(_disposicion.DisposicionFinalId);
-            await CargarAsync();
+            RefrescarDestinoEnVista();
         }
         catch (Exception ex)
         {
@@ -280,6 +280,13 @@ public partial class RetiroDetallePage : ContentPage
             ActivityIndicator.IsRunning = false;
             ActivityIndicator.IsVisible = false;
         }
+    }
+
+    private void RefrescarDestinoEnVista()
+    {
+        var detalles = (BindingContext as DetailBinding)?.Detalles ?? Array.Empty<DetalleVisual>();
+        var evidencias = PintarDestinoFinal();
+        BindingContext = new DetailBinding(detalles, evidencias);
     }
 
     private static string FormatearTamano(long? bytes)
