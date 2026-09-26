@@ -149,7 +149,7 @@ public sealed class InventarioResiduoService(IUnitOfWork unitOfWork) : IInventar
                        await TieneRolAsync(usuarioId, "ADMINISTRADOR", cancellationToken);
         var now = DateTime.UtcNow;
 
-        var query = unitOfWork.Repository<RegistroResiduo>().Query()
+        IQueryable<RegistroResiduo> query = unitOfWork.Repository<RegistroResiduo>().Query()
             .Where(x =>
                 !x.Eliminado &&
                 !x.Registro.Eliminado &&
