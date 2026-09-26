@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ReciclaApp.Pages.NuevaDisposicionFinalPage"
+             Style="{StaticResource BasePage}"
+             Shell.NavBarIsVisible="False">
+
+    <Grid RowDefinitions="Auto,*">
+        <Grid Style="{StaticResource AppHeader}" ColumnDefinitions="Auto,*">
+            <Label Text="‹" TextColor="White" FontSize="34" VerticalOptions="Center">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </Label.GestureRecognizers>
+            </Label>
+            <Label Grid.Column="1" Text="Destino final" Style="{StaticResource HeaderTitle}" />
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="18,18,18,34" Spacing="14">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="Documentar disposición / valorización" Style="{StaticResource PageTitle}" FontSize="21" />
+                    <Label x:Name="RetiroLabel" Text="Retiro" Style="{StaticResource MutedText}" />
+                </VerticalStackLayout>
+
+                <Border x:Name="ErrorBorder" IsVisible="False" BackgroundColor="{StaticResource ColorDangerSoft}" Stroke="Transparent" StrokeShape="RoundRectangle 12" Padding="12,9">
+                    <Label x:Name="ErrorLabel" TextColor="{StaticResource ColorDanger}" FontSize="12" />
+                </Border>
+
+                <Border Style="{StaticResource SoftCard}">
+                    <VerticalStackLayout Spacing="12">
+                        <VerticalStackLayout Spacing="5">
+                            <Label Text="Tipo de tratamiento" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource InputBorder}">
+                                <Picker x:Name="TratamientoPicker"
+                                        Title="Selecciona el destino"
+                                        ItemDisplayBinding="{Binding Nombre}" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Spacing="5">
+                            <Label Text="Empresa gestora" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource InputBorder}">
+                                <Picker x:Name="GestorPicker"
+                                        Title="Selecciona la empresa"
+                                        ItemDisplayBinding="{Binding Nombre}" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Spacing="5">
+                            <Label Text="Fecha de disposición / tratamiento" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource InputBorder}">
+                                <DatePicker x:Name="FechaPicker" Format="dd/MM/yyyy" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Spacing="5">
+                            <Label Text="Código o número de documento" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource InputBorder}">
+                                <Entry x:Name="DocumentoEntry" Placeholder="Certificado, constancia, manifiesto..." />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Spacing="5">
+                            <Label Text="Observación" Style="{StaticResource FieldLabel}" />
+                            <Border Style="{StaticResource InputBorder}">
+                                <Editor x:Name="ObservacionEditor" Placeholder="Información adicional" AutoSize="TextChanges" MinimumHeightRequest="90" />
+                            </Border>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border BackgroundColor="{StaticResource ColorBlueSoft}" Stroke="Transparent" StrokeShape="RoundRectangle 12" Padding="12,10">
+                    <Label Text="Después de guardar podrás adjuntar el certificado, manifiesto, constancia u otra evidencia desde el detalle del retiro." FontSize="11" TextColor="{StaticResource ColorPrimary}" />
+                </Border>
+
+                <Button x:Name="GuardarButton"
+                        Text="Guardar destino final"
+                        Style="{StaticResource PrimaryButton}"
+                        Clicked="OnGuardarClicked" />
+
+                <ActivityIndicator x:Name="ActivityIndicator" IsVisible="False" IsRunning="False" HorizontalOptions="Center" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>
