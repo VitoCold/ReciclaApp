@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ReciclaApp.Pages.RetirosPage"
+             Style="{StaticResource BasePage}"
+             Shell.NavBarIsVisible="False">
+
+    <Grid RowDefinitions="Auto,*">
+        <Grid Style="{StaticResource AppHeader}" ColumnDefinitions="Auto,*,Auto,Auto">
+            <Label Text="☰" TextColor="White" FontSize="24" VerticalOptions="Center">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnMenuTapped" />
+                </Label.GestureRecognizers>
+            </Label>
+            <Label Grid.Column="1" Text="Retiros" Style="{StaticResource HeaderTitle}" />
+            <Label x:Name="UsuarioHeaderLabel" Grid.Column="2" Text="Usuario" TextColor="White" FontSize="12" VerticalOptions="Center" />
+            <Border Grid.Column="3" WidthRequest="30" HeightRequest="30" BackgroundColor="#DDEEFF" Stroke="Transparent" StrokeShape="RoundRectangle 15">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnPerfilTapped" />
+                </Border.GestureRecognizers>
+                <Label Text="👤" FontSize="14" HorizontalOptions="Center" VerticalOptions="Center" />
+            </Border>
+        </Grid>
+
+        <Grid Grid.Row="1" Padding="18,18,18,24" RowDefinitions="Auto,Auto,*" RowSpacing="12">
+            <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="Retiros de residuos" Style="{StaticResource PageTitle}" FontSize="22" />
+                    <Label Text="Salidas agrupadas desde el almacenamiento temporal" Style="{StaticResource MutedText}" />
+                </VerticalStackLayout>
+                <Button x:Name="NuevoRetiroButton"
+                        Grid.Column="1"
+                        Text="＋ Nuevo"
+                        Style="{StaticResource SmallPrimaryButton}"
+                        VerticalOptions="Center"
+                        Clicked="OnNuevoRetiroClicked" />
+            </Grid>
+
+            <Border x:Name="ErrorBorder" Grid.Row="1" IsVisible="False" BackgroundColor="{StaticResource ColorDangerSoft}" Stroke="Transparent" StrokeShape="RoundRectangle 12" Padding="12,9">
+                <Label x:Name="ErrorLabel" TextColor="{StaticResource ColorDanger}" FontSize="12" />
+            </Border>
+
+            <Grid Grid.Row="2">
+                <RefreshView x:Name="RetirosRefreshView" Refreshing="OnRefreshRequested">
+                    <CollectionView x:Name="RetirosCollectionView" SelectionMode="None" ItemsLayout="VerticalList">
+                        <CollectionView.EmptyView>
+                            <VerticalStackLayout Padding="20,44" Spacing="10" HorizontalOptions="Center">
+                                <Border Style="{StaticResource IconCircle}" WidthRequest="64" HeightRequest="64" HorizontalOptions="Center">
+                                    <Label Text="🚚" FontSize="28" HorizontalOptions="Center" VerticalOptions="Center" />
+                                </Border>
+                                <Label Text="Aún no hay retiros" FontSize="16" FontAttributes="Bold" TextColor="{StaticResource ColorText}" HorizontalTextAlignment="Center" />
+                                <Label Text="Los retiros aparecerán aquí cuando el stock almacenado sea entregado a un gestor." Style="{StaticResource MutedText}" HorizontalTextAlignment="Center" />
+                            </VerticalStackLayout>
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource SoftCard}" Margin="0,0,0,12">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnRetiroTapped" CommandParameter="{Binding RetiroId}" />
+                                    </Border.GestureRecognizers>
+                                    <VerticalStackLayout Spacing="7">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <VerticalStackLayout Spacing="1">
+                                                <Label Text="{Binding Codigo}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                                <Label Text="{Binding FechaTexto}" FontSize="11" TextColor="{StaticResource ColorMuted}" />
+                                            </VerticalStackLayout>
+                                            <Border Grid.Column="1" Style="{StaticResource Chip}" BackgroundColor="{StaticResource ColorGreenSoft}" VerticalOptions="Start">
+                                                <Label Text="{Binding Estado}" FontSize="10" FontAttributes="Bold" TextColor="{StaticResource ColorSuccess}" />
+                                            </Border>
+                                        </Grid>
+                                        <Label Text="{Binding UbicacionTexto}" FontSize="12" TextColor="{StaticResource ColorText}" />
+                                        <Label Text="{Binding GestorTexto}" FontSize="11" TextColor="{StaticResource ColorMuted}" />
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <Label Text="{Binding TotalesTexto}" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource ColorPrimary}" />
+                                            <Label Grid.Column="1" Text="{Binding DetallesTexto}" FontSize="11" TextColor="{StaticResource ColorMuted}" />
+                                        </Grid>
+                                    </VerticalStackLayout>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </RefreshView>
+                <ActivityIndicator x:Name="ActivityIndicator" IsVisible="False" IsRunning="False" HorizontalOptions="Center" VerticalOptions="Center" />
+            </Grid>
+        </Grid>
+    </Grid>
+</ContentPage>
