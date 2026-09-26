@@ -82,9 +82,14 @@ public sealed class InventarioResiduoService(IUnitOfWork unitOfWork) : IInventar
         if (punto is null)
             return ServiceResult<InventarioResiduoItemDto>.Fail("El punto de almacenamiento no es válido para la sede del residuo.", StatusCodes.Status400BadRequest);
 
-        var yaMovido = await unitOfWork.Repository<MovimientoResiduo>().Query()
+        // SQLite no traduce SUM(decimal) de forma portable. Leemos solo las cantidades
+        // y hacemos el agregado en memoria para mantener el mismo comportamiento en
+        // SQLite (desarrollo) y SQL Server (producción).
+        var cantidadesMovidas = await unitOfWork.Repository<MovimientoResiduo>().Query()
             .Where(x => x.RegistroResiduoId == registroResiduoId && !x.Eliminado)
-            .SumAsync(x => (decimal?)x.Cantidad, cancellationToken) ?? 0m;
+            .Select(x => x.Cantidad)
+            .ToListAsync(cancellationToken);
+        var yaMovido = cantidadesMovidas.Sum();
 
         var pendiente = residuo.Cantidad - yaMovido;
         if (pendiente <= 0)
