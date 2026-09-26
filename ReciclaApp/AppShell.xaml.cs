@@ -74,6 +74,7 @@ namespace ReciclaApp
             Routing.RegisterRoute(AppRoutes.NuevoControlGeneracion, typeof(NuevoControlGeneracionPage));
             Routing.RegisterRoute(AppRoutes.DetalleControlGeneracion, typeof(ControlGeneracionDetallePage));
             Routing.RegisterRoute(AppRoutes.AsignarUsuarioControl, typeof(AsignarUsuarioControlPage));
+            Routing.RegisterRoute(AppRoutes.DetalleRegistroControl, typeof(RegistroControlDetallePage));
             Routing.RegisterRoute(AppRoutes.DetalleRegistro, typeof(DetalleRegistroDetallePage));
             Routing.RegisterRoute(AppRoutes.DetalleResiduoDetalle, typeof(DetalleResiduoDetallePage));
             Routing.RegisterRoute(AppRoutes.DetalleResiduoFotos, typeof(DetalleResiduoFotosPage));
