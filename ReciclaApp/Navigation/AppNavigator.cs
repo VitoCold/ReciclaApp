@@ -30,6 +30,9 @@ public static class AppNavigator
     public static Task IrADetalleRetiroAsync(Guid retiroId) =>
         Shell.Current.GoToAsync($"{AppRoutes.DetalleRetiro}?retiroId={retiroId}");
 
+    public static Task IrANuevaDisposicionFinalAsync(Guid retiroId) =>
+        Shell.Current.GoToAsync($"{AppRoutes.NuevaDisposicionFinal}?retiroId={retiroId}");
+
     public static async Task IrADetalleRetiroDesdeCreacionAsync(Guid retiroId)
     {
         await IrARetirosAsync();
