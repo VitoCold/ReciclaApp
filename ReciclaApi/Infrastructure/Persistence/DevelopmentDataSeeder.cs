@@ -44,8 +44,37 @@ public sealed class DevelopmentDataSeeder(
             assignAllSites: true,
             cancellationToken);
 
+        await EnsureStoragePointsAsync(cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
-        logger.LogInformation("Usuarios de desarrollo listos: ambiental, responsable y registrador.");
+        logger.LogInformation("Datos de desarrollo listos: usuarios de prueba y puntos de almacenamiento temporal.");
+    }
+
+    private async Task EnsureStoragePointsAsync(CancellationToken cancellationToken)
+    {
+        var sedes = await context.Sedes
+            .Where(x => x.EsActivo)
+            .ToListAsync(cancellationToken);
+
+        foreach (var sede in sedes)
+        {
+            var tieneAlmacen = await context.PuntosResiduo.AnyAsync(x =>
+                x.SedeId == sede.SedeId &&
+                x.EsActivo &&
+                (x.Tipo == "ALMACENAMIENTO" || x.Tipo == "AMBOS"),
+                cancellationToken);
+
+            if (tieneAlmacen)
+                continue;
+
+            context.PuntosResiduo.Add(new PuntoResiduo
+            {
+                SedeId = sede.SedeId,
+                Codigo = "ALMACEN_TEMPORAL",
+                Nombre = "Almacén temporal",
+                Tipo = "ALMACENAMIENTO",
+                EsActivo = true
+            });
+        }
     }
 
     private async Task EnsureUserAsync(
