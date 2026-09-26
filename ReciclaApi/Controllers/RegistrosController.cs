@@ -95,7 +95,11 @@ public sealed class RegistrosController(
             return Problem(statusCode: StatusCodes.Status400BadRequest, detail: "El archivo está vacío.");
 
         if (file.Length > MaxUploadBytes)
-            return Problem(statusCode: StatusCodes.Status413PayloadTooLarge, detail: "El archivo supera el límite de 15 MB.");
+            return Problem(statusCode: StatusCodes.Status413PayloadTooLarge, detail: "La foto supera el límite de 15 MB.");
+
+        if (string.IsNullOrWhiteSpace(file.ContentType) ||
+            !file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+            return Problem(statusCode: StatusCodes.Status400BadRequest, detail: "La evidencia del residuo debe ser una imagen.");
 
         await using var stream = file.OpenReadStream();
         var result = await registroService.SubirFotoAsync(
