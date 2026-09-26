@@ -44,9 +44,26 @@ public sealed class DevelopmentDataSeeder(
             assignAllSites: true,
             cancellationToken);
 
+        await EnsureWasteManagerAsync(cancellationToken);
         await EnsureStoragePointsAsync(cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
-        logger.LogInformation("Datos de desarrollo listos: usuarios de prueba y puntos de almacenamiento temporal.");
+        logger.LogInformation("Datos de desarrollo listos: usuarios de prueba, gestor y puntos de almacenamiento temporal.");
+    }
+
+    private async Task EnsureWasteManagerAsync(CancellationToken cancellationToken)
+    {
+        if (await context.Empresas.AnyAsync(x => x.Codigo == "GESTOR_PRUEBA", cancellationToken))
+            return;
+
+        context.Empresas.Add(new Empresa
+        {
+            Codigo = "GESTOR_PRUEBA",
+            RazonSocial = "Gestor Ambiental de Prueba S.A.C.",
+            NombreComercial = "Gestor de prueba",
+            EsGestoraResiduos = true,
+            NumeroAutorizacion = "DEV",
+            EsActivo = true
+        });
     }
 
     private async Task EnsureStoragePointsAsync(CancellationToken cancellationToken)
