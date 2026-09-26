@@ -17,6 +17,7 @@ public static class AppRoutes
     public const string DetalleRegistroControl = "detalle-registro-control";
     public const string NuevoRetiro = "nuevo-retiro";
     public const string DetalleRetiro = "detalle-retiro";
+    public const string NuevaDisposicionFinal = "nueva-disposicion-final";
     public const string DetalleRegistro = "detalle-registro";
     public const string DetalleResiduoDetalle = "detalle-residuo-detalle";
     public const string DetalleResiduoFotos = "detalle-residuo-fotos";
