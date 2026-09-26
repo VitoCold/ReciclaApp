@@ -127,8 +127,9 @@ public partial class StockResiduosPage : ContentPage
 
     private StockVisualItem MapVisual(InventarioResiduoItemDto item)
     {
-        var puedeGestionar = _usuario?.Roles.Contains("AMBIENTAL") == true ||
-                             _usuario?.Roles.Contains("RESPONSABLE_OPERATIVO") == true;
+        var esAmbiental = _usuario?.Roles.Contains("AMBIENTAL") == true;
+        var esResponsable = _usuario?.Roles.Contains("RESPONSABLE_OPERATIVO") == true;
+        var puedeGestionar = esAmbiental || esResponsable;
 
         var almacenamientos = item.Almacenamientos.Count == 0
             ? "Aún no trasladado"
