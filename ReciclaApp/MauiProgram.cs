@@ -34,6 +34,7 @@ namespace ReciclaApp
             builder.Services.AddSingleton<IRetiroApiClient, RetiroApiClient>();
             builder.Services.AddSingleton<IDisposicionFinalApiClient, DisposicionFinalApiClient>();
             builder.Services.AddSingleton<IAuthSessionService, AuthSessionService>();
+            builder.Services.AddSingleton<IRegistroResiduoEvidenciaApiClient, RegistroResiduoEvidenciaApiClient>();
 
 #if DEBUG
             builder.Logging.AddDebug();
