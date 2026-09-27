@@ -68,16 +68,19 @@ public partial class RegistroControlDetallePage : ContentPage
         try
         {
             var api = AppServices.Services.GetRequiredService<IReciclaApiClient>();
+            var evidenciaApi = AppServices.Services.GetRequiredService<IRegistroResiduoEvidenciaApiClient>();
             var session = AppServices.Services.GetRequiredService<IAuthSessionService>();
 
             var registroTask = api.ObtenerRegistroControlAsync(_controlId, _registroId);
             var controlTask = api.ObtenerControlGeneracionAsync(_controlId);
             var catalogosTask = api.ObtenerCatalogosAsync();
-            await Task.WhenAll(registroTask, controlTask, catalogosTask);
+            var evidenciasTask = evidenciaApi.ListarAsync(_registroId);
+            await Task.WhenAll(registroTask, controlTask, catalogosTask, evidenciasTask);
 
             _registro = await registroTask;
             var control = await controlTask;
             var catalogos = await catalogosTask;
+            var evidencias = await evidenciasTask;
 
             var usuario = session.CurrentUser;
             var esAutor = usuario is not null && _registro.RegistradoPorUsuarioId == usuario.UsuarioId;
@@ -102,16 +105,22 @@ public partial class RegistroControlDetallePage : ContentPage
             else if (!esAutor)
                 SoloLecturaLabel.Text = "Puedes consultar este registro, pero solo quien lo creó puede modificarlo o finalizarlo.";
 
+            var residuos = _registro.Residuos
+                .Select(x => MapResiduo(
+                    x,
+                    catalogos,
+                    evidencias.FirstOrDefault(e => e.RegistroResiduoId == x.RegistroResiduoId),
+                    _puedeEditar))
+                .ToArray();
+            var evidenciaCompleta = residuos.Length > 0 && residuos.All(x => x.EvidenciaCompleta);
+
             AgregarResiduoButton.IsVisible = _puedeEditar;
             FinalizarLayout.IsVisible = _puedeEditar;
-            FinalizarButton.IsEnabled = _puedeEditar && _registro.Residuos.Count > 0;
+            FinalizarButton.IsEnabled = _puedeEditar && evidenciaCompleta;
+            EvidenciaPendienteLabel.IsVisible = _puedeEditar && residuos.Length > 0 && !evidenciaCompleta;
             SinResiduosLabel.IsVisible = _registro.Residuos.Count == 0;
 
-            var residuos = _registro.Residuos
-                .Select(x => MapResiduo(x, catalogos, _puedeEditar))
-                .ToArray();
             BindingContext = new RegistroBinding(residuos);
-
             ContenidoLayout.IsVisible = true;
         }
         catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
@@ -137,6 +146,7 @@ public partial class RegistroControlDetallePage : ContentPage
     private static ResiduoControlVisual MapResiduo(
         RegistroResiduoDto residuo,
         CatalogosInicialDto catalogos,
+        RegistroResiduoEvidenciaDto? evidencia,
         bool puedeEditar)
     {
         var catalogo = catalogos.Residuos.FirstOrDefault(x => x.ResiduoId == residuo.ResiduoId);
@@ -147,12 +157,31 @@ public partial class RegistroControlDetallePage : ContentPage
         var unidad = catalogos.UnidadesMedida.FirstOrDefault(x =>
             x.UnidadMedidaId == residuo.UnidadMedidaId);
 
+        var tieneUbicacion = evidencia?.TieneUbicacion == true;
+        var cantidadFotos = evidencia?.CantidadFotos ?? residuo.Fotos.Count;
+        var evidenciaCompleta = tieneUbicacion && cantidadFotos > 0;
+
+        var ubicacionTexto = tieneUbicacion
+            ? $"📍 {evidencia!.Latitud:0.000000}, {evidencia.Longitud:0.000000}" +
+              (evidencia.PrecisionMetros.HasValue ? $" · ±{evidencia.PrecisionMetros.Value:0.#} m" : string.Empty)
+            : "📍 Ubicación pendiente";
+        var fotosTexto = cantidadFotos switch
+        {
+            0 => "📷 Sin foto",
+            1 => "📷 1 foto",
+            _ => $"📷 {cantidadFotos} fotos"
+        };
+
         return new ResiduoControlVisual(
             residuo.RegistroResiduoId,
             catalogo?.Nombre ?? "Residuo",
             clasificacion?.Nombre ?? "Sin clasificación",
             $"{residuo.Cantidad:0.###} {unidad?.Codigo ?? string.Empty}".Trim(),
             string.IsNullOrWhiteSpace(residuo.Observacion) ? "Sin observación" : residuo.Observacion,
+            ubicacionTexto,
+            fotosTexto,
+            evidenciaCompleta ? "Evidencia completa" : "Evidencia pendiente",
+            evidenciaCompleta,
             puedeEditar);
     }
 
@@ -241,7 +270,7 @@ public partial class RegistroControlDetallePage : ContentPage
 
         var confirmar = await DisplayAlert(
             "Finalizar registro",
-            "Al finalizar ya no podrás agregar, editar ni eliminar residuos. El registro quedará disponible para el proceso de almacenamiento y retiro. ¿Deseas continuar?",
+            "Al finalizar ya no podrás agregar, editar ni eliminar residuos. Cada residuo conservará su foto y coordenadas como evidencia de campo. ¿Deseas continuar?",
             "Finalizar",
             "Cancelar");
         if (!confirmar)
@@ -255,6 +284,13 @@ public partial class RegistroControlDetallePage : ContentPage
         {
             var workflow = AppServices.Services.GetRequiredService<IControlGeneracionWorkflowClient>();
             await workflow.CompletarRegistroAsync(_controlId, _registroId);
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.BadRequest)
+        {
+            await DisplayAlert(
+                "Falta evidencia",
+                "Cada residuo debe tener ubicación GPS y al menos una foto antes de finalizar.",
+                "Aceptar");
         }
         catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Conflict)
         {
@@ -297,5 +333,9 @@ public partial class RegistroControlDetallePage : ContentPage
         string Clasificacion,
         string CantidadTexto,
         string ObservacionTexto,
+        string UbicacionTexto,
+        string FotosTexto,
+        string EvidenciaEstadoTexto,
+        bool EvidenciaCompleta,
         bool PuedeEditar);
 }

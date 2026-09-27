@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Recicla.Shared.Contracts;
 using ReciclaApi.Application.Common;
 using ReciclaApi.Domain;
+using ReciclaApi.Infrastructure.Persistence;
 using ReciclaApi.Infrastructure.Repositories;
 
 namespace ReciclaApi.Application.Services;
@@ -21,7 +22,9 @@ public interface IControlGeneracionRegistroConsultaService
         CancellationToken cancellationToken = default);
 }
 
-public sealed class ControlGeneracionRegistroConsultaService(IUnitOfWork unitOfWork)
+public sealed class ControlGeneracionRegistroConsultaService(
+    IUnitOfWork unitOfWork,
+    ReciclaDbContext context)
     : IControlGeneracionRegistroConsultaService
 {
     public async Task<ServiceResult<RegistroControlDetalleDto>> ObtenerAsync(
@@ -64,8 +67,29 @@ public sealed class ControlGeneracionRegistroConsultaService(IUnitOfWork unitOfW
         if (registro.EstadoRegistro.Codigo is not ("BORRADOR" or "EN_PROCESO"))
             return ServiceResult<RegistroControlDetalleDto>.Fail("El registro ya no se encuentra en proceso.", StatusCodes.Status409Conflict);
 
-        if (!registro.Residuos.Any(x => !x.Eliminado))
+        var residuosActivos = registro.Residuos.Where(x => !x.Eliminado).ToArray();
+        if (residuosActivos.Length == 0)
             return ServiceResult<RegistroControlDetalleDto>.Fail("Debe registrar al menos un residuo antes de finalizar.", StatusCodes.Status400BadRequest);
+
+        var ids = residuosActivos.Select(x => x.RegistroResiduoId).ToArray();
+        var ubicados = await context.Set<RegistroResiduoUbicacion>()
+            .AsNoTracking()
+            .Where(x => ids.Contains(x.RegistroResiduoId))
+            .Select(x => x.RegistroResiduoId)
+            .ToListAsync(cancellationToken);
+        var ubicadosSet = ubicados.ToHashSet();
+
+        var incompletos = residuosActivos
+            .Where(x => !ubicadosSet.Contains(x.RegistroResiduoId) || !x.Fotos.Any(f => !f.Eliminado))
+            .Select(x => x.RegistroResiduoId)
+            .ToArray();
+
+        if (incompletos.Length > 0)
+        {
+            return ServiceResult<RegistroControlDetalleDto>.Fail(
+                "Cada residuo debe tener coordenadas GPS y al menos una foto antes de finalizar el registro.",
+                StatusCodes.Status400BadRequest);
+        }
 
         var registrado = await unitOfWork.Repository<EstadoRegistro>().Query(tracking: true)
             .FirstAsync(x => x.Codigo == "REGISTRADO", cancellationToken);
@@ -81,7 +105,7 @@ public sealed class ControlGeneracionRegistroConsultaService(IUnitOfWork unitOfW
             EntidadId = registroId,
             Accion = "FINALIZAR_REGISTRO_CONTROL",
             DatosAntesJson = "{\"Estado\":\"EN_PROCESO\"}",
-            DatosDespuesJson = "{\"Estado\":\"REGISTRADO\"}"
+            DatosDespuesJson = "{\"Estado\":\"REGISTRADO\",\"EvidenciaResiduo\":\"GPS_FOTO_COMPLETOS\"}"
         }, cancellationToken);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);

@@ -40,7 +40,7 @@
                            FontAttributes="Bold"
                            FontSize="17" />
                     <Label x:Name="SubtituloFormularioLabel"
-                           Text="Completa los datos del residuo generado"
+                           Text="Completa los datos y registra la evidencia en campo"
                            HorizontalTextAlignment="Center"
                            Style="{StaticResource MutedText}" />
                 </VerticalStackLayout>
@@ -135,8 +135,68 @@
                     </Border>
                 </VerticalStackLayout>
 
+                <Border Style="{StaticResource SoftCard}" BackgroundColor="{StaticResource ColorBlueSoft}">
+                    <VerticalStackLayout Spacing="5">
+                        <Label Text="Evidencia obligatoria" Style="{StaticResource SectionTitle}" />
+                        <Label Text="Cada residuo debe guardar su ubicación GPS y al menos una fotografía antes de que el registro pueda finalizarse."
+                               Style="{StaticResource MutedText}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource SoftCard}">
+                    <VerticalStackLayout Spacing="9">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="📍 Ubicación GPS" Style="{StaticResource SectionTitle}" />
+                                <Label x:Name="UbicacionEstadoLabel"
+                                       Text="Ubicación pendiente"
+                                       Style="{StaticResource MutedText}" />
+                            </VerticalStackLayout>
+                            <Label Grid.Column="1"
+                                   Text="Obligatorio"
+                                   FontSize="10"
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource ColorDanger}"
+                                   VerticalOptions="Center" />
+                        </Grid>
+                        <Button x:Name="CapturarUbicacionButton"
+                                Text="Obtener ubicación"
+                                Style="{StaticResource SmallPrimaryButton}"
+                                HorizontalOptions="Start"
+                                Clicked="OnCapturarUbicacionClicked" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource SoftCard}">
+                    <VerticalStackLayout Spacing="9">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="📷 Fotografías" Style="{StaticResource SectionTitle}" />
+                                <Label x:Name="FotosEstadoLabel"
+                                       Text="Ninguna foto registrada"
+                                       Style="{StaticResource MutedText}" />
+                                <Label x:Name="FotosDetalleLabel"
+                                       Text=""
+                                       Style="{StaticResource TinyMutedText}"
+                                       IsVisible="False" />
+                            </VerticalStackLayout>
+                            <Label Grid.Column="1"
+                                   Text="Mín. 1"
+                                   FontSize="10"
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource ColorDanger}"
+                                   VerticalOptions="Center" />
+                        </Grid>
+                        <Button x:Name="TomarFotoButton"
+                                Text="Tomar foto"
+                                Style="{StaticResource SmallPrimaryButton}"
+                                HorizontalOptions="Start"
+                                Clicked="OnTomarFotoClicked" />
+                    </VerticalStackLayout>
+                </Border>
+
                 <Button x:Name="RegistrarButton"
-                        Text="Registrar residuo  →"
+                        Text="Guardar residuo  →"
                         Style="{StaticResource PrimaryButton}"
                         Clicked="OnRegistrarClicked" />
 
