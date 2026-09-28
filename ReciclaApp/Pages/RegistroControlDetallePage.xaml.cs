@@ -70,6 +70,7 @@ public partial class RegistroControlDetallePage : ContentPage
             var api = AppServices.Services.GetRequiredService<IReciclaApiClient>();
             var evidenciaApi = AppServices.Services.GetRequiredService<IRegistroResiduoEvidenciaApiClient>();
             var session = AppServices.Services.GetRequiredService<IAuthSessionService>();
+            var httpClient = AppServices.Services.GetRequiredService<HttpClient>();
 
             var registroTask = api.ObtenerRegistroControlAsync(_controlId, _registroId);
             var controlTask = api.ObtenerControlGeneracionAsync(_controlId);
@@ -110,7 +111,8 @@ public partial class RegistroControlDetallePage : ContentPage
                     x,
                     catalogos,
                     evidencias.FirstOrDefault(e => e.RegistroResiduoId == x.RegistroResiduoId),
-                    _puedeEditar))
+                    _puedeEditar,
+                    httpClient.BaseAddress))
                 .ToArray();
             var evidenciaCompleta = residuos.Length > 0 && residuos.All(x => x.EvidenciaCompleta);
 
@@ -147,7 +149,8 @@ public partial class RegistroControlDetallePage : ContentPage
         RegistroResiduoDto residuo,
         CatalogosInicialDto catalogos,
         RegistroResiduoEvidenciaDto? evidencia,
-        bool puedeEditar)
+        bool puedeEditar,
+        Uri? apiBaseAddress)
     {
         var catalogo = catalogos.Residuos.FirstOrDefault(x => x.ResiduoId == residuo.ResiduoId);
         var clasificacion = catalogo is null
@@ -172,6 +175,15 @@ public partial class RegistroControlDetallePage : ContentPage
             _ => $"📷 {cantidadFotos} fotos"
         };
 
+        var fotos = residuo.Fotos
+            .Where(x => !string.IsNullOrWhiteSpace(x.UrlNube))
+            .Select(x => new FotoResiduoVisual(
+                x.FotoId,
+                x.NombreArchivo,
+                ResolverUrlFoto(apiBaseAddress, x.UrlNube!)))
+            .Where(x => !string.IsNullOrWhiteSpace(x.Url))
+            .ToArray();
+
         return new ResiduoControlVisual(
             residuo.RegistroResiduoId,
             catalogo?.Nombre ?? "Residuo",
@@ -182,7 +194,20 @@ public partial class RegistroControlDetallePage : ContentPage
             fotosTexto,
             evidenciaCompleta ? "Evidencia completa" : "Evidencia pendiente",
             evidenciaCompleta,
-            puedeEditar);
+            puedeEditar,
+            fotos.Length > 0,
+            fotos);
+    }
+
+    private static string ResolverUrlFoto(Uri? baseAddress, string url)
+    {
+        if (Uri.TryCreate(url, UriKind.Absolute, out var absolute))
+            return absolute.ToString();
+
+        if (baseAddress is null)
+            return string.Empty;
+
+        return new Uri(baseAddress, url.TrimStart('/')).ToString();
     }
 
     private void AplicarColorEstado(string estado)
@@ -327,6 +352,11 @@ public partial class RegistroControlDetallePage : ContentPage
 
     private sealed record RegistroBinding(IReadOnlyCollection<ResiduoControlVisual> Residuos);
 
+    private sealed record FotoResiduoVisual(
+        Guid FotoId,
+        string NombreArchivo,
+        string Url);
+
     private sealed record ResiduoControlVisual(
         Guid RegistroResiduoId,
         string Nombre,
@@ -337,5 +367,7 @@ public partial class RegistroControlDetallePage : ContentPage
         string FotosTexto,
         string EvidenciaEstadoTexto,
         bool EvidenciaCompleta,
-        bool PuedeEditar);
+        bool PuedeEditar,
+        bool TieneFotos,
+        IReadOnlyCollection<FotoResiduoVisual> Fotos);
 }
