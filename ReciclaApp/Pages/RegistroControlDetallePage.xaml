@@ -109,7 +109,7 @@
                                                         Stroke="Transparent"
                                                         StrokeShape="RoundRectangle 10"
                                                         Padding="9,7">
-                                                    <VerticalStackLayout Spacing="3">
+                                                    <VerticalStackLayout Spacing="5">
                                                         <Label Text="{Binding EvidenciaEstadoTexto}"
                                                                FontSize="10"
                                                                FontAttributes="Bold"
@@ -118,6 +118,31 @@
                                                                Style="{StaticResource TinyMutedText}" />
                                                         <Label Text="{Binding FotosTexto}"
                                                                Style="{StaticResource TinyMutedText}" />
+
+                                                        <ScrollView Orientation="Horizontal"
+                                                                    HorizontalScrollBarVisibility="Never"
+                                                                    Margin="0,3,0,0"
+                                                                    IsVisible="{Binding MostrarMiniaturas}">
+                                                            <HorizontalStackLayout Spacing="7"
+                                                                                   BindableLayout.ItemsSource="{Binding Miniaturas}">
+                                                                <BindableLayout.ItemTemplate>
+                                                                    <DataTemplate>
+                                                                        <Border WidthRequest="72"
+                                                                                HeightRequest="72"
+                                                                                Padding="0"
+                                                                                Stroke="{StaticResource ColorBorder}"
+                                                                                StrokeThickness="1"
+                                                                                StrokeShape="RoundRectangle 9"
+                                                                                BackgroundColor="White">
+                                                                            <Image Source="{Binding Fuente}"
+                                                                                   Aspect="AspectFill"
+                                                                                   WidthRequest="72"
+                                                                                   HeightRequest="72" />
+                                                                        </Border>
+                                                                    </DataTemplate>
+                                                                </BindableLayout.ItemTemplate>
+                                                            </HorizontalStackLayout>
+                                                        </ScrollView>
                                                     </VerticalStackLayout>
                                                 </Border>
 
