@@ -120,11 +120,12 @@ public static class AppNavigator
 
         var navigation = shell.Navigation;
         var paginaAnterior = navigation.NavigationStack.LastOrDefault();
+        var paginaRaiz = navigation.NavigationStack.FirstOrDefault();
 
         await shell.GoToAsync(route, true);
 
         if (paginaAnterior is not null &&
-            navigation.NavigationStack.Count > 1 &&
+            !ReferenceEquals(paginaAnterior, paginaRaiz) &&
             navigation.NavigationStack.Contains(paginaAnterior))
         {
             navigation.RemovePage(paginaAnterior);
