@@ -10,6 +10,8 @@ public static class AppNavigator
 
     public static Task IrARetirosAsync() => Shell.Current.GoToAsync(AppRoutes.Retiros);
 
+    public static Task IrAReportesAsync() => Shell.Current.GoToAsync(AppRoutes.Reportes);
+
     public static Task IrARegistrosAsync() => Shell.Current.GoToAsync(AppRoutes.Registros);
 
     public static Task IrAPerfilAsync() => Shell.Current.GoToAsync(AppRoutes.Perfil);
