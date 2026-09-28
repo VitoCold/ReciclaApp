@@ -7,6 +7,7 @@ public static class AppRoutes
     public const string ControlesGeneracion = "//controles-generacion";
     public const string StockResiduos = "//stock-residuos";
     public const string Retiros = "//retiros";
+    public const string Reportes = "//reportes";
     public const string Registros = "//registros";
     public const string Perfil = "//perfil";
 
