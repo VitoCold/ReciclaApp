@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Net;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +16,7 @@ namespace ReciclaApp.Pages;
 public partial class RegistrarResiduoPage : ContentPage
 {
     private readonly List<Microsoft.Maui.Storage.FileResult> _fotosPendientes = new();
+    private readonly ObservableCollection<FotoPreviewItem> _fotosPreview = new();
     private CatalogosInicialDto? _catalogos;
     private UnidadMedidaDto? _unidadSeleccionada;
     private bool _isLoading;
@@ -37,6 +39,7 @@ public partial class RegistrarResiduoPage : ContentPage
     public RegistrarResiduoPage()
     {
         InitializeComponent();
+        FotosPreviewLayout.BindingContext = _fotosPreview;
         ActualizarEstadoEvidencia();
     }
 
@@ -165,6 +168,7 @@ public partial class RegistrarResiduoPage : ContentPage
             _precisionMetros = evidencia?.PrecisionMetros;
             _ubicacionCapturadaUtc = evidencia?.UbicacionCapturadaUtc;
             _fotosExistentes = evidencia?.CantidadFotos ?? residuo.Fotos.Count;
+            CargarPreviewsExistentes(residuo.Fotos);
 
             TituloPageLabel.Text = "Editar residuo";
             TituloFormularioLabel.Text = "Editar información";
@@ -305,15 +309,30 @@ public partial class RegistrarResiduoPage : ContentPage
             if (foto is null)
                 return;
 
+            var preview = await CrearPreviewPendienteAsync(foto);
             _fotosPendientes.Add(foto);
+            _fotosPreview.Add(preview);
             ActualizarEstadoEvidencia();
         }
         catch (Exception ex)
         {
             AppServices.Services.GetService<ILogger<RegistrarResiduoPage>>()?
                 .LogWarning(ex, "No se pudo capturar la fotografía del residuo.");
-            MostrarError("No se pudo tomar la foto. Verifica el permiso de cámara e inténtalo nuevamente.");
+            MostrarError("No se pudo tomar o previsualizar la foto. Verifica el permiso de cámara e inténtalo nuevamente.");
         }
+    }
+
+    private void OnEliminarFotoPendienteClicked(object sender, EventArgs e)
+    {
+        if (_isLoading || sender is not Button button || button.CommandParameter is not FotoPreviewItem preview || !preview.PuedeEliminar)
+            return;
+
+        if (preview.Archivo is not null)
+            _fotosPendientes.Remove(preview.Archivo);
+
+        _fotosPreview.Remove(preview);
+        EliminarCachePreview(preview.RutaCache);
+        ActualizarEstadoEvidencia();
     }
 
     private async void OnRegistrarClicked(object sender, EventArgs e)
@@ -419,6 +438,13 @@ public partial class RegistrarResiduoPage : ContentPage
 
                 _fotosPendientes.Remove(foto);
                 _fotosExistentes++;
+
+                var preview = _fotosPreview.FirstOrDefault(x => ReferenceEquals(x.Archivo, foto));
+                if (preview is not null)
+                {
+                    _fotosPreview.Remove(preview);
+                    EliminarCachePreview(preview.RutaCache);
+                }
             }
 
             ActualizarEstadoEvidencia();
@@ -455,6 +481,82 @@ public partial class RegistrarResiduoPage : ContentPage
         }
     }
 
+    private async Task<FotoPreviewItem> CrearPreviewPendienteAsync(Microsoft.Maui.Storage.FileResult foto)
+    {
+        var extension = Path.GetExtension(foto.FileName);
+        if (string.IsNullOrWhiteSpace(extension))
+            extension = ".jpg";
+
+        var rutaCache = Path.Combine(
+            Microsoft.Maui.Storage.FileSystem.CacheDirectory,
+            $"residuo_preview_{Guid.NewGuid():N}{extension}");
+
+        await using (var origen = await foto.OpenReadAsync())
+        await using (var destino = File.Create(rutaCache))
+            await origen.CopyToAsync(destino);
+
+        return new FotoPreviewItem(
+            Guid.NewGuid(),
+            ImageSource.FromStream(() => File.OpenRead(rutaCache)),
+            "Nueva · pendiente de guardar",
+            true,
+            foto,
+            rutaCache);
+    }
+
+    private void CargarPreviewsExistentes(IEnumerable<RegistroResiduoFotoDto> fotos)
+    {
+        foreach (var existente in _fotosPreview.Where(x => !x.PuedeEliminar).ToArray())
+            _fotosPreview.Remove(existente);
+
+        var httpClient = AppServices.Services.GetService<HttpClient>();
+        foreach (var foto in fotos)
+        {
+            var fuente = CrearFuenteRemota(foto.UrlNube, httpClient?.BaseAddress);
+            if (fuente is null)
+                continue;
+
+            _fotosPreview.Add(new FotoPreviewItem(
+                foto.FotoId,
+                fuente,
+                "Guardada",
+                false,
+                null,
+                null));
+        }
+    }
+
+    private static ImageSource? CrearFuenteRemota(string? url, Uri? baseAddress)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+            return null;
+
+        if (Uri.TryCreate(url, UriKind.Absolute, out var absoluta) &&
+            (absoluta.Scheme == Uri.UriSchemeHttp || absoluta.Scheme == Uri.UriSchemeHttps))
+            return ImageSource.FromUri(absoluta);
+
+        if (baseAddress is null)
+            return null;
+
+        return ImageSource.FromUri(new Uri(baseAddress, url));
+    }
+
+    private static void EliminarCachePreview(string? ruta)
+    {
+        if (string.IsNullOrWhiteSpace(ruta))
+            return;
+
+        try
+        {
+            if (File.Exists(ruta))
+                File.Delete(ruta);
+        }
+        catch
+        {
+            // El caché es temporal; si el sistema mantiene el archivo abierto se limpiará después.
+        }
+    }
+
     private void ActualizarEstadoEvidencia()
     {
         if (TieneUbicacion)
@@ -479,10 +581,13 @@ public partial class RegistrarResiduoPage : ContentPage
             _ => $"{totalFotos} fotos registradas/listas"
         };
         TomarFotoButton.Text = totalFotos == 0 ? "Tomar foto" : "Tomar otra foto";
+        FotosPreviewScroll.IsVisible = _fotosPreview.Count > 0;
 
         if (_fotosPendientes.Count > 0)
         {
-            FotosDetalleLabel.Text = "Pendientes de subir: " + string.Join(", ", _fotosPendientes.Select(x => x.FileName));
+            FotosDetalleLabel.Text = _fotosPendientes.Count == 1
+                ? "1 foto nueva pendiente de guardar"
+                : $"{_fotosPendientes.Count} fotos nuevas pendientes de guardar";
             FotosDetalleLabel.IsVisible = true;
         }
         else
@@ -521,4 +626,12 @@ public partial class RegistrarResiduoPage : ContentPage
     {
         await AppNavigator.VolverAsync();
     }
+
+    private sealed record FotoPreviewItem(
+        Guid Id,
+        ImageSource Fuente,
+        string EstadoTexto,
+        bool PuedeEliminar,
+        Microsoft.Maui.Storage.FileResult? Archivo,
+        string? RutaCache);
 }
