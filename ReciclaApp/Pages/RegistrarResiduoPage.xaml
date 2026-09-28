@@ -159,8 +159,6 @@
                                    TextColor="{StaticResource ColorPrimary}"
                                    VerticalOptions="Center" />
                         </Grid>
-                        <Label Text="La app obtiene la coordenada automáticamente; no necesitas ejecutar ninguna acción adicional."
-                               Style="{StaticResource TinyMutedText}" />
                     </VerticalStackLayout>
                 </Border>
 
