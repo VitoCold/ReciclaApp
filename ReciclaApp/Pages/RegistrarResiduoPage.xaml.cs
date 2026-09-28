@@ -26,6 +26,7 @@ public partial class RegistrarResiduoPage : ContentPage
     private double? _precisionMetros;
     private DateTime? _ubicacionCapturadaUtc;
     private int _fotosExistentes;
+    private Task<bool>? _capturaUbicacionEnCurso;
 
     public string ControlId { get; set; } = string.Empty;
     public string RegistroId { get; set; } = string.Empty;
@@ -52,6 +53,9 @@ public partial class RegistrarResiduoPage : ContentPage
 
         if (EsEdicion && !_edicionCargada && _catalogos is not null)
             await CargarResiduoEdicionAsync();
+
+        if (!TieneUbicacion && !_isLoading)
+            await CapturarUbicacionAutomaticaAsync();
     }
 
     private async Task CargarCatalogosAsync()
@@ -229,27 +233,33 @@ public partial class RegistrarResiduoPage : ContentPage
         UnidadLabel.Text = _unidadSeleccionada?.Codigo ?? "-";
     }
 
-    private async void OnCapturarUbicacionClicked(object sender, EventArgs e)
+    private Task<bool> CapturarUbicacionAutomaticaAsync()
     {
-        if (_isLoading)
-            return;
+        if (TieneUbicacion)
+            return Task.FromResult(true);
 
-        ErrorBorder.IsVisible = false;
+        if (_capturaUbicacionEnCurso is { IsCompleted: false })
+            return _capturaUbicacionEnCurso;
+
+        _capturaUbicacionEnCurso = CapturarUbicacionInternaAsync();
+        return _capturaUbicacionEnCurso;
+    }
+
+    private async Task<bool> CapturarUbicacionInternaAsync()
+    {
         try
         {
+            UbicacionEstadoLabel.Text = "Obteniendo ubicación automáticamente...";
+
             var permiso = await Microsoft.Maui.ApplicationModel.Permissions.CheckStatusAsync<Microsoft.Maui.ApplicationModel.Permissions.LocationWhenInUse>();
             if (permiso != Microsoft.Maui.ApplicationModel.PermissionStatus.Granted)
                 permiso = await Microsoft.Maui.ApplicationModel.Permissions.RequestAsync<Microsoft.Maui.ApplicationModel.Permissions.LocationWhenInUse>();
 
             if (permiso != Microsoft.Maui.ApplicationModel.PermissionStatus.Granted)
             {
-                MostrarError("Debes permitir el acceso a la ubicación para registrar este residuo.");
-                return;
+                UbicacionEstadoLabel.Text = "Permiso de ubicación requerido";
+                return false;
             }
-
-            _isLoading = true;
-            SetBusy(true);
-            UbicacionEstadoLabel.Text = "Obteniendo ubicación...";
 
             var request = new Microsoft.Maui.Devices.Sensors.GeolocationRequest(
                 Microsoft.Maui.Devices.Sensors.GeolocationAccuracy.High,
@@ -258,8 +268,8 @@ public partial class RegistrarResiduoPage : ContentPage
 
             if (location is null)
             {
-                MostrarError("No se pudo obtener la ubicación. Verifica que el GPS esté activo e inténtalo nuevamente.");
-                return;
+                UbicacionEstadoLabel.Text = "No se pudo obtener la ubicación automáticamente";
+                return false;
             }
 
             _latitud = location.Latitude;
@@ -267,17 +277,14 @@ public partial class RegistrarResiduoPage : ContentPage
             _precisionMetros = location.Accuracy;
             _ubicacionCapturadaUtc = DateTime.UtcNow;
             ActualizarEstadoEvidencia();
+            return true;
         }
         catch (Exception ex)
         {
             AppServices.Services.GetService<ILogger<RegistrarResiduoPage>>()?
-                .LogWarning(ex, "No se pudo capturar la ubicación del residuo.");
-            MostrarError("No se pudo obtener la ubicación. Verifica los permisos y que el GPS esté activo.");
-        }
-        finally
-        {
-            _isLoading = false;
-            SetBusy(false);
+                .LogWarning(ex, "No se pudo capturar automáticamente la ubicación del residuo.");
+            UbicacionEstadoLabel.Text = "No se pudo obtener la ubicación automáticamente";
+            return false;
         }
     }
 
@@ -357,9 +364,9 @@ public partial class RegistrarResiduoPage : ContentPage
             return;
         }
 
-        if (!TieneUbicacion)
+        if (!TieneUbicacion && !await CapturarUbicacionAutomaticaAsync())
         {
-            MostrarError("Obtén la ubicación GPS antes de guardar el residuo.");
+            MostrarError("No se pudo obtener la ubicación GPS automáticamente. Verifica el permiso de ubicación y que el GPS esté activo, luego vuelve a guardar.");
             return;
         }
 
@@ -565,12 +572,14 @@ public partial class RegistrarResiduoPage : ContentPage
                 ? $" · precisión ±{_precisionMetros.Value:0.#} m"
                 : string.Empty;
             UbicacionEstadoLabel.Text = $"{_latitud:0.000000}, {_longitud:0.000000}{precision}";
-            CapturarUbicacionButton.Text = "Actualizar ubicación";
+        }
+        else if (_capturaUbicacionEnCurso is { IsCompleted: false })
+        {
+            UbicacionEstadoLabel.Text = "Obteniendo ubicación automáticamente...";
         }
         else
         {
-            UbicacionEstadoLabel.Text = "Ubicación pendiente";
-            CapturarUbicacionButton.Text = "Obtener ubicación";
+            UbicacionEstadoLabel.Text = "Ubicación pendiente de captura automática";
         }
 
         var totalFotos = _fotosExistentes + _fotosPendientes.Count;
@@ -610,7 +619,6 @@ public partial class RegistrarResiduoPage : ContentPage
         ResiduoPicker.IsEnabled = !busy && !EsEdicion;
         CantidadEntry.IsEnabled = !busy;
         ObservacionEditor.IsEnabled = !busy;
-        CapturarUbicacionButton.IsEnabled = !busy;
         TomarFotoButton.IsEnabled = !busy;
         ResiduoActivityIndicator.IsVisible = busy;
         ResiduoActivityIndicator.IsRunning = busy;
