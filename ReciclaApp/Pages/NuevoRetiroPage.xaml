@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ReciclaApp.Pages.NuevoRetiroPage"
+             Style="{StaticResource BasePage}"
+             Shell.NavBarIsVisible="False">
+
+    <Grid RowDefinitions="Auto,*">
+        <Grid Style="{StaticResource AppHeader}" ColumnDefinitions="Auto,*">
+            <Label Text="‹" TextColor="White" FontSize="34" VerticalOptions="Center">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </Label.GestureRecognizers>
+            </Label>
+            <Label Grid.Column="1" Text="Nuevo retiro" Style="{StaticResource HeaderTitle}" />
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="18,18,18,34" Spacing="14">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="Retiro agrupado" Style="{StaticResource PageTitle}" FontSize="22" />
+                    <Label Text="Selecciona un almacén y los residuos que saldrán con el gestor." Style="{StaticResource MutedText}" />
+                </VerticalStackLayout>
+
+                <Border x:Name="ErrorBorder" IsVisible="False" BackgroundColor="{StaticResource ColorDangerSoft}" Stroke="Transparent" StrokeShape="RoundRectangle 12" Padding="12,9">
+                    <Label x:Name="ErrorLabel" TextColor="{StaticResource ColorDanger}" FontSize="12" />
+                </Border>
+
+                <ActivityIndicator x:Name="ActivityIndicator" IsVisible="False" IsRunning="False" HorizontalOptions="Center" />
+
+                <Border Style="{StaticResource SoftCard}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Origen del retiro" Style="{StaticResource SectionTitle}" />
+                        <Label Text="Sede" Style="{StaticResource TinyMutedText}" />
+                        <Picker x:Name="SedePicker"
+                                Title="Selecciona una sede"
+                                ItemDisplayBinding="{Binding Nombre}"
+                                SelectedIndexChanged="OnSedeChanged" />
+                        <Label Text="Punto de almacenamiento" Style="{StaticResource TinyMutedText}" />
+                        <Picker x:Name="PuntoPicker"
+                                Title="Selecciona un almacén"
+                                ItemDisplayBinding="{Binding Nombre}"
+                                SelectedIndexChanged="OnPuntoChanged" />
+                        <Label Text="Empresa gestora" Style="{StaticResource TinyMutedText}" />
+                        <Picker x:Name="GestorPicker"
+                                Title="Selecciona un gestor"
+                                ItemDisplayBinding="{Binding Nombre}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource SoftCard}">
+                    <VerticalStackLayout Spacing="10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="Residuos almacenados" Style="{StaticResource SectionTitle}" />
+                            <Label x:Name="CantidadSeleccionLabel" Grid.Column="1" Text="0 seleccionados" Style="{StaticResource TinyMutedText}" />
+                        </Grid>
+
+                        <Label x:Name="SinStockLabel"
+                               Text="Selecciona un almacén para ver el stock disponible."
+                               Style="{StaticResource MutedText}"
+                               Margin="0,6" />
+
+                        <VerticalStackLayout x:Name="ItemsLayout" BindableLayout.ItemsSource="{Binding Items}" Spacing="0">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Stroke="#E5E7EB" StrokeShape="RoundRectangle 10" Padding="10" Margin="0,0,0,8">
+                                        <Grid ColumnDefinitions="Auto,*,90" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="4">
+                                            <CheckBox IsChecked="{Binding Seleccionado, Mode=TwoWay}"
+                                                      CheckedChanged="OnSeleccionChanged"
+                                                      VerticalOptions="Center" />
+                                            <VerticalStackLayout Grid.Column="1" Spacing="1">
+                                                <Label Text="{Binding Residuo}" FontSize="13" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                                <Label Text="{Binding OrigenTexto}" FontSize="10" TextColor="{StaticResource ColorMuted}" />
+                                            </VerticalStackLayout>
+                                            <Entry Grid.Column="2"
+                                                   Text="{Binding CantidadTexto, Mode=TwoWay}"
+                                                   Keyboard="Numeric"
+                                                   HorizontalTextAlignment="End"
+                                                   Placeholder="Cantidad" />
+                                            <Label Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
+                                                   Text="{Binding DisponibleTexto}"
+                                                   FontSize="10"
+                                                   TextColor="{StaticResource ColorPrimary}" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource SoftCard}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Datos del transporte" Style="{StaticResource SectionTitle}" />
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <VerticalStackLayout>
+                                <Label Text="Fecha" Style="{StaticResource TinyMutedText}" />
+                                <DatePicker x:Name="FechaPicker" />
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1">
+                                <Label Text="Hora" Style="{StaticResource TinyMutedText}" />
+                                <TimePicker x:Name="HoraPicker" />
+                            </VerticalStackLayout>
+                        </Grid>
+                        <Entry x:Name="DocumentoEntry" Placeholder="Documento / guía de transporte (opcional)" />
+                        <Entry x:Name="VehiculoEntry" Placeholder="Vehículo (opcional)" />
+                        <Entry x:Name="PlacaEntry" Placeholder="Placa (opcional)" />
+                        <Entry x:Name="ConductorEntry" Placeholder="Conductor (opcional)" />
+                        <Editor x:Name="ObservacionEditor" Placeholder="Observación (opcional)" AutoSize="TextChanges" MinimumHeightRequest="80" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Button x:Name="GuardarButton"
+                        Text="Confirmar retiro"
+                        Style="{StaticResource PrimaryButton}"
+                        Clicked="OnGuardarClicked" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

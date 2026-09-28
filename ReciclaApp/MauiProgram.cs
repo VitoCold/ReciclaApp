@@ -29,7 +29,13 @@ namespace ReciclaApp
                 Timeout = TimeSpan.FromSeconds(30)
             });
             builder.Services.AddSingleton<IReciclaApiClient, ReciclaApiClient>();
+            builder.Services.AddSingleton<IControlGeneracionWorkflowClient, ControlGeneracionWorkflowClient>();
+            builder.Services.AddSingleton<IInventarioApiClient, InventarioApiClient>();
+            builder.Services.AddSingleton<IRetiroApiClient, RetiroApiClient>();
+            builder.Services.AddSingleton<IDisposicionFinalApiClient, DisposicionFinalApiClient>();
+            builder.Services.AddSingleton<IReporteApiClient, ReporteApiClient>();
             builder.Services.AddSingleton<IAuthSessionService, AuthSessionService>();
+            builder.Services.AddSingleton<IRegistroResiduoEvidenciaApiClient, RegistroResiduoEvidenciaApiClient>();
 
 #if DEBUG
             builder.Logging.AddDebug();

@@ -384,7 +384,8 @@ public sealed class RegistroService(
         unitOfWork.Repository<EstadoSincronizacion>().Query(tracking: true)
             .FirstAsync(x => x.Codigo == "SINCRONIZADO", cancellationToken);
 
-    private static bool EsBorrador(Registro registro) => registro.EstadoRegistro.Codigo == "BORRADOR";
+    private static bool EsBorrador(Registro registro) =>
+        registro.EstadoRegistro.Codigo is "BORRADOR" or "EN_PROCESO";
 
     private static RegistroListItemDto MapListItem(Registro x) => new(
         x.RegistroId,

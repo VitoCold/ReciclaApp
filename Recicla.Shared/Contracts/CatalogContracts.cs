@@ -6,6 +6,25 @@ public sealed record ProyectoDto(Guid ProyectoId, string Codigo, string Nombre);
 
 public sealed record ActividadDto(Guid ActividadId, Guid? ProyectoId, string Codigo, string Nombre);
 
+public sealed record EmpresaDto(
+    Guid EmpresaId,
+    string Codigo,
+    string RazonSocial,
+    string? NombreComercial,
+    bool EsGestoraResiduos);
+
+public sealed record PuntoResiduoDto(
+    Guid PuntoResiduoId,
+    Guid SedeId,
+    string Codigo,
+    string Nombre,
+    string Tipo);
+
+public sealed record UsuarioAsignableDto(
+    Guid UsuarioId,
+    string Nombre,
+    IReadOnlyCollection<string> Roles);
+
 public sealed record ClasificacionResiduoDto(int ClasificacionResiduoId, string Codigo, string Nombre, string? ColorHex);
 
 public sealed record TipoResiduoDto(Guid TipoResiduoId, string Codigo, string Nombre);
@@ -28,4 +47,7 @@ public sealed record CatalogosInicialDto(
     IReadOnlyCollection<ClasificacionResiduoDto> Clasificaciones,
     IReadOnlyCollection<TipoResiduoDto> TiposResiduo,
     IReadOnlyCollection<UnidadMedidaDto> UnidadesMedida,
-    IReadOnlyCollection<ResiduoCatalogoDto> Residuos);
+    IReadOnlyCollection<ResiduoCatalogoDto> Residuos,
+    IReadOnlyCollection<EmpresaDto> Empresas,
+    IReadOnlyCollection<PuntoResiduoDto> PuntosResiduo,
+    IReadOnlyCollection<UsuarioAsignableDto> UsuariosAsignables);

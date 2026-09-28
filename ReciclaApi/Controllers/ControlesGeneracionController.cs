@@ -141,6 +141,17 @@ public sealed class ControlesGeneracionController(
         return FromResult(result);
     }
 
+    [HttpPost("{id:guid}/registros/{registroId:guid}/completar")]
+    [Authorize(Roles = "RESPONSABLE_OPERATIVO,REGISTRADOR")]
+    public async Task<IActionResult> CompletarRegistro(
+        Guid id,
+        Guid registroId,
+        CancellationToken cancellationToken)
+    {
+        var result = await registroConsultaService.CompletarAsync(id, registroId, UsuarioId, cancellationToken);
+        return FromResult(result);
+    }
+
     private async Task<IActionResult> CambiarEstado(
         Guid id,
         string estado,

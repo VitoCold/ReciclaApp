@@ -104,7 +104,11 @@ public partial class RegistrosPage : ContentPage
 
     private async void OnNuevoRegistroClicked(object sender, EventArgs e)
     {
-        await AppNavigator.IrAInicioRegistroAsync();
+        await DisplayAlert(
+            "Selecciona un control",
+            "Los nuevos registros de residuos deben crearse dentro de un control de generación activo.",
+            "Continuar");
+        await AppNavigator.IrAControlesGeneracionAsync();
     }
 
     private async void OnRegistroTapped(object sender, TappedEventArgs e)

@@ -32,16 +32,18 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
     {
         var global = await TieneRolAsync(usuarioId, "AMBIENTAL", cancellationToken)
             || await TieneRolAsync(usuarioId, "ADMINISTRADOR", cancellationToken);
-        var now = DateTime.UtcNow;
+        var hoy = DateTime.UtcNow.Date;
 
         var query = QueryControles();
         if (!global)
         {
-            query = query.Where(x => x.Usuarios.Any(u =>
-                u.UsuarioId == usuarioId &&
-                u.EsActivo &&
-                u.FechaDesde <= now &&
-                (!u.FechaHasta.HasValue || u.FechaHasta.Value >= now)));
+            query = query.Where(x =>
+                x.CreadoPorUsuarioId == usuarioId ||
+                x.Usuarios.Any(u =>
+                    u.UsuarioId == usuarioId &&
+                    u.EsActivo &&
+                    u.FechaDesde <= hoy &&
+                    (!u.FechaHasta.HasValue || u.FechaHasta.Value >= hoy)));
         }
 
         var controles = await query
@@ -75,10 +77,21 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
         if (!await TieneRolAsync(usuarioId, "RESPONSABLE_OPERATIVO", cancellationToken))
             return ServiceResult<ControlGeneracionDetalleDto>.Fail("Solo un responsable operativo puede crear un control de generación.", StatusCodes.Status403Forbidden);
 
-        var error = await ValidarCabeceraAsync(request.SedeId, request.EmpresaResponsableId, request.ProyectoId, request.ActividadId, request.PuntoGeneracionId, request.FechaInicio, request.FechaFin, cancellationToken);
+        var error = await ValidarCabeceraAsync(
+            request.SedeId,
+            request.EmpresaResponsableId,
+            request.ProyectoId,
+            request.ActividadId,
+            request.PuntoGeneracionId,
+            request.FechaInicio,
+            request.FechaFin,
+            cancellationToken);
         if (error is not null)
             return ServiceResult<ControlGeneracionDetalleDto>.Fail(error, StatusCodes.Status400BadRequest);
 
+        var hoy = DateTime.UtcNow.Date;
+        var fechaInicio = request.FechaInicio.Date;
+        var fechaFin = request.FechaFin?.Date;
         var estado = await GetEstadoAsync("PENDIENTE_APROBACION", cancellationToken);
         var control = new ControlGeneracion
         {
@@ -89,8 +102,8 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
             ActividadId = request.ActividadId,
             PuntoGeneracionId = request.PuntoGeneracionId,
             DescripcionTrabajo = request.DescripcionTrabajo,
-            FechaInicio = request.FechaInicio,
-            FechaFin = request.FechaFin,
+            FechaInicio = fechaInicio,
+            FechaFin = fechaFin,
             EstadoControlGeneracionId = estado.EstadoControlGeneracionId,
             Observacion = request.Observacion,
             CreadoPorUsuarioId = usuarioId
@@ -103,7 +116,8 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
             UsuarioId = usuarioId,
             RolControl = "RESPONSABLE",
             EsPrincipal = true,
-            FechaDesde = request.FechaInicio,
+            // El creador debe poder preparar el equipo aunque la operación empiece en una fecha futura.
+            FechaDesde = fechaInicio <= hoy ? fechaInicio : hoy,
             AsignadoPorUsuarioId = usuarioId
         }, cancellationToken);
 
@@ -146,7 +160,15 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
         if (control.EstadoControlGeneracion.Codigo == "ANULADO")
             return ServiceResult<ControlGeneracionDetalleDto>.Fail("No se puede modificar un control anulado.", StatusCodes.Status409Conflict);
 
-        var error = await ValidarCabeceraAsync(request.SedeId, request.EmpresaResponsableId, request.ProyectoId, request.ActividadId, request.PuntoGeneracionId, request.FechaInicio, request.FechaFin, cancellationToken);
+        var error = await ValidarCabeceraAsync(
+            request.SedeId,
+            request.EmpresaResponsableId,
+            request.ProyectoId,
+            request.ActividadId,
+            request.PuntoGeneracionId,
+            request.FechaInicio,
+            request.FechaFin,
+            cancellationToken);
         if (error is not null)
             return ServiceResult<ControlGeneracionDetalleDto>.Fail(error, StatusCodes.Status400BadRequest);
 
@@ -169,8 +191,8 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
         control.ActividadId = request.ActividadId;
         control.PuntoGeneracionId = request.PuntoGeneracionId;
         control.DescripcionTrabajo = request.DescripcionTrabajo;
-        control.FechaInicio = request.FechaInicio;
-        control.FechaFin = request.FechaFin;
+        control.FechaInicio = request.FechaInicio.Date;
+        control.FechaFin = request.FechaFin?.Date;
         control.Observacion = request.Observacion;
         control.MotivoUltimoCambio = request.MotivoModificacion.Trim();
         control.ActualizadoUtc = DateTime.UtcNow;
@@ -311,8 +333,9 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
         if (request.EsPrincipal && rolControl != "RESPONSABLE")
             return ServiceResult<ControlGeneracionDetalleDto>.Fail("Solo un responsable puede marcarse como principal.", StatusCodes.Status400BadRequest);
 
-        var desde = request.FechaDesde ?? DateTime.UtcNow;
-        if (request.FechaHasta.HasValue && request.FechaHasta.Value < desde)
+        var desde = (request.FechaDesde ?? DateTime.UtcNow).Date;
+        var hasta = request.FechaHasta?.Date;
+        if (hasta.HasValue && hasta.Value < desde)
             return ServiceResult<ControlGeneracionDetalleDto>.Fail("La fecha fin de asignación no puede ser anterior a la fecha de inicio.", StatusCodes.Status400BadRequest);
 
         var usuario = await unitOfWork.Repository<Usuario>().Query()
@@ -324,11 +347,12 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
         if (!await TieneRolAsync(request.UsuarioId, rolGlobalRequerido, cancellationToken))
             return ServiceResult<ControlGeneracionDetalleDto>.Fail($"El usuario no tiene el rol global {rolGlobalRequerido}.", StatusCodes.Status400BadRequest);
 
+        var hoy = DateTime.UtcNow.Date;
         var duplicado = control.Usuarios.Any(x =>
             x.UsuarioId == request.UsuarioId &&
             x.RolControl == rolControl &&
             x.EsActivo &&
-            (!x.FechaHasta.HasValue || x.FechaHasta.Value >= DateTime.UtcNow));
+            (!x.FechaHasta.HasValue || x.FechaHasta.Value >= hoy));
         if (duplicado)
             return ServiceResult<ControlGeneracionDetalleDto>.Fail("El usuario ya tiene una asignación vigente con ese rol.", StatusCodes.Status409Conflict);
 
@@ -345,7 +369,7 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
             RolControl = rolControl,
             EsPrincipal = request.EsPrincipal,
             FechaDesde = desde,
-            FechaHasta = request.FechaHasta,
+            FechaHasta = hasta,
             AsignadoPorUsuarioId = usuarioId
         }, cancellationToken);
 
@@ -355,7 +379,7 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
             RolControl = rolControl,
             request.EsPrincipal,
             FechaDesde = desde,
-            request.FechaHasta
+            FechaHasta = hasta
         }, cancellationToken);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -380,15 +404,15 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
 
         if (asignacion.RolControl == "RESPONSABLE" && asignacion.ControlGeneracion.EstadoControlGeneracion.Codigo == "ACTIVO")
         {
-            var now = DateTime.UtcNow;
+            var hoy = DateTime.UtcNow.Date;
             var otrosResponsables = await unitOfWork.Repository<ControlGeneracionUsuario>().Query()
                 .CountAsync(x =>
                     x.ControlGeneracionId == controlId &&
                     x.ControlGeneracionUsuarioId != asignacionId &&
                     x.RolControl == "RESPONSABLE" &&
                     x.EsActivo &&
-                    x.FechaDesde <= now &&
-                    (!x.FechaHasta.HasValue || x.FechaHasta.Value >= now),
+                    x.FechaDesde <= hoy &&
+                    (!x.FechaHasta.HasValue || x.FechaHasta.Value >= hoy),
                     cancellationToken);
 
             if (otrosResponsables == 0)
@@ -396,7 +420,7 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
         }
 
         asignacion.EsActivo = false;
-        asignacion.FechaHasta ??= DateTime.UtcNow;
+        asignacion.FechaHasta ??= DateTime.UtcNow.Date;
         asignacion.ActualizadoUtc = DateTime.UtcNow;
 
         await AuditarAsync(controlId, usuarioId, "DESASIGNAR_USUARIO", new
@@ -419,7 +443,10 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
             return ServiceResult<IReadOnlyCollection<RegistroControlListItemDto>>.Fail("Control de generación no encontrado o sin acceso.", StatusCodes.Status404NotFound);
 
         var registros = await unitOfWork.Repository<Registro>().Query()
-            .Where(x => x.ControlGeneracionId == controlId && !x.Eliminado)
+            .Where(x =>
+                x.ControlGeneracionId == controlId &&
+                !x.Eliminado &&
+                x.Residuos.Any(r => !r.Eliminado))
             .Include(x => x.RegistradoPorUsuario)
             .Include(x => x.EstadoRegistro)
             .Include(x => x.Residuos.Where(r => !r.Eliminado))
@@ -432,6 +459,7 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
             x.RegistradoPorUsuarioId,
             NombreUsuario(x.RegistradoPorUsuario),
             x.EstadoRegistro.Nombre,
+            x.EstadoRegistro.Codigo,
             x.Residuos.Count,
             x.CreadoUtc)).ToArray();
 
@@ -455,8 +483,45 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
         if (!await EsParticipanteOperativoActivoAsync(controlId, usuarioId, cancellationToken))
             return ServiceResult<RegistroControlCreadoDto>.Fail("No tiene una asignación vigente para registrar en este control.", StatusCodes.Status403Forbidden);
 
-        if (request.FechaRegistro < control.FechaInicio || (control.FechaFin.HasValue && request.FechaRegistro > control.FechaFin.Value))
-            return ServiceResult<RegistroControlCreadoDto>.Fail("La fecha del registro está fuera de la vigencia del control.", StatusCodes.Status400BadRequest);
+        var fechaRegistro = request.FechaRegistro;
+        if (fechaRegistro.Date < control.FechaInicio.Date ||
+            (control.FechaFin.HasValue && fechaRegistro.Date > control.FechaFin.Value.Date))
+        {
+            return ServiceResult<RegistroControlCreadoDto>.Fail(
+                "La fecha del registro está fuera de la vigencia del control.",
+                StatusCodes.Status400BadRequest);
+        }
+
+        // Un intento abandonado antes del primer residuo es un borrador técnico.
+        // Se reutiliza desde backend para que no se multiplique ni contamine reportes/conteos.
+        var borradorVacio = await unitOfWork.Repository<Registro>().Query(tracking: true)
+            .Include(x => x.EstadoRegistro)
+            .Include(x => x.Residuos.Where(r => !r.Eliminado))
+            .Where(x =>
+                x.ControlGeneracionId == controlId &&
+                x.RegistradoPorUsuarioId == usuarioId &&
+                !x.Eliminado &&
+                (x.EstadoRegistro.Codigo == "EN_PROCESO" || x.EstadoRegistro.Codigo == "BORRADOR") &&
+                !x.Residuos.Any(r => !r.Eliminado))
+            .OrderByDescending(x => x.CreadoUtc)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (borradorVacio is not null)
+        {
+            borradorVacio.CodigoLocal = request.CodigoLocal;
+            borradorVacio.FechaRegistro = fechaRegistro;
+            borradorVacio.Observacion = request.Observacion;
+            borradorVacio.OrigenDispositivo = request.OrigenDispositivo;
+            borradorVacio.ActualizadoUtc = DateTime.UtcNow;
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+
+            return ServiceResult<RegistroControlCreadoDto>.Ok(new RegistroControlCreadoDto(
+                borradorVacio.RegistroId,
+                controlId,
+                borradorVacio.FechaRegistro,
+                borradorVacio.EstadoRegistro.Nombre,
+                borradorVacio.EstadoRegistro.Codigo));
+        }
 
         var estadoRegistro = await unitOfWork.Repository<EstadoRegistro>().Query(tracking: true)
             .FirstAsync(x => x.Codigo == "EN_PROCESO", cancellationToken);
@@ -467,7 +532,7 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
         {
             ControlGeneracionId = controlId,
             CodigoLocal = request.CodigoLocal,
-            FechaRegistro = request.FechaRegistro,
+            FechaRegistro = fechaRegistro,
             RegistradoPorUsuarioId = usuarioId,
             ProyectoId = control.ProyectoId,
             ActividadId = control.ActividadId,
@@ -487,7 +552,8 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
             registro.RegistroId,
             controlId,
             registro.FechaRegistro,
-            estadoRegistro.Nombre), StatusCodes.Status201Created);
+            estadoRegistro.Nombre,
+            estadoRegistro.Codigo), StatusCodes.Status201Created);
     }
 
     private IQueryable<ControlGeneracion> QueryControles(bool tracking = false)
@@ -502,7 +568,8 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
             .Include(x => x.CreadoPorUsuario)
             .Include(x => x.AprobadoPorUsuario)
             .Include(x => x.Usuarios).ThenInclude(x => x.Usuario)
-            .Include(x => x.Registros.Where(r => !r.Eliminado));
+            .Include(x => x.Registros.Where(r => !r.Eliminado))
+                .ThenInclude(r => r.Residuos.Where(rr => !rr.Eliminado));
 
         return query.Where(x => !x.Eliminado);
     }
@@ -513,42 +580,45 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
             await TieneRolAsync(usuarioId, "ADMINISTRADOR", cancellationToken))
             return true;
 
-        var now = DateTime.UtcNow;
-        return await unitOfWork.Repository<ControlGeneracionUsuario>().Query()
+        var hoy = DateTime.UtcNow.Date;
+        return await unitOfWork.Repository<ControlGeneracion>().Query()
             .AnyAsync(x =>
                 x.ControlGeneracionId == controlId &&
-                x.UsuarioId == usuarioId &&
-                x.EsActivo &&
-                x.FechaDesde <= now &&
-                (!x.FechaHasta.HasValue || x.FechaHasta.Value >= now),
+                !x.Eliminado &&
+                (x.CreadoPorUsuarioId == usuarioId ||
+                 x.Usuarios.Any(u =>
+                    u.UsuarioId == usuarioId &&
+                    u.EsActivo &&
+                    u.FechaDesde <= hoy &&
+                    (!u.FechaHasta.HasValue || u.FechaHasta.Value >= hoy))),
                 cancellationToken);
     }
 
     private async Task<bool> EsResponsableActivoAsync(Guid controlId, Guid usuarioId, CancellationToken cancellationToken)
     {
-        var now = DateTime.UtcNow;
+        var hoy = DateTime.UtcNow.Date;
         return await unitOfWork.Repository<ControlGeneracionUsuario>().Query()
             .AnyAsync(x =>
                 x.ControlGeneracionId == controlId &&
                 x.UsuarioId == usuarioId &&
                 x.RolControl == "RESPONSABLE" &&
                 x.EsActivo &&
-                x.FechaDesde <= now &&
-                (!x.FechaHasta.HasValue || x.FechaHasta.Value >= now),
+                (!x.FechaHasta.HasValue || x.FechaHasta.Value >= hoy) &&
+                (x.FechaDesde <= hoy || x.ControlGeneracion.CreadoPorUsuarioId == usuarioId),
                 cancellationToken);
     }
 
     private async Task<bool> EsParticipanteOperativoActivoAsync(Guid controlId, Guid usuarioId, CancellationToken cancellationToken)
     {
-        var now = DateTime.UtcNow;
+        var hoy = DateTime.UtcNow.Date;
         return await unitOfWork.Repository<ControlGeneracionUsuario>().Query()
             .AnyAsync(x =>
                 x.ControlGeneracionId == controlId &&
                 x.UsuarioId == usuarioId &&
                 (x.RolControl == "RESPONSABLE" || x.RolControl == "REGISTRADOR") &&
                 x.EsActivo &&
-                x.FechaDesde <= now &&
-                (!x.FechaHasta.HasValue || x.FechaHasta.Value >= now),
+                x.FechaDesde <= hoy &&
+                (!x.FechaHasta.HasValue || x.FechaHasta.Value >= hoy),
                 cancellationToken);
     }
 
@@ -570,7 +640,7 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
         DateTime? fechaFin,
         CancellationToken cancellationToken)
     {
-        if (fechaFin.HasValue && fechaFin.Value < fechaInicio)
+        if (fechaFin.HasValue && fechaFin.Value.Date < fechaInicio.Date)
             return "La fecha fin no puede ser anterior a la fecha de inicio.";
 
         if (!await unitOfWork.Repository<Sede>().Query().AnyAsync(x => x.SedeId == sedeId && x.EsActivo, cancellationToken))
@@ -653,8 +723,9 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
         x.FechaInicio,
         x.FechaFin,
         x.EstadoControlGeneracion.Nombre,
+        x.EstadoControlGeneracion.Codigo,
         x.Usuarios.Count(u => u.RolControl == "REGISTRADOR" && u.EsActivo),
-        x.Registros.Count);
+        x.Registros.Count(r => r.Residuos.Any(rr => !rr.Eliminado)));
 
     private static ControlGeneracionDetalleDto MapDetalle(ControlGeneracion x) => new(
         x.ControlGeneracionId,
@@ -673,6 +744,7 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
         x.FechaInicio,
         x.FechaFin,
         x.EstadoControlGeneracion.Nombre,
+        x.EstadoControlGeneracion.Codigo,
         x.Observacion,
         x.MotivoUltimoCambio,
         x.CreadoPorUsuarioId,

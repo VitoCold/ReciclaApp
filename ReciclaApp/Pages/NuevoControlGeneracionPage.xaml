@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ReciclaApp.Pages.NuevoControlGeneracionPage"
+             Style="{StaticResource BasePage}"
+             Shell.NavBarIsVisible="False">
+
+    <Grid RowDefinitions="Auto,*">
+        <Grid Style="{StaticResource AppHeader}" ColumnDefinitions="Auto,*">
+            <Label Text="‹" TextColor="White" FontSize="34" VerticalOptions="Center">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </Label.GestureRecognizers>
+            </Label>
+            <Label Grid.Column="1" Text="Nuevo control" Style="{StaticResource HeaderTitle}" />
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="18,18,18,30" Spacing="14">
+                <VerticalStackLayout Spacing="3">
+                    <Label Text="Control de generación" Style="{StaticResource PageTitle}" FontSize="22" />
+                    <Label Text="Define el ámbito del trabajo que será enviado a Ambiental para aprobación." Style="{StaticResource MutedText}" />
+                </VerticalStackLayout>
+
+                <Border x:Name="ErrorBorder" IsVisible="False" BackgroundColor="{StaticResource ColorDangerSoft}" Stroke="Transparent" StrokeShape="RoundRectangle 12" Padding="12,9">
+                    <Label x:Name="ErrorLabel" TextColor="{StaticResource ColorDanger}" FontSize="12" />
+                </Border>
+
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Sede" Style="{StaticResource FieldLabel}" />
+                    <Border Style="{StaticResource InputBorder}">
+                        <Picker x:Name="SedePicker" Title="Selecciona una sede" ItemDisplayBinding="{Binding Nombre}" SelectedIndexChanged="OnSedeChanged" />
+                    </Border>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Empresa responsable" Style="{StaticResource FieldLabel}" />
+                    <Border Style="{StaticResource InputBorder}">
+                        <Picker x:Name="EmpresaPicker" Title="Selecciona una empresa" ItemDisplayBinding="{Binding RazonSocial}" />
+                    </Border>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Proyecto / área" Style="{StaticResource FieldLabel}" />
+                    <Border Style="{StaticResource InputBorder}">
+                        <Picker x:Name="ProyectoPicker" Title="Selecciona un proyecto" ItemDisplayBinding="{Binding Nombre}" SelectedIndexChanged="OnProyectoChanged" />
+                    </Border>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Actividad" Style="{StaticResource FieldLabel}" />
+                    <Border Style="{StaticResource InputBorder}">
+                        <Picker x:Name="ActividadPicker" Title="Selecciona una actividad" ItemDisplayBinding="{Binding Nombre}" />
+                    </Border>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Punto de generación (opcional)" Style="{StaticResource FieldLabel}" />
+                    <Border Style="{StaticResource InputBorder}">
+                        <Picker x:Name="PuntoPicker" Title="Sin punto específico" ItemDisplayBinding="{Binding Nombre}" />
+                    </Border>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Actividad / trabajo" Style="{StaticResource FieldLabel}" />
+                    <Border Style="{StaticResource InputBorder}">
+                        <Entry x:Name="DescripcionTrabajoEntry" Placeholder="Ej. mantenimiento de válvula V-102" />
+                    </Border>
+                </VerticalStackLayout>
+
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="Fecha de inicio" Style="{StaticResource FieldLabel}" />
+                        <Border Style="{StaticResource InputBorder}">
+                            <DatePicker x:Name="FechaInicioPicker" />
+                        </Border>
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="1" Spacing="6">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="Fecha de fin" Style="{StaticResource FieldLabel}" VerticalOptions="Center" />
+                            <Switch x:Name="TieneFechaFinSwitch" Grid.Column="1" IsToggled="True" Toggled="OnFechaFinToggled" />
+                        </Grid>
+                        <Border Style="{StaticResource InputBorder}">
+                            <DatePicker x:Name="FechaFinPicker" />
+                        </Border>
+                    </VerticalStackLayout>
+                </Grid>
+
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Observación" Style="{StaticResource FieldLabel}" />
+                    <Border Style="{StaticResource InputBorder}">
+                        <Editor x:Name="ObservacionEditor" AutoSize="TextChanges" Placeholder="Información adicional del control" MinimumHeightRequest="80" />
+                    </Border>
+                </VerticalStackLayout>
+
+                <Border BackgroundColor="{StaticResource ColorWarningSoft}" Stroke="Transparent" StrokeShape="RoundRectangle 12" Padding="12">
+                    <Label Text="Al guardar, el control quedará pendiente de aprobación. El registro de residuos se habilitará cuando Ambiental lo apruebe." TextColor="{StaticResource ColorWarning}" FontSize="12" />
+                </Border>
+
+                <Button x:Name="GuardarButton" Text="Enviar para aprobación" Style="{StaticResource PrimaryButton}" Clicked="OnGuardarClicked" />
+                <ActivityIndicator x:Name="ActivityIndicator" IsVisible="False" IsRunning="False" HorizontalOptions="Center" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

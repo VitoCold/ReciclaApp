@@ -64,6 +64,7 @@ public sealed record ControlGeneracionListItemDto(
     DateTime FechaInicio,
     DateTime? FechaFin,
     string Estado,
+    string EstadoCodigo,
     int CantidadRegistradores,
     int CantidadRegistros);
 
@@ -84,6 +85,7 @@ public sealed record ControlGeneracionDetalleDto(
     DateTime FechaInicio,
     DateTime? FechaFin,
     string Estado,
+    string EstadoCodigo,
     string? Observacion,
     string? MotivoUltimoCambio,
     Guid CreadoPorUsuarioId,
@@ -99,6 +101,7 @@ public sealed record RegistroControlListItemDto(
     Guid RegistradoPorUsuarioId,
     string RegistradoPor,
     string Estado,
+    string EstadoCodigo,
     int CantidadResiduos,
     DateTime CreadoUtc);
 
@@ -110,6 +113,7 @@ public sealed record RegistroControlDetalleDto(
     Guid RegistradoPorUsuarioId,
     string RegistradoPor,
     string Estado,
+    string EstadoCodigo,
     string? Observacion,
     IReadOnlyCollection<RegistroResiduoDto> Residuos);
 
@@ -117,4 +121,5 @@ public sealed record RegistroControlCreadoDto(
     Guid RegistroId,
     Guid ControlGeneracionId,
     DateTime FechaRegistro,
-    string Estado);
+    string Estado,
+    string EstadoCodigo);

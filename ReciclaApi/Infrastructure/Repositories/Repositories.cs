@@ -45,7 +45,10 @@ public sealed class RegistroRepository(ReciclaDbContext context) : IRegistroRepo
         CancellationToken cancellationToken = default) =>
         await context.Registros
             .AsNoTracking()
-            .Where(x => x.RegistradoPorUsuarioId == usuarioId && !x.Eliminado)
+            .Where(x =>
+                x.RegistradoPorUsuarioId == usuarioId &&
+                x.ControlGeneracionId == null &&
+                !x.Eliminado)
             .Include(x => x.Proyecto)
             .Include(x => x.Actividad)
             .Include(x => x.Sede)

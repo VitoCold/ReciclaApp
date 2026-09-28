@@ -85,10 +85,22 @@ public sealed class CatalogoService(IUnitOfWork unitOfWork) : ICatalogoService
         Guid usuarioId,
         CancellationToken cancellationToken = default)
     {
-        var sedeIds = await unitOfWork.Repository<UsuarioSede>().Query()
-            .Where(x => x.UsuarioId == usuarioId)
-            .Select(x => x.SedeId)
+        var rolesUsuario = await unitOfWork.Repository<UsuarioRol>().Query()
+            .Where(x => x.UsuarioId == usuarioId && x.Rol.EsActivo)
+            .Select(x => x.Rol.Codigo)
             .ToListAsync(cancellationToken);
+
+        var accesoGlobal = rolesUsuario.Contains("AMBIENTAL") || rolesUsuario.Contains("ADMINISTRADOR");
+
+        var sedeIds = accesoGlobal
+            ? await unitOfWork.Repository<Sede>().Query()
+                .Where(x => x.EsActivo)
+                .Select(x => x.SedeId)
+                .ToListAsync(cancellationToken)
+            : await unitOfWork.Repository<UsuarioSede>().Query()
+                .Where(x => x.UsuarioId == usuarioId)
+                .Select(x => x.SedeId)
+                .ToListAsync(cancellationToken);
 
         var sedes = await unitOfWork.Repository<Sede>().Query()
             .Where(x => x.EsActivo && sedeIds.Contains(x.SedeId))
@@ -137,6 +149,54 @@ public sealed class CatalogoService(IUnitOfWork unitOfWork) : ICatalogoService
                 x.UnidadMedidaDefaultId))
             .ToListAsync(cancellationToken);
 
-        return new CatalogosInicialDto(sedes, proyectos, actividades, clasificaciones, tipos, unidades, residuos);
+        var empresas = await unitOfWork.Repository<Empresa>().Query()
+            .Where(x => x.EsActivo)
+            .OrderBy(x => x.RazonSocial)
+            .Select(x => new EmpresaDto(
+                x.EmpresaId,
+                x.Codigo,
+                x.RazonSocial,
+                x.NombreComercial,
+                x.EsGestoraResiduos))
+            .ToListAsync(cancellationToken);
+
+        var puntosResiduo = await unitOfWork.Repository<PuntoResiduo>().Query()
+            .Where(x => x.EsActivo && sedeIds.Contains(x.SedeId))
+            .OrderBy(x => x.Nombre)
+            .Select(x => new PuntoResiduoDto(
+                x.PuntoResiduoId,
+                x.SedeId,
+                x.Codigo,
+                x.Nombre,
+                x.Tipo))
+            .ToListAsync(cancellationToken);
+
+        var usuarios = await unitOfWork.Repository<Usuario>().Query()
+            .Include(x => x.UsuarioRoles)
+                .ThenInclude(x => x.Rol)
+            .Where(x => x.EsActivo && x.UsuarioRoles.Any(r =>
+                r.Rol.EsActivo && (r.Rol.Codigo == "RESPONSABLE_OPERATIVO" || r.Rol.Codigo == "REGISTRADOR")))
+            .OrderBy(x => x.Nombres)
+            .ThenBy(x => x.Apellidos)
+            .ToListAsync(cancellationToken);
+
+        var usuariosAsignables = usuarios
+            .Select(x => new UsuarioAsignableDto(
+                x.UsuarioId,
+                string.Join(" ", new[] { x.Nombres, x.Apellidos }.Where(n => !string.IsNullOrWhiteSpace(n))),
+                x.UsuarioRoles.Where(r => r.Rol.EsActivo).Select(r => r.Rol.Codigo).ToArray()))
+            .ToArray();
+
+        return new CatalogosInicialDto(
+            sedes,
+            proyectos,
+            actividades,
+            clasificaciones,
+            tipos,
+            unidades,
+            residuos,
+            empresas,
+            puntosResiduo,
+            usuariosAsignables);
     }
 }

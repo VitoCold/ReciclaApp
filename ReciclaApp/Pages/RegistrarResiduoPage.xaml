@@ -40,7 +40,7 @@
                            FontAttributes="Bold"
                            FontSize="17" />
                     <Label x:Name="SubtituloFormularioLabel"
-                           Text="Completa los datos del residuo generado"
+                           Text="Completa los datos y registra la evidencia en campo"
                            HorizontalTextAlignment="Center"
                            Style="{StaticResource MutedText}" />
                 </VerticalStackLayout>
@@ -135,8 +135,113 @@
                     </Border>
                 </VerticalStackLayout>
 
+                <Border Style="{StaticResource SoftCard}" BackgroundColor="{StaticResource ColorBlueSoft}">
+                    <VerticalStackLayout Spacing="5">
+                        <Label Text="Evidencia obligatoria" Style="{StaticResource SectionTitle}" />
+                        <Label Text="Cada residuo debe guardar su ubicación GPS y al menos una fotografía antes de que el registro pueda finalizarse."
+                               Style="{StaticResource MutedText}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource SoftCard}">
+                    <VerticalStackLayout Spacing="6">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="📍 Ubicación GPS" Style="{StaticResource SectionTitle}" />
+                                <Label x:Name="UbicacionEstadoLabel"
+                                       Text="Obteniendo ubicación automáticamente..."
+                                       Style="{StaticResource MutedText}" />
+                            </VerticalStackLayout>
+                            <Label Grid.Column="1"
+                                   Text="Automático"
+                                   FontSize="10"
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource ColorPrimary}"
+                                   VerticalOptions="Center" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource SoftCard}">
+                    <VerticalStackLayout Spacing="10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="📷 Fotografías" Style="{StaticResource SectionTitle}" />
+                                <Label x:Name="FotosEstadoLabel"
+                                       Text="Ninguna foto registrada"
+                                       Style="{StaticResource MutedText}" />
+                                <Label x:Name="FotosDetalleLabel"
+                                       Text=""
+                                       Style="{StaticResource TinyMutedText}"
+                                       IsVisible="False" />
+                            </VerticalStackLayout>
+                            <Label Grid.Column="1"
+                                   Text="Mín. 1"
+                                   FontSize="10"
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource ColorDanger}"
+                                   VerticalOptions="Center" />
+                        </Grid>
+
+                        <ScrollView x:Name="FotosPreviewScroll"
+                                    Orientation="Horizontal"
+                                    HorizontalScrollBarVisibility="Never"
+                                    IsVisible="False">
+                            <HorizontalStackLayout x:Name="FotosPreviewLayout"
+                                                   Spacing="10"
+                                                   BindableLayout.ItemsSource="{Binding}">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border WidthRequest="138"
+                                                Padding="6"
+                                                Stroke="{StaticResource ColorBorder}"
+                                                StrokeThickness="1"
+                                                StrokeShape="RoundRectangle 12">
+                                            <VerticalStackLayout Spacing="6">
+                                                <Border HeightRequest="108"
+                                                        BackgroundColor="#F1F5F9"
+                                                        Stroke="Transparent"
+                                                        StrokeShape="RoundRectangle 9">
+                                                    <Image Source="{Binding Fuente}"
+                                                           Aspect="AspectFill"
+                                                           HeightRequest="108"
+                                                           WidthRequest="126" />
+                                                </Border>
+
+                                                <Label Text="{Binding EstadoTexto}"
+                                                       FontSize="10"
+                                                       FontAttributes="Bold"
+                                                       TextColor="{StaticResource ColorMuted}"
+                                                       LineBreakMode="TailTruncation" />
+
+                                                <Button Text="Eliminar"
+                                                        IsVisible="{Binding PuedeEliminar}"
+                                                        BackgroundColor="Transparent"
+                                                        TextColor="{StaticResource ColorDanger}"
+                                                        FontSize="11"
+                                                        FontAttributes="Bold"
+                                                        Padding="0"
+                                                        HeightRequest="28"
+                                                        HorizontalOptions="Start"
+                                                        CommandParameter="{Binding .}"
+                                                        Clicked="OnEliminarFotoPendienteClicked" />
+                                            </VerticalStackLayout>
+                                        </Border>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </HorizontalStackLayout>
+                        </ScrollView>
+
+                        <Button x:Name="TomarFotoButton"
+                                Text="Tomar foto"
+                                Style="{StaticResource SmallPrimaryButton}"
+                                HorizontalOptions="Start"
+                                Clicked="OnTomarFotoClicked" />
+                    </VerticalStackLayout>
+                </Border>
+
                 <Button x:Name="RegistrarButton"
-                        Text="Registrar residuo  →"
+                        Text="Guardar residuo  →"
                         Style="{StaticResource PrimaryButton}"
                         Clicked="OnRegistrarClicked" />
 

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ReciclaApp.Pages.ControlesGeneracionPage"
+             Style="{StaticResource BasePage}"
+             Shell.NavBarIsVisible="False">
+
+    <Grid RowDefinitions="Auto,*">
+        <Grid Style="{StaticResource AppHeader}" ColumnDefinitions="Auto,*,Auto,Auto">
+            <Label Text="☰" TextColor="White" FontSize="24" VerticalOptions="Center">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnMenuTapped" />
+                </Label.GestureRecognizers>
+            </Label>
+            <Label Grid.Column="1" Text="Controles de generación" Style="{StaticResource HeaderTitle}" />
+            <Label x:Name="UsuarioHeaderLabel" Grid.Column="2" Text="Usuario" TextColor="White" FontSize="12" VerticalOptions="Center" />
+            <Border Grid.Column="3" WidthRequest="30" HeightRequest="30" BackgroundColor="#DDEEFF" Stroke="Transparent" StrokeShape="RoundRectangle 15">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnPerfilTapped" />
+                </Border.GestureRecognizers>
+                <Label Text="👤" FontSize="14" HorizontalOptions="Center" VerticalOptions="Center" />
+            </Border>
+        </Grid>
+
+        <Grid Grid.Row="1" Padding="18,18,18,24" RowDefinitions="Auto,Auto,Auto,*" RowSpacing="14">
+            <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                <VerticalStackLayout Spacing="2">
+                    <Label x:Name="TituloLabel" Text="Mis controles" Style="{StaticResource PageTitle}" FontSize="22" />
+                    <Label x:Name="SubtituloLabel" Text="Ámbitos autorizados para registrar residuos" Style="{StaticResource MutedText}" />
+                </VerticalStackLayout>
+                <Border Grid.Column="1" Style="{StaticResource Chip}" BackgroundColor="{StaticResource ColorBlueSoft}" VerticalOptions="Center">
+                    <Label x:Name="CantidadLabel" Text="0 controles" TextColor="{StaticResource ColorPrimary}" FontSize="11" FontAttributes="Bold" />
+                </Border>
+            </Grid>
+
+            <Button x:Name="NuevoControlButton"
+                    Grid.Row="1"
+                    Text="＋ Nuevo control de generación"
+                    Style="{StaticResource PrimaryButton}"
+                    IsVisible="False"
+                    Clicked="OnNuevoControlClicked" />
+
+            <Border x:Name="ErrorBorder" Grid.Row="2" IsVisible="False" BackgroundColor="{StaticResource ColorDangerSoft}" Stroke="Transparent" StrokeShape="RoundRectangle 12" Padding="12,9">
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label x:Name="ErrorLabel" Text="No se pudieron cargar los controles." TextColor="{StaticResource ColorDanger}" FontSize="12" />
+                    <Label Grid.Column="1" Text="Reintentar" TextColor="{StaticResource ColorPrimary}" FontAttributes="Bold" FontSize="12">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnReintentarTapped" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="3">
+                <RefreshView x:Name="ControlesRefreshView" Refreshing="OnRefreshRequested">
+                    <CollectionView x:Name="ControlesCollectionView" SelectionMode="None" ItemsLayout="VerticalList">
+                        <CollectionView.EmptyView>
+                            <VerticalStackLayout Padding="20,44" Spacing="10" HorizontalOptions="Center">
+                                <Border Style="{StaticResource IconCircle}" WidthRequest="64" HeightRequest="64" HorizontalOptions="Center">
+                                    <Label Text="🗂" FontSize="28" HorizontalOptions="Center" VerticalOptions="Center" />
+                                </Border>
+                                <Label Text="No hay controles disponibles" FontSize="16" FontAttributes="Bold" TextColor="{StaticResource ColorText}" HorizontalTextAlignment="Center" />
+                                <Label x:Name="EmptyHintLabel" Text="Cuando tengas un control asignado aparecerá aquí." Style="{StaticResource MutedText}" HorizontalTextAlignment="Center" />
+                            </VerticalStackLayout>
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource SoftCard}" Margin="0,0,0,12">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnControlTapped" CommandParameter="{Binding ControlGeneracionId}" />
+                                    </Border.GestureRecognizers>
+                                    <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="7">
+                                        <VerticalStackLayout Spacing="2">
+                                            <Label Text="{Binding Codigo}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                            <Label FontSize="12" TextColor="{StaticResource ColorMuted}">
+                                                <Label.FormattedText>
+                                                    <FormattedString>
+                                                        <Span Text="{Binding Sede}" />
+                                                        <Span Text=" · " />
+                                                        <Span Text="{Binding EmpresaResponsable}" />
+                                                    </FormattedString>
+                                                </Label.FormattedText>
+                                            </Label>
+                                        </VerticalStackLayout>
+                                        <Border Grid.Column="1" Style="{StaticResource Chip}" BackgroundColor="{StaticResource ColorBlueSoft}" VerticalOptions="Start">
+                                            <Label Text="{Binding Estado}" FontSize="10" FontAttributes="Bold" TextColor="{StaticResource ColorPrimary}" />
+                                        </Border>
+                                        <Label Grid.Row="1" Grid.ColumnSpan="2" FontSize="12" TextColor="{StaticResource ColorText}">
+                                            <Label.FormattedText>
+                                                <FormattedString>
+                                                    <Span Text="{Binding Proyecto}" />
+                                                    <Span Text=" · " />
+                                                    <Span Text="{Binding Actividad}" />
+                                                </FormattedString>
+                                            </Label.FormattedText>
+                                        </Label>
+                                        <Grid Grid.Row="2" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" Margin="0,4,0,0">
+                                            <Label Style="{StaticResource TinyMutedText}">
+                                                <Label.FormattedText>
+                                                    <FormattedString>
+                                                        <Span Text="{Binding CantidadRegistradores}" />
+                                                        <Span Text=" registradores · " />
+                                                        <Span Text="{Binding CantidadRegistros}" />
+                                                        <Span Text=" registros" />
+                                                    </FormattedString>
+                                                </Label.FormattedText>
+                                            </Label>
+                                            <Label Grid.Column="1" Text="Ver control ›" TextColor="{StaticResource ColorPrimary}" FontSize="11" FontAttributes="Bold" />
+                                        </Grid>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </RefreshView>
+                <ActivityIndicator x:Name="ActivityIndicator" IsVisible="False" IsRunning="False" HorizontalOptions="Center" VerticalOptions="Center" />
+            </Grid>
+        </Grid>
+    </Grid>
+</ContentPage>
