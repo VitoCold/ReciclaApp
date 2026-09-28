@@ -116,19 +116,20 @@ public partial class RegistrarResiduoPage : ContentPage
         {
             var apiClient = AppServices.Services.GetRequiredService<IReciclaApiClient>();
             RegistroResiduoDto? residuo;
-            string estado;
+            bool estadoEditable;
 
             if (VieneDeControl && Guid.TryParse(ControlId, out var controlId))
             {
                 var registroControl = await apiClient.ObtenerRegistroControlAsync(controlId, registroId);
                 residuo = registroControl.Residuos.FirstOrDefault(x => x.RegistroResiduoId == registroResiduoId);
-                estado = registroControl.Estado;
+                estadoEditable = registroControl.EstadoCodigo is "EN_PROCESO" or "BORRADOR";
             }
             else
             {
                 var registro = await apiClient.ObtenerRegistroAsync(registroId);
                 residuo = registro.Residuos.FirstOrDefault(x => x.RegistroResiduoId == registroResiduoId);
-                estado = registro.Estado;
+                estadoEditable = string.Equals(registro.Estado, "En proceso", StringComparison.OrdinalIgnoreCase) ||
+                                 string.Equals(registro.Estado, "Borrador", StringComparison.OrdinalIgnoreCase);
             }
 
             if (residuo is null)
@@ -137,8 +138,6 @@ public partial class RegistrarResiduoPage : ContentPage
                 return;
             }
 
-            var estadoEditable = string.Equals(estado, "En proceso", StringComparison.OrdinalIgnoreCase) ||
-                                 string.Equals(estado, "Borrador", StringComparison.OrdinalIgnoreCase);
             if (!estadoEditable)
             {
                 MostrarError("Este registro ya no se encuentra en proceso y no puede modificarse.");
@@ -379,6 +378,7 @@ public partial class RegistrarResiduoPage : ContentPage
         if (_isLoading)
             return;
 
+        var eraEdicion = EsEdicion;
         _isLoading = true;
         SetBusy(true);
 
@@ -391,7 +391,7 @@ public partial class RegistrarResiduoPage : ContentPage
                 : ObservacionEditor.Text.Trim();
 
             Guid registroResiduoId;
-            if (EsEdicion && Guid.TryParse(RegistroResiduoId, out var existenteId))
+            if (eraEdicion && Guid.TryParse(RegistroResiduoId, out var existenteId))
             {
                 var request = new ActualizarRegistroResiduoRequest(
                     UnidadMedidaId: _unidadSeleccionada.UnidadMedidaId,
@@ -457,9 +457,16 @@ public partial class RegistrarResiduoPage : ContentPage
             ActualizarEstadoEvidencia();
 
             if (VieneDeControl)
-                await AppNavigator.VolverAsync();
+            {
+                if (eraEdicion)
+                    await AppNavigator.VolverAsync();
+                else if (Guid.TryParse(ControlId, out var controlId))
+                    await AppNavigator.IrADetalleRegistroControlDesdeCapturaAsync(controlId, registroId);
+            }
             else
+            {
                 await AppNavigator.IrAResiduosDelRegistroAsync(registroId);
+            }
         }
         catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
         {
