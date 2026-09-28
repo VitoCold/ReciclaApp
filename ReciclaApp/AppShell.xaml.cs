@@ -8,6 +8,16 @@ namespace ReciclaApp
 {
     public partial class AppShell : Shell
     {
+        private static readonly string[] RutasPrincipales =
+        {
+            "controles-generacion",
+            "stock-residuos",
+            "retiros",
+            "reportes",
+            "registros",
+            "perfil"
+        };
+
         private bool _sessionChecked;
         private bool _checkingProtectedRoute;
 
@@ -46,11 +56,13 @@ namespace ReciclaApp
         private async void OnShellNavigated(object? sender, ShellNavigatedEventArgs e)
         {
             var location = e.Current.Location.OriginalString;
-            var isLogin = location.Contains("login", StringComparison.OrdinalIgnoreCase);
+            var isLogin = EsRuta(location, "login");
+            var esPrincipal = EsRutaPrincipal(location);
 
-            FlyoutBehavior = isLogin
-                ? Microsoft.Maui.FlyoutBehavior.Disabled
-                : Microsoft.Maui.FlyoutBehavior.Flyout;
+            FlyoutIsPresented = false;
+            FlyoutBehavior = !isLogin && esPrincipal
+                ? Microsoft.Maui.FlyoutBehavior.Flyout
+                : Microsoft.Maui.FlyoutBehavior.Disabled;
 
             if (isLogin || _checkingProtectedRoute)
                 return;
@@ -91,6 +103,20 @@ namespace ReciclaApp
             Shell.SetFlyoutItemIsVisible(RetirosShellContent, puedeGestionarSalidaYReportes);
             Shell.SetFlyoutItemIsVisible(ReportesShellContent, puedeGestionarSalidaYReportes);
         }
+
+        private static bool EsRutaPrincipal(string? location)
+        {
+            if (string.IsNullOrWhiteSpace(location))
+                return false;
+
+            var normalizada = location.Trim('/');
+            return RutasPrincipales.Any(route =>
+                string.Equals(normalizada, route, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private static bool EsRuta(string? location, string route) =>
+            !string.IsNullOrWhiteSpace(location) &&
+            string.Equals(location.Trim('/'), route, StringComparison.OrdinalIgnoreCase);
 
         private static void RegistrarRutas()
         {
