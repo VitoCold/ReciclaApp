@@ -144,26 +144,23 @@
                 </Border>
 
                 <Border Style="{StaticResource SoftCard}">
-                    <VerticalStackLayout Spacing="9">
+                    <VerticalStackLayout Spacing="6">
                         <Grid ColumnDefinitions="*,Auto">
                             <VerticalStackLayout Spacing="2">
                                 <Label Text="📍 Ubicación GPS" Style="{StaticResource SectionTitle}" />
                                 <Label x:Name="UbicacionEstadoLabel"
-                                       Text="Ubicación pendiente"
+                                       Text="Obteniendo ubicación automáticamente..."
                                        Style="{StaticResource MutedText}" />
                             </VerticalStackLayout>
                             <Label Grid.Column="1"
-                                   Text="Obligatorio"
+                                   Text="Automático"
                                    FontSize="10"
                                    FontAttributes="Bold"
-                                   TextColor="{StaticResource ColorDanger}"
+                                   TextColor="{StaticResource ColorPrimary}"
                                    VerticalOptions="Center" />
                         </Grid>
-                        <Button x:Name="CapturarUbicacionButton"
-                                Text="Obtener ubicación"
-                                Style="{StaticResource SmallPrimaryButton}"
-                                HorizontalOptions="Start"
-                                Clicked="OnCapturarUbicacionClicked" />
+                        <Label Text="La app obtiene la coordenada automáticamente; no necesitas ejecutar ninguna acción adicional."
+                               Style="{StaticResource TinyMutedText}" />
                     </VerticalStackLayout>
                 </Border>
 
