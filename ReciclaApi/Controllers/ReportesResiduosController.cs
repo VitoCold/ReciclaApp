@@ -52,4 +52,26 @@ public sealed class ReportesResiduosController(
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             fileName);
     }
+
+    [HttpGet("archivos")]
+    public async Task<IActionResult> ListarArchivos(CancellationToken cancellationToken)
+    {
+        var result = await reportesService.ListarArchivosAsync(UsuarioId, cancellationToken);
+        return FromResult(result);
+    }
+
+    [HttpGet("archivos/{archivoId:guid}")]
+    public async Task<IActionResult> DescargarArchivo(
+        Guid archivoId,
+        CancellationToken cancellationToken)
+    {
+        var result = await reportesService.ObtenerArchivoAsync(archivoId, UsuarioId, cancellationToken);
+        if (!result.Succeeded || result.Value is null)
+            return StatusCode(result.StatusCode, new { error = result.Error });
+
+        return File(
+            result.Value.Contenido,
+            result.Value.ContentType,
+            result.Value.NombreArchivo);
+    }
 }
