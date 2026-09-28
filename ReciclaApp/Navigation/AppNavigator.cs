@@ -25,6 +25,14 @@ public static class AppNavigator
     public static Task IrADetalleRegistroControlAsync(Guid controlId, Guid registroId) =>
         Shell.Current.GoToAsync($"{AppRoutes.DetalleRegistroControl}?controlId={controlId}&registroId={registroId}");
 
+    // Al guardar el primer residuo, reemplaza el formulario por el detalle del registro.
+    // Así Atrás desde el detalle vuelve directamente al control.
+    public static async Task IrADetalleRegistroControlDesdeCapturaAsync(Guid controlId, Guid registroId)
+    {
+        await VolverAsync();
+        await IrADetalleRegistroControlAsync(controlId, registroId);
+    }
+
     public static Task IrANuevoRetiroAsync() => Shell.Current.GoToAsync(AppRoutes.NuevoRetiro);
 
     public static Task IrADetalleRetiroAsync(Guid retiroId) =>
