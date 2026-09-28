@@ -84,9 +84,11 @@ public partial class RegistroControlDetallePage : ContentPage
 
             var usuario = session.CurrentUser;
             var esAutor = usuario is not null && _registro.RegistradoPorUsuarioId == usuario.UsuarioId;
+            var esAmbiental = usuario?.Roles.Contains("AMBIENTAL") == true;
             var enProceso = EsEnProceso(_registro.EstadoCodigo);
             var controlActivo = control.EstadoCodigo == "ACTIVO";
             _puedeEditar = esAutor && enProceso && controlActivo;
+            var baseAddress = AppServices.Services.GetService<HttpClient>()?.BaseAddress;
 
             FechaLabel.Text = _registro.FechaRegistro.ToString("dd/MM/yyyy HH:mm");
             RegistradoPorLabel.Text = $"Registrado por {_registro.RegistradoPor}";
@@ -110,7 +112,9 @@ public partial class RegistroControlDetallePage : ContentPage
                     x,
                     catalogos,
                     evidencias.FirstOrDefault(e => e.RegistroResiduoId == x.RegistroResiduoId),
-                    _puedeEditar))
+                    _puedeEditar,
+                    esAmbiental,
+                    baseAddress))
                 .ToArray();
             var evidenciaCompleta = residuos.Length > 0 && residuos.All(x => x.EvidenciaCompleta);
 
@@ -147,7 +151,9 @@ public partial class RegistroControlDetallePage : ContentPage
         RegistroResiduoDto residuo,
         CatalogosInicialDto catalogos,
         RegistroResiduoEvidenciaDto? evidencia,
-        bool puedeEditar)
+        bool puedeEditar,
+        bool mostrarMiniaturas,
+        Uri? baseAddress)
     {
         var catalogo = catalogos.Residuos.FirstOrDefault(x => x.ResiduoId == residuo.ResiduoId);
         var clasificacion = catalogo is null
@@ -172,6 +178,14 @@ public partial class RegistroControlDetallePage : ContentPage
             _ => $"📷 {cantidadFotos} fotos"
         };
 
+        var miniaturas = mostrarMiniaturas
+            ? residuo.Fotos
+                .Select(x => CrearFuenteRemota(x.UrlNube, baseAddress))
+                .Where(x => x is not null)
+                .Select(x => new FotoMiniaturaVisual(x!))
+                .ToArray()
+            : Array.Empty<FotoMiniaturaVisual>();
+
         return new ResiduoControlVisual(
             residuo.RegistroResiduoId,
             catalogo?.Nombre ?? "Residuo",
@@ -182,7 +196,24 @@ public partial class RegistroControlDetallePage : ContentPage
             fotosTexto,
             evidenciaCompleta ? "Evidencia completa" : "Evidencia pendiente",
             evidenciaCompleta,
-            puedeEditar);
+            puedeEditar,
+            mostrarMiniaturas && miniaturas.Length > 0,
+            miniaturas);
+    }
+
+    private static ImageSource? CrearFuenteRemota(string? url, Uri? baseAddress)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+            return null;
+
+        if (Uri.TryCreate(url, UriKind.Absolute, out var absoluta) &&
+            (absoluta.Scheme == Uri.UriSchemeHttp || absoluta.Scheme == Uri.UriSchemeHttps))
+            return ImageSource.FromUri(absoluta);
+
+        if (baseAddress is null)
+            return null;
+
+        return ImageSource.FromUri(new Uri(baseAddress, url));
     }
 
     private void AplicarColorEstado(string estadoCodigo)
@@ -324,6 +355,8 @@ public partial class RegistroControlDetallePage : ContentPage
 
     private sealed record RegistroBinding(IReadOnlyCollection<ResiduoControlVisual> Residuos);
 
+    private sealed record FotoMiniaturaVisual(ImageSource Fuente);
+
     private sealed record ResiduoControlVisual(
         Guid RegistroResiduoId,
         string Nombre,
@@ -334,5 +367,7 @@ public partial class RegistroControlDetallePage : ContentPage
         string FotosTexto,
         string EvidenciaEstadoTexto,
         bool EvidenciaCompleta,
-        bool PuedeEditar);
+        bool PuedeEditar,
+        bool MostrarMiniaturas,
+        IReadOnlyCollection<FotoMiniaturaVisual> Miniaturas);
 }
