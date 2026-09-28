@@ -51,6 +51,12 @@
         ContentTemplate="{DataTemplate pages:RetirosPage}" />
 
     <ShellContent
+        x:Name="ReportesShellContent"
+        Title="Reportes"
+        Route="reportes"
+        ContentTemplate="{DataTemplate pages:ReportesPage}" />
+
+    <ShellContent
         Title="Mis registros"
         Route="registros"
         ContentTemplate="{DataTemplate pages:RegistrosPage}" />
