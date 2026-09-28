@@ -44,16 +44,20 @@ public partial class ControlesGeneracionPage : ContentPage
             .Where(x => !string.IsNullOrWhiteSpace(x)));
 
         var esAmbiental = usuario.Roles.Contains("AMBIENTAL");
+        var esAdministrador = usuario.Roles.Contains("ADMINISTRADOR");
         var esResponsable = usuario.Roles.Contains("RESPONSABLE_OPERATIVO");
+        var accesoGlobal = esAmbiental || esAdministrador;
 
-        TituloLabel.Text = esAmbiental ? "Todos los controles" : "Mis controles";
+        TituloLabel.Text = accesoGlobal ? "Todos los controles" : "Mis controles";
         SubtituloLabel.Text = esAmbiental
             ? "Supervisión global de los controles de generación"
-            : "Controles donde tienes una asignación vigente";
+            : esAdministrador
+                ? "Consulta global de los controles de generación"
+                : "Controles donde tienes una asignación vigente";
         NuevoControlButton.IsVisible = esResponsable;
         EmptyHintLabel.Text = esResponsable
             ? "Crea un control para solicitar la aprobación de Ambiental."
-            : esAmbiental
+            : accesoGlobal
                 ? "Los controles creados por los responsables aparecerán aquí."
                 : "Cuando te asignen a un control aparecerá aquí.";
     }
