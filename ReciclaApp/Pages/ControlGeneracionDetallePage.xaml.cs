@@ -58,15 +58,9 @@ public partial class ControlGeneracionDetallePage : ContentPage
             _control = await api.ObtenerControlGeneracionAsync(_controlId);
             _registros = await api.ListarRegistrosControlAsync(_controlId);
 
-            // Un registro sin residuos todavía es un borrador técnico. No debe
-            // mostrarse como un registro real del control hasta tener contenido.
-            var registrosVisibles = _registros
-                .Where(x => x.CantidadResiduos > 0)
-                .ToArray();
-
-            PintarControl(_control, registrosVisibles);
+            PintarControl(_control, _registros);
             ConfigurarAcciones(_control);
-            BindingContext = new DetailBinding(_control.Usuarios, registrosVisibles);
+            BindingContext = new DetailBinding(_control.Usuarios, _registros);
             ContenidoLayout.IsVisible = true;
         }
         catch (Exception ex)
@@ -110,22 +104,33 @@ public partial class ControlGeneracionDetallePage : ContentPage
             return;
 
         var esAmbiental = usuario.Roles.Contains("AMBIENTAL");
-        var now = DateTime.Now;
-        var asignacion = control.Usuarios.FirstOrDefault(x =>
+        var hoy = DateTime.Now.Date;
+        var esCreador = control.CreadoPorUsuarioId == usuario.UsuarioId;
+
+        var asignacionOperativa = control.Usuarios.FirstOrDefault(x =>
             x.UsuarioId == usuario.UsuarioId &&
             x.EsActivo &&
-            x.FechaDesde <= now &&
-            (!x.FechaHasta.HasValue || x.FechaHasta.Value >= now));
+            x.FechaDesde.Date <= hoy &&
+            (!x.FechaHasta.HasValue || x.FechaHasta.Value.Date >= hoy));
 
-        var esResponsableControl = asignacion?.RolControl == "RESPONSABLE";
-        var esParticipante = asignacion?.RolControl is "RESPONSABLE" or "REGISTRADOR";
-        var pendiente = control.Estado == "Pendiente de aprobación";
+        var asignacionResponsable = control.Usuarios.FirstOrDefault(x =>
+            x.UsuarioId == usuario.UsuarioId &&
+            x.RolControl == "RESPONSABLE" &&
+            x.EsActivo &&
+            (!x.FechaHasta.HasValue || x.FechaHasta.Value.Date >= hoy) &&
+            (x.FechaDesde.Date <= hoy || esCreador));
+
+        var esResponsableControl = asignacionResponsable is not null;
+        var esParticipante = asignacionOperativa?.RolControl is "RESPONSABLE" or "REGISTRADOR";
+        var pendiente = control.EstadoCodigo == "PENDIENTE_APROBACION";
+        var dentroVigencia = hoy >= control.FechaInicio.Date &&
+            (!control.FechaFin.HasValue || hoy <= control.FechaFin.Value.Date);
 
         AmbientalActions.IsVisible = esAmbiental && pendiente;
         AprobarButton.IsVisible = esAmbiental && pendiente;
         RechazarButton.IsVisible = esAmbiental && pendiente;
-        GestionarEquipoButton.IsVisible = esResponsableControl;
-        RegistrarButton.IsVisible = esParticipante && control.Estado == "Activo";
+        GestionarEquipoButton.IsVisible = esResponsableControl && control.EstadoCodigo is not ("CERRADO" or "ANULADO");
+        RegistrarButton.IsVisible = esParticipante && control.EstadoCodigo == "ACTIVO" && dentroVigencia;
     }
 
     private async void OnAprobarClicked(object sender, EventArgs e)
@@ -174,42 +179,16 @@ public partial class ControlGeneracionDetallePage : ContentPage
     {
         try
         {
-            var session = AppServices.Services.GetRequiredService<IAuthSessionService>();
-            var usuario = session.CurrentUser;
+            var api = AppServices.Services.GetRequiredService<IReciclaApiClient>();
+            var creado = await api.CrearRegistroEnControlAsync(_controlId, new CrearRegistroEnControlRequest(
+                $"MOB-{Guid.NewGuid():N}"[..12],
+                DateTime.Now,
+                null,
+                DeviceInfo.Current.Platform.ToString()));
 
-            // Si el usuario abandonó anteriormente la captura antes de guardar
-            // el primer residuo, reutilizamos ese borrador en vez de crear otro.
-            var borradorVacio = usuario is null
-                ? null
-                : _registros
-                    .Where(x =>
-                        x.RegistradoPorUsuarioId == usuario.UsuarioId &&
-                        x.CantidadResiduos == 0 &&
-                        (string.Equals(x.Estado, "En proceso", StringComparison.OrdinalIgnoreCase) ||
-                         string.Equals(x.Estado, "Borrador", StringComparison.OrdinalIgnoreCase)))
-                    .OrderByDescending(x => x.CreadoUtc)
-                    .FirstOrDefault();
-
-            Guid registroId;
-            if (borradorVacio is not null)
-            {
-                registroId = borradorVacio.RegistroId;
-            }
-            else
-            {
-                var api = AppServices.Services.GetRequiredService<IReciclaApiClient>();
-                var creado = await api.CrearRegistroEnControlAsync(_controlId, new CrearRegistroEnControlRequest(
-                    $"MOB-{Guid.NewGuid():N}"[..12],
-                    DateTime.Now,
-                    null,
-                    DeviceInfo.Current.Platform.ToString()));
-                registroId = creado.RegistroId;
-            }
-
-            // Dejamos el detalle del registro debajo del formulario para que
-            // guardar o cancelar vuelva al contexto del control y no a Mis registros.
-            await AppNavigator.IrADetalleRegistroControlAsync(_controlId, registroId);
-            await AppNavigator.IrARegistrarResiduoDesdeControlAsync(_controlId, registroId);
+            // El formulario queda directamente sobre el control. Si el usuario cancela,
+            // Atrás vuelve al control; si guarda, la navegación lo lleva al detalle del registro.
+            await AppNavigator.IrARegistrarResiduoDesdeControlAsync(_controlId, creado.RegistroId);
         }
         catch (Exception ex)
         {
