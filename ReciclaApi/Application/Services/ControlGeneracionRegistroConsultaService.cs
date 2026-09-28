@@ -139,14 +139,17 @@ public sealed class ControlGeneracionRegistroConsultaService(
         if (global)
             return true;
 
-        var now = DateTime.UtcNow;
-        return await unitOfWork.Repository<ControlGeneracionUsuario>().Query()
+        var hoy = DateTime.UtcNow.Date;
+        return await unitOfWork.Repository<ControlGeneracion>().Query()
             .AnyAsync(x =>
                 x.ControlGeneracionId == controlId &&
-                x.UsuarioId == usuarioId &&
-                x.EsActivo &&
-                x.FechaDesde <= now &&
-                (!x.FechaHasta.HasValue || x.FechaHasta.Value >= now),
+                !x.Eliminado &&
+                (x.CreadoPorUsuarioId == usuarioId ||
+                 x.Usuarios.Any(u =>
+                    u.UsuarioId == usuarioId &&
+                    u.EsActivo &&
+                    u.FechaDesde <= hoy &&
+                    (!u.FechaHasta.HasValue || u.FechaHasta.Value >= hoy))),
                 cancellationToken);
     }
 
@@ -158,6 +161,7 @@ public sealed class ControlGeneracionRegistroConsultaService(
         registro.RegistradoPorUsuarioId,
         NombreUsuario(registro.RegistradoPorUsuario),
         registro.EstadoRegistro.Nombre,
+        registro.EstadoRegistro.Codigo,
         registro.Observacion,
         registro.Residuos.Where(x => !x.Eliminado).Select(MapResiduo).ToArray());
 
