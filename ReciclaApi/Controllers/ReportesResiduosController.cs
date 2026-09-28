@@ -18,7 +18,7 @@ public sealed class ReportesResiduosController(
         [FromQuery] Guid? sedeId,
         [FromQuery] Guid? empresaResponsableId,
         [FromQuery] Guid? controlGeneracionId,
-        [FromQuery] Guid? clasificacionResiduoId,
+        [FromQuery] int? clasificacionResiduoId,
         [FromQuery] Guid? residuoId,
         CancellationToken cancellationToken)
     {
@@ -35,7 +35,7 @@ public sealed class ReportesResiduosController(
         [FromQuery] Guid? sedeId,
         [FromQuery] Guid? empresaResponsableId,
         [FromQuery] Guid? controlGeneracionId,
-        [FromQuery] Guid? clasificacionResiduoId,
+        [FromQuery] int? clasificacionResiduoId,
         [FromQuery] Guid? residuoId,
         CancellationToken cancellationToken)
     {
