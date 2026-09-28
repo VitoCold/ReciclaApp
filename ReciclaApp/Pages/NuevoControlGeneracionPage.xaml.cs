@@ -16,7 +16,7 @@ public partial class NuevoControlGeneracionPage : ContentPage
     {
         InitializeComponent();
         FechaInicioPicker.Date = DateTime.Today;
-        FechaFinPicker.Date = DateTime.Today.AddDays(30);
+        FechaFinPicker.Date = DateTime.Today.AddMonths(1);
     }
 
     protected override async void OnAppearing()
@@ -30,7 +30,7 @@ public partial class NuevoControlGeneracionPage : ContentPage
             return;
         }
 
-        if (session.CurrentUser?.Roles.Contains("RESPONSABLE_OPERATIVO") != true)
+        if (session.CurrentUser is null || !session.CurrentUser.Roles.Contains("RESPONSABLE_OPERATIVO"))
         {
             await DisplayAlert("Sin permiso", "Solo un responsable operativo puede crear controles de generación.", "Aceptar");
             await AppNavigator.VolverAsync();
@@ -52,22 +52,20 @@ public partial class NuevoControlGeneracionPage : ContentPage
             var api = AppServices.Services.GetRequiredService<IReciclaApiClient>();
             _catalogos = await api.ObtenerCatalogosAsync();
 
-            SedePicker.ItemsSource = _catalogos.Sedes.ToList();
-            EmpresaPicker.ItemsSource = _catalogos.Empresas.Where(x => !x.EsGestoraResiduos).ToList();
-            ProyectoPicker.ItemsSource = _catalogos.Proyectos.ToList();
-
-            if (_catalogos.Sedes.Count == 1)
-                SedePicker.SelectedIndex = 0;
-            if (_catalogos.Empresas.Count(x => !x.EsGestoraResiduos) == 1)
-                EmpresaPicker.SelectedIndex = 0;
-            if (_catalogos.Proyectos.Count == 1)
-                ProyectoPicker.SelectedIndex = 0;
+            SedePicker.ItemsSource = _catalogos.Sedes.OrderBy(x => x.Nombre).ToList();
+            EmpresaPicker.ItemsSource = _catalogos.Empresas
+                .Where(x => !x.EsGestoraResiduos)
+                .OrderBy(x => x.NombreComercial ?? x.RazonSocial)
+                .ToList();
+            ProyectoPicker.ItemsSource = _catalogos.Proyectos.OrderBy(x => x.Nombre).ToList();
+            ActividadPicker.ItemsSource = Array.Empty<ActividadDto>();
+            PuntoPicker.ItemsSource = Array.Empty<PuntoResiduoDto>();
         }
         catch (Exception ex)
         {
             AppServices.Services.GetService<ILogger<NuevoControlGeneracionPage>>()?
                 .LogError(ex, "Error cargando catálogos para nuevo control.");
-            MostrarError("No se pudieron cargar los catálogos necesarios para crear el control.");
+            MostrarError("No se pudieron cargar los datos para crear el control. " + MensajeHttp(ex));
         }
         finally
         {
@@ -80,12 +78,12 @@ public partial class NuevoControlGeneracionPage : ContentPage
     {
         if (_catalogos is null || SedePicker.SelectedItem is not SedeDto sede)
         {
-            PuntoPicker.ItemsSource = null;
+            PuntoPicker.ItemsSource = Array.Empty<PuntoResiduoDto>();
             return;
         }
 
         PuntoPicker.ItemsSource = _catalogos.PuntosResiduo
-            .Where(x => x.SedeId == sede.SedeId && x.Tipo is "GENERACION" or "AMBOS")
+            .Where(x => x.SedeId == sede.SedeId && (x.Tipo == "GENERACION" || x.Tipo == "AMBOS"))
             .OrderBy(x => x.Nombre)
             .ToList();
         PuntoPicker.SelectedItem = null;
@@ -158,8 +156,7 @@ public partial class NuevoControlGeneracionPage : ContentPage
             var api = AppServices.Services.GetRequiredService<IReciclaApiClient>();
             var creado = await api.CrearControlGeneracionAsync(request);
 
-            await AppNavigator.VolverAsync();
-            await AppNavigator.IrADetalleControlGeneracionAsync(creado.ControlGeneracionId);
+            await AppNavigator.IrADetalleControlGeneracionDesdeCreacionAsync(creado.ControlGeneracionId);
         }
         catch (Exception ex)
         {
