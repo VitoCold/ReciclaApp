@@ -83,12 +83,13 @@ namespace ReciclaApp
 
         private void ActualizarVisibilidadPorRol(Recicla.Shared.Contracts.UsuarioDto? usuario)
         {
-            var puedeVerRetiros = usuario is not null &&
+            var puedeGestionarSalidaYReportes = usuario is not null &&
                 (usuario.Roles.Contains("ADMINISTRADOR") ||
                  usuario.Roles.Contains("AMBIENTAL") ||
                  usuario.Roles.Contains("RESPONSABLE_OPERATIVO"));
 
-            Shell.SetFlyoutItemIsVisible(RetirosShellContent, puedeVerRetiros);
+            Shell.SetFlyoutItemIsVisible(RetirosShellContent, puedeGestionarSalidaYReportes);
+            Shell.SetFlyoutItemIsVisible(ReportesShellContent, puedeGestionarSalidaYReportes);
         }
 
         private static void RegistrarRutas()
