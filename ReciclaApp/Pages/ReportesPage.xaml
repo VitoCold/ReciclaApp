@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ReciclaApp.Pages.ReportesPage"
+             Style="{StaticResource BasePage}"
+             Shell.NavBarIsVisible="False">
+
+    <Grid RowDefinitions="Auto,*">
+        <Grid Style="{StaticResource AppHeader}" ColumnDefinitions="Auto,*">
+            <Label Text="☰" TextColor="White" FontSize="24" VerticalOptions="Center">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnMenuTapped" />
+                </Label.GestureRecognizers>
+            </Label>
+            <VerticalStackLayout Grid.Column="1" Spacing="0">
+                <Label Text="Reportes" Style="{StaticResource HeaderTitle}" />
+                <Label Text="Generación, almacenamiento y retiros" TextColor="#D7E9FA" FontSize="10" />
+            </VerticalStackLayout>
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="16,16,16,30" Spacing="14">
+                <Border x:Name="ErrorBorder"
+                        IsVisible="False"
+                        BackgroundColor="{StaticResource ColorDangerSoft}"
+                        Stroke="Transparent"
+                        StrokeShape="RoundRectangle 12"
+                        Padding="12">
+                    <Label x:Name="ErrorLabel" TextColor="{StaticResource ColorDanger}" FontSize="12" />
+                </Border>
+
+                <Border Style="{StaticResource SoftCard}">
+                    <VerticalStackLayout Spacing="12">
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="Reporte mensual de residuos" Style="{StaticResource SectionTitle}" />
+                            <Label Text="El periodo se aplica sobre la fecha de generación de cada registro."
+                                   Style="{StaticResource MutedText}" />
+                        </VerticalStackLayout>
+
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <Border Style="{StaticResource InputBorder}">
+                                <VerticalStackLayout Spacing="2">
+                                    <Label Text="Desde" FontSize="11" FontAttributes="Bold" />
+                                    <DatePicker x:Name="DesdePicker" FontSize="12" Format="dd/MM/yyyy" />
+                                </VerticalStackLayout>
+                            </Border>
+                            <Border Grid.Column="1" Style="{StaticResource InputBorder}">
+                                <VerticalStackLayout Spacing="2">
+                                    <Label Text="Hasta" FontSize="11" FontAttributes="Bold" />
+                                    <DatePicker x:Name="HastaPicker" FontSize="12" Format="dd/MM/yyyy" />
+                                </VerticalStackLayout>
+                            </Border>
+                        </Grid>
+
+                        <Border Style="{StaticResource InputBorder}">
+                            <VerticalStackLayout Spacing="0">
+                                <Label Text="Sede" FontSize="11" FontAttributes="Bold" />
+                                <Picker x:Name="SedePicker"
+                                        ItemDisplayBinding="{Binding Nombre}"
+                                        SelectedIndexChanged="OnAlcanceChanged"
+                                        FontSize="12" />
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <Border Style="{StaticResource InputBorder}">
+                            <VerticalStackLayout Spacing="0">
+                                <Label Text="Empresa responsable" FontSize="11" FontAttributes="Bold" />
+                                <Picker x:Name="EmpresaPicker"
+                                        ItemDisplayBinding="{Binding Nombre}"
+                                        SelectedIndexChanged="OnAlcanceChanged"
+                                        FontSize="12" />
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <Border Style="{StaticResource InputBorder}">
+                            <VerticalStackLayout Spacing="0">
+                                <Label Text="Control de generación" FontSize="11" FontAttributes="Bold" />
+                                <Picker x:Name="ControlPicker"
+                                        ItemDisplayBinding="{Binding Nombre}"
+                                        FontSize="12" />
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <Border Style="{StaticResource InputBorder}">
+                                <VerticalStackLayout Spacing="0">
+                                    <Label Text="Clasificación" FontSize="11" FontAttributes="Bold" />
+                                    <Picker x:Name="ClasificacionPicker"
+                                            ItemDisplayBinding="{Binding Nombre}"
+                                            SelectedIndexChanged="OnClasificacionChanged"
+                                            FontSize="12" />
+                                </VerticalStackLayout>
+                            </Border>
+                            <Border Grid.Column="1" Style="{StaticResource InputBorder}">
+                                <VerticalStackLayout Spacing="0">
+                                    <Label Text="Residuo" FontSize="11" FontAttributes="Bold" />
+                                    <Picker x:Name="ResiduoPicker"
+                                            ItemDisplayBinding="{Binding Nombre}"
+                                            FontSize="12" />
+                                </VerticalStackLayout>
+                            </Border>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                            <Button Text="Consultar"
+                                    Style="{StaticResource PrimaryButton}"
+                                    Clicked="OnConsultarClicked" />
+                            <Button Grid.Column="1"
+                                    Text="Limpiar"
+                                    BackgroundColor="Transparent"
+                                    TextColor="{StaticResource ColorPrimary}"
+                                    FontAttributes="Bold"
+                                    Clicked="OnLimpiarClicked" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <ActivityIndicator x:Name="ActivityIndicator"
+                                   IsVisible="False"
+                                   IsRunning="False"
+                                   HorizontalOptions="Center" />
+
+                <VerticalStackLayout x:Name="ResultadosLayout" IsVisible="False" Spacing="14">
+                    <Border Style="{StaticResource SoftCard}" BackgroundColor="{StaticResource ColorBlueSoft}">
+                        <VerticalStackLayout Spacing="5">
+                            <Label Text="Resultado" Style="{StaticResource SectionTitle}" />
+                            <Label x:Name="PeriodoLabel" Style="{StaticResource MutedText}" />
+                            <Label x:Name="CantidadLabel" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <VerticalStackLayout x:Name="ResumenLayout"
+                                         BindableLayout.ItemsSource="{Binding Resumen}"
+                                         Spacing="8">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource SoftCard}">
+                                    <VerticalStackLayout Spacing="8">
+                                        <Label Text="{Binding Unidad}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource ColorPrimary}" />
+                                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="7">
+                                            <VerticalStackLayout Spacing="0">
+                                                <Label Text="Generado" Style="{StaticResource TinyMutedText}" />
+                                                <Label Text="{Binding Generado}" FontAttributes="Bold" />
+                                            </VerticalStackLayout>
+                                            <VerticalStackLayout Grid.Column="1" Spacing="0">
+                                                <Label Text="En almacenamiento" Style="{StaticResource TinyMutedText}" />
+                                                <Label Text="{Binding Almacenado}" FontAttributes="Bold" />
+                                            </VerticalStackLayout>
+                                            <VerticalStackLayout Grid.Row="1" Spacing="0">
+                                                <Label Text="Retirado" Style="{StaticResource TinyMutedText}" />
+                                                <Label Text="{Binding Retirado}" FontAttributes="Bold" />
+                                            </VerticalStackLayout>
+                                            <VerticalStackLayout Grid.Row="1" Grid.Column="1" Spacing="0">
+                                                <Label Text="Saldo" Style="{StaticResource TinyMutedText}" />
+                                                <Label Text="{Binding Saldo}" FontAttributes="Bold" TextColor="{StaticResource ColorPrimary}" />
+                                            </VerticalStackLayout>
+                                        </Grid>
+                                        <Label Text="{Binding Pendiente}" Style="{StaticResource TinyMutedText}" />
+                                    </VerticalStackLayout>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+
+                    <Button x:Name="ExportarButton"
+                            Text="Exportar a Excel"
+                            Style="{StaticResource PrimaryButton}"
+                            Clicked="OnExportarClicked" />
+
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Detalle" Style="{StaticResource SectionTitle}" />
+                        <Label x:Name="SinDatosLabel"
+                               Text="No hay registros finalizados para los filtros seleccionados."
+                               Style="{StaticResource MutedText}"
+                               IsVisible="False" />
+
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Detalle}" Spacing="8">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Style="{StaticResource SoftCard}">
+                                        <VerticalStackLayout Spacing="7">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <VerticalStackLayout Spacing="1">
+                                                    <Label Text="{Binding Residuo}" FontSize="13" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                                    <Label Text="{Binding Clasificacion}" Style="{StaticResource TinyMutedText}" />
+                                                </VerticalStackLayout>
+                                                <Label Grid.Column="1" Text="{Binding Generado}" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource ColorPrimary}" />
+                                            </Grid>
+
+                                            <Label Text="{Binding Contexto}" Style="{StaticResource MutedText}" />
+                                            <Label Text="{Binding EmpresaProyecto}" Style="{StaticResource TinyMutedText}" />
+                                            <Label Text="{Binding RegistroTexto}" Style="{StaticResource TinyMutedText}" />
+
+                                            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="6">
+                                                <Border BackgroundColor="#F1F5F9" Stroke="Transparent" Padding="7,5">
+                                                    <Label Text="{Binding Almacenado}" FontSize="9" HorizontalTextAlignment="Center" />
+                                                </Border>
+                                                <Border Grid.Column="1" BackgroundColor="#F1F5F9" Stroke="Transparent" Padding="7,5">
+                                                    <Label Text="{Binding Retirado}" FontSize="9" HorizontalTextAlignment="Center" />
+                                                </Border>
+                                                <Border Grid.Column="2" BackgroundColor="#F1F5F9" Stroke="Transparent" Padding="7,5">
+                                                    <Label Text="{Binding Saldo}" FontSize="9" HorizontalTextAlignment="Center" />
+                                                </Border>
+                                            </Grid>
+
+                                            <Label Text="{Binding Evidencia}" Style="{StaticResource TinyMutedText}" />
+                                            <Label Text="{Binding Observacion}" Style="{StaticResource TinyMutedText}" IsVisible="{Binding TieneObservacion}" />
+                                        </VerticalStackLayout>
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>
