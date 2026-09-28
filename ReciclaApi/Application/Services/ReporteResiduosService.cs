@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text.Json;
 using ClosedXML.Excel;
 using Microsoft.EntityFrameworkCore;
 using Recicla.Shared.Contracts;
@@ -18,10 +20,35 @@ public interface IReporteResiduosService
         Guid usuarioId,
         ReporteResiduosFiltroRequest filtro,
         CancellationToken cancellationToken = default);
+
+    Task<ServiceResult<IReadOnlyCollection<ReporteArchivoHistoricoDto>>> ListarArchivosAsync(
+        Guid usuarioId,
+        CancellationToken cancellationToken = default);
+
+    Task<ServiceResult<ReporteArchivoHistoricoContenido>> ObtenerArchivoAsync(
+        Guid archivoId,
+        Guid usuarioId,
+        CancellationToken cancellationToken = default);
 }
 
-public sealed class ReporteResiduosService(ReciclaDbContext context) : IReporteResiduosService
+public sealed record ReporteArchivoHistoricoContenido(
+    byte[] Contenido,
+    string NombreArchivo,
+    string ContentType);
+
+public sealed class ReporteResiduosService(
+    ReciclaDbContext context,
+    IWebHostEnvironment environment,
+    ILogger<ReporteResiduosService> logger) : IReporteResiduosService
 {
+    private const string ExcelContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        WriteIndented = true
+    };
+
+    private string ArchivoRaiz => Path.Combine(environment.ContentRootPath, "App_Data", "reportes-residuos");
+
     public async Task<ServiceResult<ReporteResiduosDto>> GenerarAsync(
         Guid usuarioId,
         ReporteResiduosFiltroRequest filtro,
@@ -51,7 +78,85 @@ public sealed class ReporteResiduosService(ReciclaDbContext context) : IReporteR
             return ServiceResult<byte[]>.Fail("No tienes permiso para exportar reportes.", StatusCodes.Status403Forbidden);
 
         var reporte = await ConstruirAsync(usuarioId, filtro, cancellationToken);
-        return ServiceResult<byte[]>.Ok(CrearExcel(reporte));
+        var excel = CrearExcel(reporte);
+
+        try
+        {
+            await ArchivarExcelAsync(usuarioId, filtro, reporte, excel, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "No se pudo archivar la exportación Excel de residuos para {UsuarioId}.", usuarioId);
+            return ServiceResult<byte[]>.Fail(
+                "El reporte fue generado, pero no pudo archivarse en el backend.",
+                StatusCodes.Status500InternalServerError);
+        }
+
+        return ServiceResult<byte[]>.Ok(excel);
+    }
+
+    public async Task<ServiceResult<IReadOnlyCollection<ReporteArchivoHistoricoDto>>> ListarArchivosAsync(
+        Guid usuarioId,
+        CancellationToken cancellationToken = default)
+    {
+        if (!await PuedeConsultarReportesAsync(usuarioId, cancellationToken))
+        {
+            return ServiceResult<IReadOnlyCollection<ReporteArchivoHistoricoDto>>.Fail(
+                "No tienes permiso para consultar el historial de reportes.",
+                StatusCodes.Status403Forbidden);
+        }
+
+        var archivos = await LeerMetadatosAsync(cancellationToken);
+        var esGlobal = await EsGlobalAsync(usuarioId, cancellationToken);
+        var visibles = archivos
+            .Where(x => esGlobal || x.GeneradoPorUsuarioId == usuarioId)
+            .OrderByDescending(x => x.GeneradoUtc)
+            .ToArray();
+
+        return ServiceResult<IReadOnlyCollection<ReporteArchivoHistoricoDto>>.Ok(visibles);
+    }
+
+    public async Task<ServiceResult<ReporteArchivoHistoricoContenido>> ObtenerArchivoAsync(
+        Guid archivoId,
+        Guid usuarioId,
+        CancellationToken cancellationToken = default)
+    {
+        if (!await PuedeConsultarReportesAsync(usuarioId, cancellationToken))
+        {
+            return ServiceResult<ReporteArchivoHistoricoContenido>.Fail(
+                "No tienes permiso para consultar el historial de reportes.",
+                StatusCodes.Status403Forbidden);
+        }
+
+        var encontrado = await BuscarMetadataAsync(archivoId, cancellationToken);
+        if (encontrado is null)
+        {
+            return ServiceResult<ReporteArchivoHistoricoContenido>.Fail(
+                "Archivo de reporte no encontrado.",
+                StatusCodes.Status404NotFound);
+        }
+
+        var (metadata, metadataPath) = encontrado.Value;
+        var esGlobal = await EsGlobalAsync(usuarioId, cancellationToken);
+        if (!esGlobal && metadata.GeneradoPorUsuarioId != usuarioId)
+        {
+            return ServiceResult<ReporteArchivoHistoricoContenido>.Fail(
+                "Archivo de reporte no encontrado o sin acceso.",
+                StatusCodes.Status404NotFound);
+        }
+
+        var directory = Path.GetDirectoryName(metadataPath)!;
+        var excelPath = Path.Combine(directory, metadata.NombreArchivo);
+        if (!File.Exists(excelPath))
+        {
+            return ServiceResult<ReporteArchivoHistoricoContenido>.Fail(
+                "El metadato existe, pero el archivo Excel ya no está disponible.",
+                StatusCodes.Status404NotFound);
+        }
+
+        var contenido = await File.ReadAllBytesAsync(excelPath, cancellationToken);
+        return ServiceResult<ReporteArchivoHistoricoContenido>.Ok(
+            new ReporteArchivoHistoricoContenido(contenido, metadata.NombreArchivo, ExcelContentType));
     }
 
     private async Task<ReporteResiduosDto> ConstruirAsync(
@@ -196,6 +301,102 @@ public sealed class ReporteResiduosService(ReciclaDbContext context) : IReporteR
             .ToArray();
 
         return new ReporteResiduosDto(desde, hasta, resumen, detalle);
+    }
+
+    private async Task ArchivarExcelAsync(
+        Guid usuarioId,
+        ReporteResiduosFiltroRequest filtro,
+        ReporteResiduosDto reporte,
+        byte[] contenido,
+        CancellationToken cancellationToken)
+    {
+        var generadoUtc = DateTime.UtcNow;
+        var archivoId = Guid.NewGuid();
+        var directory = Path.Combine(
+            ArchivoRaiz,
+            generadoUtc.ToString("yyyy"),
+            generadoUtc.ToString("MM"));
+        Directory.CreateDirectory(directory);
+
+        var nombreArchivo = $"reporte_residuos_{filtro.Desde:yyyyMMdd}_{filtro.Hasta:yyyyMMdd}_{generadoUtc:yyyyMMddHHmmss}_{archivoId.ToString("N")[..6]}.xlsx";
+        var excelPath = Path.Combine(directory, nombreArchivo);
+        var metadataPath = Path.Combine(directory, $"{archivoId:N}.json");
+
+        await File.WriteAllBytesAsync(excelPath, contenido, cancellationToken);
+
+        try
+        {
+            var generadoPor = await context.Usuarios
+                .AsNoTracking()
+                .Where(x => x.UsuarioId == usuarioId)
+                .Select(x => (x.Nombres + " " + (x.Apellidos ?? string.Empty)).Trim())
+                .FirstOrDefaultAsync(cancellationToken)
+                ?? usuarioId.ToString();
+
+            var metadata = new ReporteArchivoHistoricoDto(
+                archivoId,
+                nombreArchivo,
+                generadoUtc,
+                usuarioId,
+                generadoPor,
+                filtro with { Desde = filtro.Desde.Date, Hasta = filtro.Hasta.Date },
+                reporte.Detalle.Count,
+                contenido.LongLength,
+                Convert.ToHexString(SHA256.HashData(contenido)));
+
+            var json = JsonSerializer.Serialize(metadata, JsonOptions);
+            await File.WriteAllTextAsync(metadataPath, json, cancellationToken);
+        }
+        catch
+        {
+            if (File.Exists(excelPath))
+                File.Delete(excelPath);
+            throw;
+        }
+    }
+
+    private async Task<IReadOnlyCollection<ReporteArchivoHistoricoDto>> LeerMetadatosAsync(CancellationToken cancellationToken)
+    {
+        if (!Directory.Exists(ArchivoRaiz))
+            return Array.Empty<ReporteArchivoHistoricoDto>();
+
+        var result = new List<ReporteArchivoHistoricoDto>();
+        foreach (var path in Directory.EnumerateFiles(ArchivoRaiz, "*.json", SearchOption.AllDirectories))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            try
+            {
+                var json = await File.ReadAllTextAsync(path, cancellationToken);
+                var metadata = JsonSerializer.Deserialize<ReporteArchivoHistoricoDto>(json, JsonOptions);
+                if (metadata is not null)
+                    result.Add(metadata);
+            }
+            catch (Exception ex) when (ex is JsonException or IOException)
+            {
+                logger.LogWarning(ex, "No se pudo leer metadata de reporte archivado {Path}.", path);
+            }
+        }
+
+        return result;
+    }
+
+    private async Task<(ReporteArchivoHistoricoDto Metadata, string MetadataPath)?> BuscarMetadataAsync(
+        Guid archivoId,
+        CancellationToken cancellationToken)
+    {
+        if (!Directory.Exists(ArchivoRaiz))
+            return null;
+
+        var nombreMetadata = $"{archivoId:N}.json";
+        var path = Directory
+            .EnumerateFiles(ArchivoRaiz, nombreMetadata, SearchOption.AllDirectories)
+            .FirstOrDefault();
+        if (path is null)
+            return null;
+
+        var json = await File.ReadAllTextAsync(path, cancellationToken);
+        var metadata = JsonSerializer.Deserialize<ReporteArchivoHistoricoDto>(json, JsonOptions);
+        return metadata is null ? null : (metadata, path);
     }
 
     private static byte[] CrearExcel(ReporteResiduosDto reporte)
