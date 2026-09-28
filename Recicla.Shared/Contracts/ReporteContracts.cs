@@ -6,7 +6,7 @@ public sealed record ReporteResiduosFiltroRequest(
     Guid? SedeId = null,
     Guid? EmpresaResponsableId = null,
     Guid? ControlGeneracionId = null,
-    Guid? ClasificacionResiduoId = null,
+    int? ClasificacionResiduoId = null,
     Guid? ResiduoId = null);
 
 public sealed record ReporteResumenUnidadDto(
@@ -31,7 +31,7 @@ public sealed record ReporteResiduoItemDto(
     string Proyecto,
     Guid ActividadId,
     string Actividad,
-    Guid ClasificacionResiduoId,
+    int ClasificacionResiduoId,
     string Clasificacion,
     Guid ResiduoId,
     string Residuo,
