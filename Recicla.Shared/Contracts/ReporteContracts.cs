@@ -54,3 +54,14 @@ public sealed record ReporteResiduosDto(
     DateTime Hasta,
     IReadOnlyCollection<ReporteResumenUnidadDto> Resumen,
     IReadOnlyCollection<ReporteResiduoItemDto> Detalle);
+
+public sealed record ReporteArchivoHistoricoDto(
+    Guid ArchivoId,
+    string NombreArchivo,
+    DateTime GeneradoUtc,
+    Guid GeneradoPorUsuarioId,
+    string GeneradoPor,
+    ReporteResiduosFiltroRequest Filtro,
+    int CantidadFilas,
+    long TamanoBytes,
+    string Sha256);
