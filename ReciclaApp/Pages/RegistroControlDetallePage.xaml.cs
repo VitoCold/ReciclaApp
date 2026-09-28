@@ -84,8 +84,8 @@ public partial class RegistroControlDetallePage : ContentPage
 
             var usuario = session.CurrentUser;
             var esAutor = usuario is not null && _registro.RegistradoPorUsuarioId == usuario.UsuarioId;
-            var enProceso = EsEnProceso(_registro.Estado);
-            var controlActivo = string.Equals(control.Estado, "Activo", StringComparison.OrdinalIgnoreCase);
+            var enProceso = EsEnProceso(_registro.EstadoCodigo);
+            var controlActivo = control.EstadoCodigo == "ACTIVO";
             _puedeEditar = esAutor && enProceso && controlActivo;
 
             FechaLabel.Text = _registro.FechaRegistro.ToString("dd/MM/yyyy HH:mm");
@@ -98,7 +98,7 @@ public partial class RegistroControlDetallePage : ContentPage
                 ? "Sin observaciones generales"
                 : _registro.Observacion;
 
-            AplicarColorEstado(_registro.Estado);
+            AplicarColorEstado(_registro.EstadoCodigo);
             SoloLecturaLabel.IsVisible = !esAutor || !controlActivo;
             if (esAutor && !controlActivo)
                 SoloLecturaLabel.Text = "El control no está activo. El registro queda disponible solo para consulta.";
@@ -185,18 +185,16 @@ public partial class RegistroControlDetallePage : ContentPage
             puedeEditar);
     }
 
-    private void AplicarColorEstado(string estado)
+    private void AplicarColorEstado(string estadoCodigo)
     {
-        if (EsEnProceso(estado))
+        if (EsEnProceso(estadoCodigo))
         {
             EstadoBorder.BackgroundColor = Color.FromArgb("#FFF4DC");
             EstadoLabel.TextColor = Color.FromArgb("#F59E0B");
             return;
         }
 
-        if (string.Equals(estado, "Registrado", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(estado, "Completado", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(estado, "Validado", StringComparison.OrdinalIgnoreCase))
+        if (estadoCodigo is "REGISTRADO" or "COMPLETADO" or "VALIDADO")
         {
             EstadoBorder.BackgroundColor = Color.FromArgb("#E8F7EE");
             EstadoLabel.TextColor = Color.FromArgb("#079542");
@@ -207,9 +205,8 @@ public partial class RegistroControlDetallePage : ContentPage
         EstadoLabel.TextColor = Color.FromArgb("#0753B7");
     }
 
-    private static bool EsEnProceso(string estado) =>
-        string.Equals(estado, "En proceso", StringComparison.OrdinalIgnoreCase) ||
-        string.Equals(estado, "Borrador", StringComparison.OrdinalIgnoreCase);
+    private static bool EsEnProceso(string estadoCodigo) =>
+        estadoCodigo is "EN_PROCESO" or "BORRADOR";
 
     private async void OnAgregarResiduoClicked(object sender, EventArgs e)
     {
