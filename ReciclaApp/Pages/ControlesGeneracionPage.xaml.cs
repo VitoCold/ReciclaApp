@@ -53,7 +53,7 @@ public partial class ControlesGeneracionPage : ContentPage
             ? "Supervisión global de los controles de generación"
             : esAdministrador
                 ? "Consulta global de los controles de generación"
-                : "Controles donde tienes una asignación vigente";
+                : "Controles creados por ti o con una asignación vigente";
         NuevoControlButton.IsVisible = esResponsable;
         EmptyHintLabel.Text = esResponsable
             ? "Crea un control para solicitar la aprobación de Ambiental."
