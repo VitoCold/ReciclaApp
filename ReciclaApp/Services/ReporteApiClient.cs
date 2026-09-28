@@ -71,6 +71,12 @@ public sealed class ReporteApiClient(HttpClient httpClient) : IReporteApiClient
             parametros.Add($"{nombre}={valor.Value}");
     }
 
+    private static void Agregar(ICollection<string> parametros, string nombre, int? valor)
+    {
+        if (valor.HasValue)
+            parametros.Add($"{nombre}={valor.Value}");
+    }
+
     private static async Task EnsureSuccessAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {
         if (response.IsSuccessStatusCode)
