@@ -36,11 +36,15 @@ public static class ControlGeneracionSeeder
             .Select(x => x.Codigo)
             .ToListAsync(cancellationToken);
 
-        AddStateIfMissing(context, states, "PENDIENTE_APROBACION", "Pendiente de aprobación");
+        AddStateIfMissing(context, states, "BORRADOR", "Borrador");
+        AddStateIfMissing(context, states, "PENDIENTE_REVISION", "Pendiente de revisión");
+        AddStateIfMissing(context, states, "OBSERVADO", "Observado");
+        AddStateIfMissing(context, states, "APROBADO", "Aprobado");
         AddStateIfMissing(context, states, "ACTIVO", "Activo");
-        AddStateIfMissing(context, states, "RECHAZADO", "Rechazado");
+        AddStateIfMissing(context, states, "FINALIZADO", "Finalizado");
+
+        // Estados excepcionales fuera del flujo normal.
         AddStateIfMissing(context, states, "SUSPENDIDO", "Suspendido");
-        AddStateIfMissing(context, states, "CERRADO", "Cerrado");
         AddStateIfMissing(context, states, "ANULADO", "Anulado");
     }
 
