@@ -13,8 +13,12 @@ public interface IControlGeneracionService
     Task<ServiceResult<ControlGeneracionDetalleDto>> ObtenerAsync(Guid controlId, Guid usuarioId, CancellationToken cancellationToken = default);
     Task<ServiceResult<ControlGeneracionDetalleDto>> CrearAsync(Guid usuarioId, CrearControlGeneracionRequest request, CancellationToken cancellationToken = default);
     Task<ServiceResult<ControlGeneracionDetalleDto>> ActualizarCabeceraAsync(Guid controlId, Guid usuarioId, ActualizarControlGeneracionRequest request, CancellationToken cancellationToken = default);
+    Task<ServiceResult<ControlGeneracionDetalleDto>> EnviarARevisionAsync(Guid controlId, Guid usuarioId, CancellationToken cancellationToken = default);
     Task<ServiceResult<ControlGeneracionDetalleDto>> AprobarAsync(Guid controlId, Guid usuarioId, CancellationToken cancellationToken = default);
+    Task<ServiceResult<ControlGeneracionDetalleDto>> ObservarAsync(Guid controlId, Guid usuarioId, RechazarControlGeneracionRequest request, CancellationToken cancellationToken = default);
     Task<ServiceResult<ControlGeneracionDetalleDto>> RechazarAsync(Guid controlId, Guid usuarioId, RechazarControlGeneracionRequest request, CancellationToken cancellationToken = default);
+    Task<ServiceResult<ControlGeneracionDetalleDto>> IniciarAsync(Guid controlId, Guid usuarioId, CancellationToken cancellationToken = default);
+    Task<ServiceResult<ControlGeneracionDetalleDto>> FinalizarAsync(Guid controlId, Guid usuarioId, CancellationToken cancellationToken = default);
     Task<ServiceResult<ControlGeneracionDetalleDto>> CambiarEstadoAsync(Guid controlId, Guid usuarioId, string estadoDestino, CambiarEstadoControlGeneracionRequest request, CancellationToken cancellationToken = default);
     Task<ServiceResult<ControlGeneracionDetalleDto>> AsignarUsuarioAsync(Guid controlId, Guid usuarioId, AsignarControlGeneracionUsuarioRequest request, CancellationToken cancellationToken = default);
     Task<ServiceResult> DesasignarUsuarioAsync(Guid controlId, Guid asignacionId, Guid usuarioId, CancellationToken cancellationToken = default);
@@ -92,7 +96,7 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
         var hoy = DateTime.UtcNow.Date;
         var fechaInicio = request.FechaInicio.Date;
         var fechaFin = request.FechaFin?.Date;
-        var estado = await GetEstadoAsync("PENDIENTE_APROBACION", cancellationToken);
+        var estado = await GetEstadoAsync("BORRADOR", cancellationToken);
         var control = new ControlGeneracion
         {
             Codigo = GenerarCodigo(),
@@ -131,7 +135,7 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
             control.PuntoGeneracionId,
             control.FechaInicio,
             control.FechaFin,
-            Estado = "PENDIENTE_APROBACION"
+            Estado = "BORRADOR"
         }, cancellationToken);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -146,8 +150,8 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
         ActualizarControlGeneracionRequest request,
         CancellationToken cancellationToken = default)
     {
-        if (!await TieneRolAsync(usuarioId, "AMBIENTAL", cancellationToken))
-            return ServiceResult<ControlGeneracionDetalleDto>.Fail("Solo Ambiental puede modificar la información inicial del control.", StatusCodes.Status403Forbidden);
+        if (!await EsResponsableActivoAsync(controlId, usuarioId, cancellationToken))
+            return ServiceResult<ControlGeneracionDetalleDto>.Fail("Solo un responsable vigente del control puede modificar su información.", StatusCodes.Status403Forbidden);
 
         if (string.IsNullOrWhiteSpace(request.MotivoModificacion))
             return ServiceResult<ControlGeneracionDetalleDto>.Fail("Debe indicar el motivo de la modificación.", StatusCodes.Status400BadRequest);
@@ -157,8 +161,8 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
         if (control is null)
             return ServiceResult<ControlGeneracionDetalleDto>.Fail("Control de generación no encontrado.", StatusCodes.Status404NotFound);
 
-        if (control.EstadoControlGeneracion.Codigo == "ANULADO")
-            return ServiceResult<ControlGeneracionDetalleDto>.Fail("No se puede modificar un control anulado.", StatusCodes.Status409Conflict);
+        if (control.EstadoControlGeneracion.Codigo is not ("BORRADOR" or "OBSERVADO"))
+            return ServiceResult<ControlGeneracionDetalleDto>.Fail("Solo se puede editar un control en borrador u observado.", StatusCodes.Status409Conflict);
 
         var error = await ValidarCabeceraAsync(
             request.SedeId,
@@ -215,6 +219,43 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
         return ServiceResult<ControlGeneracionDetalleDto>.Ok(MapDetalle(control));
     }
 
+    public async Task<ServiceResult<ControlGeneracionDetalleDto>> EnviarARevisionAsync(
+        Guid controlId,
+        Guid usuarioId,
+        CancellationToken cancellationToken = default)
+    {
+        if (!await EsResponsableActivoAsync(controlId, usuarioId, cancellationToken))
+            return ServiceResult<ControlGeneracionDetalleDto>.Fail("Solo un responsable vigente del control puede enviarlo a revisión.", StatusCodes.Status403Forbidden);
+
+        var control = await QueryControles(tracking: true)
+            .FirstOrDefaultAsync(x => x.ControlGeneracionId == controlId && !x.Eliminado, cancellationToken);
+        if (control is null)
+            return ServiceResult<ControlGeneracionDetalleDto>.Fail("Control de generación no encontrado.", StatusCodes.Status404NotFound);
+
+        if (control.EstadoControlGeneracion.Codigo is not ("BORRADOR" or "OBSERVADO"))
+            return ServiceResult<ControlGeneracionDetalleDto>.Fail("Solo un control en borrador u observado puede enviarse a revisión.", StatusCodes.Status409Conflict);
+
+        var origen = control.EstadoControlGeneracion.Codigo;
+        var pendiente = await GetEstadoAsync("PENDIENTE_REVISION", cancellationToken);
+        control.EstadoControlGeneracionId = pendiente.EstadoControlGeneracionId;
+        control.EstadoControlGeneracion = pendiente;
+        control.MotivoUltimoCambio = origen == "OBSERVADO"
+            ? "Correcciones enviadas a revisión"
+            : "Enviado a revisión";
+        control.ActualizadoUtc = DateTime.UtcNow;
+
+        await AuditarAsync(
+            controlId,
+            usuarioId,
+            "ENVIAR_REVISION",
+            new { Estado = origen },
+            new { Estado = "PENDIENTE_REVISION" },
+            cancellationToken);
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return ServiceResult<ControlGeneracionDetalleDto>.Ok(MapDetalle(control));
+    }
+
     public async Task<ServiceResult<ControlGeneracionDetalleDto>> AprobarAsync(
         Guid controlId,
         Guid usuarioId,
@@ -228,49 +269,130 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
         if (control is null)
             return ServiceResult<ControlGeneracionDetalleDto>.Fail("Control de generación no encontrado.", StatusCodes.Status404NotFound);
 
-        if (control.EstadoControlGeneracion.Codigo is not ("PENDIENTE_APROBACION" or "RECHAZADO"))
-            return ServiceResult<ControlGeneracionDetalleDto>.Fail("El control no está pendiente de aprobación.", StatusCodes.Status409Conflict);
+        if (control.EstadoControlGeneracion.Codigo != "PENDIENTE_REVISION")
+            return ServiceResult<ControlGeneracionDetalleDto>.Fail("Solo se puede aprobar un control pendiente de revisión.", StatusCodes.Status409Conflict);
 
-        var activo = await GetEstadoAsync("ACTIVO", cancellationToken);
-        control.EstadoControlGeneracionId = activo.EstadoControlGeneracionId;
-        control.EstadoControlGeneracion = activo;
+        var aprobado = await GetEstadoAsync("APROBADO", cancellationToken);
+        control.EstadoControlGeneracionId = aprobado.EstadoControlGeneracionId;
+        control.EstadoControlGeneracion = aprobado;
         control.AprobadoPorUsuarioId = usuarioId;
         control.AprobadoUtc = DateTime.UtcNow;
         control.MotivoUltimoCambio = "Aprobado por Ambiental";
         control.ActualizadoUtc = DateTime.UtcNow;
 
-        await AuditarAsync(controlId, usuarioId, "APROBAR", null, new { Estado = "ACTIVO" }, cancellationToken);
+        await AuditarAsync(controlId, usuarioId, "APROBAR", new { Estado = "PENDIENTE_REVISION" }, new { Estado = "APROBADO" }, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return ServiceResult<ControlGeneracionDetalleDto>.Ok(MapDetalle(control));
     }
 
-    public async Task<ServiceResult<ControlGeneracionDetalleDto>> RechazarAsync(
+    public async Task<ServiceResult<ControlGeneracionDetalleDto>> ObservarAsync(
         Guid controlId,
         Guid usuarioId,
         RechazarControlGeneracionRequest request,
         CancellationToken cancellationToken = default)
     {
         if (!await TieneRolAsync(usuarioId, "AMBIENTAL", cancellationToken))
-            return ServiceResult<ControlGeneracionDetalleDto>.Fail("Solo Ambiental puede rechazar controles de generación.", StatusCodes.Status403Forbidden);
+            return ServiceResult<ControlGeneracionDetalleDto>.Fail("Solo Ambiental puede observar controles de generación.", StatusCodes.Status403Forbidden);
 
         if (string.IsNullOrWhiteSpace(request.Motivo))
-            return ServiceResult<ControlGeneracionDetalleDto>.Fail("Debe indicar el motivo del rechazo.", StatusCodes.Status400BadRequest);
+            return ServiceResult<ControlGeneracionDetalleDto>.Fail("Debe indicar la observación.", StatusCodes.Status400BadRequest);
 
         var control = await QueryControles(tracking: true)
             .FirstOrDefaultAsync(x => x.ControlGeneracionId == controlId && !x.Eliminado, cancellationToken);
         if (control is null)
             return ServiceResult<ControlGeneracionDetalleDto>.Fail("Control de generación no encontrado.", StatusCodes.Status404NotFound);
 
-        if (control.EstadoControlGeneracion.Codigo != "PENDIENTE_APROBACION")
-            return ServiceResult<ControlGeneracionDetalleDto>.Fail("Solo se puede rechazar un control pendiente de aprobación.", StatusCodes.Status409Conflict);
+        if (control.EstadoControlGeneracion.Codigo != "PENDIENTE_REVISION")
+            return ServiceResult<ControlGeneracionDetalleDto>.Fail("Solo se puede observar un control pendiente de revisión.", StatusCodes.Status409Conflict);
 
-        var rechazado = await GetEstadoAsync("RECHAZADO", cancellationToken);
-        control.EstadoControlGeneracionId = rechazado.EstadoControlGeneracionId;
-        control.EstadoControlGeneracion = rechazado;
+        var observado = await GetEstadoAsync("OBSERVADO", cancellationToken);
+        control.EstadoControlGeneracionId = observado.EstadoControlGeneracionId;
+        control.EstadoControlGeneracion = observado;
         control.MotivoUltimoCambio = request.Motivo.Trim();
         control.ActualizadoUtc = DateTime.UtcNow;
 
-        await AuditarAsync(controlId, usuarioId, "RECHAZAR", null, new { Estado = "RECHAZADO", Motivo = request.Motivo }, cancellationToken);
+        await AuditarAsync(
+            controlId,
+            usuarioId,
+            "OBSERVAR",
+            new { Estado = "PENDIENTE_REVISION" },
+            new { Estado = "OBSERVADO", Observacion = request.Motivo },
+            cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return ServiceResult<ControlGeneracionDetalleDto>.Ok(MapDetalle(control));
+    }
+
+    // Compatibilidad temporal con clientes móviles anteriores.
+    public Task<ServiceResult<ControlGeneracionDetalleDto>> RechazarAsync(
+        Guid controlId,
+        Guid usuarioId,
+        RechazarControlGeneracionRequest request,
+        CancellationToken cancellationToken = default) =>
+        ObservarAsync(controlId, usuarioId, request, cancellationToken);
+
+    public async Task<ServiceResult<ControlGeneracionDetalleDto>> IniciarAsync(
+        Guid controlId,
+        Guid usuarioId,
+        CancellationToken cancellationToken = default)
+    {
+        if (!await EsParticipanteOperativoActivoAsync(controlId, usuarioId, cancellationToken))
+            return ServiceResult<ControlGeneracionDetalleDto>.Fail("Solo personal operativo vigente del control puede iniciar la actividad.", StatusCodes.Status403Forbidden);
+
+        var control = await QueryControles(tracking: true)
+            .FirstOrDefaultAsync(x => x.ControlGeneracionId == controlId && !x.Eliminado, cancellationToken);
+        if (control is null)
+            return ServiceResult<ControlGeneracionDetalleDto>.Fail("Control de generación no encontrado.", StatusCodes.Status404NotFound);
+
+        if (control.EstadoControlGeneracion.Codigo != "APROBADO")
+            return ServiceResult<ControlGeneracionDetalleDto>.Fail("Solo se puede iniciar un control aprobado.", StatusCodes.Status409Conflict);
+
+        var activo = await GetEstadoAsync("ACTIVO", cancellationToken);
+        control.EstadoControlGeneracionId = activo.EstadoControlGeneracionId;
+        control.EstadoControlGeneracion = activo;
+        control.MotivoUltimoCambio = "Actividad iniciada";
+        control.ActualizadoUtc = DateTime.UtcNow;
+
+        await AuditarAsync(controlId, usuarioId, "INICIAR_ACTIVIDAD", new { Estado = "APROBADO" }, new { Estado = "ACTIVO" }, cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return ServiceResult<ControlGeneracionDetalleDto>.Ok(MapDetalle(control));
+    }
+
+    public async Task<ServiceResult<ControlGeneracionDetalleDto>> FinalizarAsync(
+        Guid controlId,
+        Guid usuarioId,
+        CancellationToken cancellationToken = default)
+    {
+        if (!await EsParticipanteOperativoActivoAsync(controlId, usuarioId, cancellationToken))
+            return ServiceResult<ControlGeneracionDetalleDto>.Fail("Solo personal operativo vigente del control puede finalizar la actividad.", StatusCodes.Status403Forbidden);
+
+        var control = await QueryControles(tracking: true)
+            .FirstOrDefaultAsync(x => x.ControlGeneracionId == controlId && !x.Eliminado, cancellationToken);
+        if (control is null)
+            return ServiceResult<ControlGeneracionDetalleDto>.Fail("Control de generación no encontrado.", StatusCodes.Status404NotFound);
+
+        if (control.EstadoControlGeneracion.Codigo != "ACTIVO")
+            return ServiceResult<ControlGeneracionDetalleDto>.Fail("Solo se puede finalizar un control activo.", StatusCodes.Status409Conflict);
+
+        var tieneRegistrosAbiertos = await unitOfWork.Repository<Registro>().Query()
+            .Include(x => x.EstadoRegistro)
+            .AnyAsync(x =>
+                x.ControlGeneracionId == controlId &&
+                !x.Eliminado &&
+                (x.EstadoRegistro.Codigo == "BORRADOR" || x.EstadoRegistro.Codigo == "EN_PROCESO"),
+                cancellationToken);
+
+        if (tieneRegistrosAbiertos)
+            return ServiceResult<ControlGeneracionDetalleDto>.Fail(
+                "No se puede finalizar el control mientras existan registros de residuos en proceso.",
+                StatusCodes.Status409Conflict);
+
+        var finalizado = await GetEstadoAsync("FINALIZADO", cancellationToken);
+        control.EstadoControlGeneracionId = finalizado.EstadoControlGeneracionId;
+        control.EstadoControlGeneracion = finalizado;
+        control.MotivoUltimoCambio = "Actividad finalizada";
+        control.ActualizadoUtc = DateTime.UtcNow;
+
+        await AuditarAsync(controlId, usuarioId, "FINALIZAR_ACTIVIDAD", new { Estado = "ACTIVO" }, new { Estado = "FINALIZADO" }, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return ServiceResult<ControlGeneracionDetalleDto>.Ok(MapDetalle(control));
     }
@@ -323,8 +445,8 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
         if (control is null)
             return ServiceResult<ControlGeneracionDetalleDto>.Fail("Control de generación no encontrado.", StatusCodes.Status404NotFound);
 
-        if (control.EstadoControlGeneracion.Codigo is "CERRADO" or "ANULADO")
-            return ServiceResult<ControlGeneracionDetalleDto>.Fail("No se pueden cambiar asignaciones en un control cerrado o anulado.", StatusCodes.Status409Conflict);
+        if (control.EstadoControlGeneracion.Codigo is "FINALIZADO" or "ANULADO")
+            return ServiceResult<ControlGeneracionDetalleDto>.Fail("No se pueden cambiar asignaciones en un control finalizado o anulado.", StatusCodes.Status409Conflict);
 
         var rolControl = request.RolControl.Trim().ToUpperInvariant();
         if (!RolesControl.Contains(rolControl))
@@ -692,14 +814,17 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
 
     private static bool TransicionPermitida(string origen, string destino) => (origen, destino) switch
     {
+        // Suspensión y reactivación son excepciones administradas por Ambiental.
         ("ACTIVO", "SUSPENDIDO") => true,
-        ("ACTIVO", "CERRADO") => true,
-        ("ACTIVO", "ANULADO") => true,
         ("SUSPENDIDO", "ACTIVO") => true,
-        ("SUSPENDIDO", "CERRADO") => true,
+
+        // La anulación queda fuera del flujo normal, pero puede cortar un control no finalizado.
+        ("BORRADOR", "ANULADO") => true,
+        ("PENDIENTE_REVISION", "ANULADO") => true,
+        ("OBSERVADO", "ANULADO") => true,
+        ("APROBADO", "ANULADO") => true,
+        ("ACTIVO", "ANULADO") => true,
         ("SUSPENDIDO", "ANULADO") => true,
-        ("PENDIENTE_APROBACION", "ANULADO") => true,
-        ("RECHAZADO", "ANULADO") => true,
         _ => false
     };
 
