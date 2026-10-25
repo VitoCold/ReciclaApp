@@ -101,9 +101,6 @@ public sealed class MovimientoResiduoConfiguration : IEntityTypeConfiguration<Mo
             table.HasCheckConstraint("CK_MovimientosResiduo_Cantidad", "[Cantidad] > 0"));
         entity.HasKey(x => x.MovimientoResiduoId);
         entity.Property(x => x.Cantidad).HasPrecision(18, 3);
-        entity.Property(x => x.TipoRetiro).HasMaxLength(10).IsRequired();
-        entity.Property(x => x.SaldoEstimadoAntes).HasPrecision(18, 3);
-        entity.Property(x => x.DiferenciaConciliacion).HasPrecision(18, 3);
         entity.Property(x => x.Observacion).HasMaxLength(500);
         entity.HasIndex(x => new { x.RegistroResiduoId, x.FechaMovimiento });
         entity.HasIndex(x => new { x.PuntoDestinoId, x.FechaMovimiento });
@@ -150,6 +147,9 @@ public sealed class RetiroDetalleConfiguration : IEntityTypeConfiguration<Retiro
         });
         entity.HasKey(x => x.RetiroDetalleId);
         entity.Property(x => x.Cantidad).HasPrecision(18, 3);
+        entity.Property(x => x.TipoRetiro).HasMaxLength(10).IsRequired();
+        entity.Property(x => x.SaldoEstimadoAntes).HasPrecision(18, 3);
+        entity.Property(x => x.DiferenciaConciliacion).HasPrecision(18, 3);
         entity.Property(x => x.Observacion).HasMaxLength(500);
         entity.HasIndex(x => new { x.RetiroId, x.RegistroResiduoId }).IsUnique();
         entity.HasIndex(x => x.RegistroResiduoId);
