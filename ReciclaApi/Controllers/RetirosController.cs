@@ -28,7 +28,7 @@ public sealed class RetirosController(
     }
 
     [HttpPost]
-    [Authorize(Roles = "AMBIENTAL,RESPONSABLE_OPERATIVO")]
+    [Authorize(Roles = "AMBIENTAL")]
     public async Task<IActionResult> Crear(
         [FromBody] CrearRetiroRequest request,
         CancellationToken cancellationToken)
