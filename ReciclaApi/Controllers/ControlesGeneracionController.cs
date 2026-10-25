@@ -40,13 +40,21 @@ public sealed class ControlesGeneracionController(
     }
 
     [HttpPut("{id:guid}")]
-    [Authorize(Roles = "AMBIENTAL")]
+    [Authorize(Roles = "RESPONSABLE_OPERATIVO")]
     public async Task<IActionResult> ActualizarCabecera(
         Guid id,
         [FromBody] ActualizarControlGeneracionRequest request,
         CancellationToken cancellationToken)
     {
         var result = await controlService.ActualizarCabeceraAsync(id, UsuarioId, request, cancellationToken);
+        return FromResult(result);
+    }
+
+    [HttpPost("{id:guid}/enviar-revision")]
+    [Authorize(Roles = "RESPONSABLE_OPERATIVO")]
+    public async Task<IActionResult> EnviarARevision(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await controlService.EnviarARevisionAsync(id, UsuarioId, cancellationToken);
         return FromResult(result);
     }
 
@@ -58,6 +66,18 @@ public sealed class ControlesGeneracionController(
         return FromResult(result);
     }
 
+    [HttpPost("{id:guid}/observar")]
+    [Authorize(Roles = "AMBIENTAL")]
+    public async Task<IActionResult> Observar(
+        Guid id,
+        [FromBody] RechazarControlGeneracionRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await controlService.ObservarAsync(id, UsuarioId, request, cancellationToken);
+        return FromResult(result);
+    }
+
+    // Compatibilidad temporal con la versión móvil anterior.
     [HttpPost("{id:guid}/rechazar")]
     [Authorize(Roles = "AMBIENTAL")]
     public async Task<IActionResult> Rechazar(
@@ -66,6 +86,22 @@ public sealed class ControlesGeneracionController(
         CancellationToken cancellationToken)
     {
         var result = await controlService.RechazarAsync(id, UsuarioId, request, cancellationToken);
+        return FromResult(result);
+    }
+
+    [HttpPost("{id:guid}/iniciar")]
+    [Authorize(Roles = "RESPONSABLE_OPERATIVO,REGISTRADOR")]
+    public async Task<IActionResult> Iniciar(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await controlService.IniciarAsync(id, UsuarioId, cancellationToken);
+        return FromResult(result);
+    }
+
+    [HttpPost("{id:guid}/finalizar")]
+    [Authorize(Roles = "RESPONSABLE_OPERATIVO")]
+    public async Task<IActionResult> Finalizar(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await controlService.FinalizarAsync(id, UsuarioId, cancellationToken);
         return FromResult(result);
     }
 
@@ -78,11 +114,6 @@ public sealed class ControlesGeneracionController(
     [Authorize(Roles = "AMBIENTAL")]
     public Task<IActionResult> Reactivar(Guid id, [FromBody] CambiarEstadoControlGeneracionRequest request, CancellationToken cancellationToken) =>
         CambiarEstado(id, "ACTIVO", request, cancellationToken);
-
-    [HttpPost("{id:guid}/cerrar")]
-    [Authorize(Roles = "AMBIENTAL")]
-    public Task<IActionResult> Cerrar(Guid id, [FromBody] CambiarEstadoControlGeneracionRequest request, CancellationToken cancellationToken) =>
-        CambiarEstado(id, "CERRADO", request, cancellationToken);
 
     [HttpPost("{id:guid}/anular")]
     [Authorize(Roles = "AMBIENTAL")]

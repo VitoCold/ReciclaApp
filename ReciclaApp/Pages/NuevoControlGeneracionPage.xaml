@@ -12,14 +12,14 @@
                     <TapGestureRecognizer Tapped="OnBackTapped" />
                 </Label.GestureRecognizers>
             </Label>
-            <Label Grid.Column="1" Text="Nuevo control" Style="{StaticResource HeaderTitle}" />
+            <Label x:Name="HeaderTitleLabel" Grid.Column="1" Text="Nuevo control" Style="{StaticResource HeaderTitle}" />
         </Grid>
 
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Padding="18,18,18,30" Spacing="14">
                 <VerticalStackLayout Spacing="3">
-                    <Label Text="Control de generación" Style="{StaticResource PageTitle}" FontSize="22" />
-                    <Label Text="Define el ámbito del trabajo que será enviado a Ambiental para aprobación." Style="{StaticResource MutedText}" />
+                    <Label x:Name="PageTitleLabel" Text="Control de generación" Style="{StaticResource PageTitle}" FontSize="22" />
+                    <Label x:Name="PageHintLabel" Text="Prepara la información y el equipo. El control quedará en borrador hasta que decidas enviarlo a revisión." Style="{StaticResource MutedText}" />
                 </VerticalStackLayout>
 
                 <Border x:Name="ErrorBorder" IsVisible="False" BackgroundColor="{StaticResource ColorDangerSoft}" Stroke="Transparent" StrokeShape="RoundRectangle 12" Padding="12,9">
@@ -93,11 +93,11 @@
                     </Border>
                 </VerticalStackLayout>
 
-                <Border BackgroundColor="{StaticResource ColorWarningSoft}" Stroke="Transparent" StrokeShape="RoundRectangle 12" Padding="12">
-                    <Label Text="Al guardar, el control quedará pendiente de aprobación. El registro de residuos se habilitará cuando Ambiental lo apruebe." TextColor="{StaticResource ColorWarning}" FontSize="12" />
+                <Border x:Name="EstadoEdicionBorder" BackgroundColor="{StaticResource ColorWarningSoft}" Stroke="Transparent" StrokeShape="RoundRectangle 12" Padding="12">
+                    <Label x:Name="EstadoEdicionLabel" Text="Al guardar, el control permanecerá en borrador. Desde el detalle podrás completar el equipo y enviarlo a revisión." TextColor="{StaticResource ColorWarning}" FontSize="12" />
                 </Border>
 
-                <Button x:Name="GuardarButton" Text="Enviar para aprobación" Style="{StaticResource PrimaryButton}" Clicked="OnGuardarClicked" />
+                <Button x:Name="GuardarButton" Text="Guardar borrador" Style="{StaticResource PrimaryButton}" Clicked="OnGuardarClicked" />
                 <ActivityIndicator x:Name="ActivityIndicator" IsVisible="False" IsRunning="False" HorizontalOptions="Center" />
             </VerticalStackLayout>
         </ScrollView>

@@ -122,32 +122,103 @@ public partial class ControlGeneracionDetallePage : ContentPage
 
         var esResponsableControl = asignacionResponsable is not null;
         var esParticipante = asignacionOperativa?.RolControl is "RESPONSABLE" or "REGISTRADOR";
-        var pendiente = control.EstadoCodigo == "PENDIENTE_APROBACION";
+
+        var borrador = control.EstadoCodigo == "BORRADOR";
+        var observado = control.EstadoCodigo == "OBSERVADO";
+        var pendienteRevision = control.EstadoCodigo == "PENDIENTE_REVISION";
+        var aprobado = control.EstadoCodigo == "APROBADO";
+        var activo = control.EstadoCodigo == "ACTIVO";
         var dentroVigencia = hoy >= control.FechaInicio.Date &&
             (!control.FechaFin.HasValue || hoy <= control.FechaFin.Value.Date);
 
-        AmbientalActions.IsVisible = esAmbiental && pendiente;
-        AprobarButton.IsVisible = esAmbiental && pendiente;
-        RechazarButton.IsVisible = esAmbiental && pendiente;
-        GestionarEquipoButton.IsVisible = esResponsableControl && control.EstadoCodigo is not ("CERRADO" or "ANULADO");
-        RegistrarButton.IsVisible = esParticipante && control.EstadoCodigo == "ACTIVO" && dentroVigencia;
+        var puedePreparar = esResponsableControl && (borrador || observado);
+
+        ResponsableActions.IsVisible = puedePreparar;
+        EditarControlButton.IsVisible = puedePreparar;
+        EnviarRevisionButton.IsVisible = puedePreparar;
+
+        AmbientalActions.IsVisible = esAmbiental && pendienteRevision;
+        AprobarButton.IsVisible = esAmbiental && pendienteRevision;
+        ObservarButton.IsVisible = esAmbiental && pendienteRevision;
+
+        OperativeActions.IsVisible = esParticipante && (aprobado || activo);
+        IniciarButton.IsVisible = esParticipante && aprobado && dentroVigencia;
+        RegistrarButton.IsVisible = esParticipante && activo && dentroVigencia;
+        FinalizarButton.IsVisible = esResponsableControl && activo;
+
+        var puedeGestionarEquipo = esResponsableControl &&
+            (borrador || observado || aprobado || activo);
+        GestionarEquipoButton.IsVisible = puedeGestionarEquipo;
+    }
+
+    private async void OnEditarControlClicked(object sender, EventArgs e) =>
+        await AppNavigator.IrAEditarControlGeneracionAsync(_controlId);
+
+    private async void OnEnviarRevisionClicked(object sender, EventArgs e)
+    {
+        if (!await DisplayAlert(
+                "Enviar a revisión",
+                "El control y el equipo quedarán bloqueados para revisión Ambiental. ¿Deseas continuar?",
+                "Enviar",
+                "Cancelar"))
+            return;
+
+        await EjecutarAccionAsync(async api => await api.EnviarControlGeneracionARevisionAsync(_controlId));
     }
 
     private async void OnAprobarClicked(object sender, EventArgs e)
     {
-        if (!await DisplayAlert("Aprobar control", "¿Confirmas que este control puede iniciar el registro de residuos?", "Aprobar", "Cancelar"))
+        if (!await DisplayAlert(
+                "Aprobar control",
+                "Se aprobará el control y el equipo propuesto. La actividad aún deberá iniciarse antes de registrar residuos. ¿Confirmas?",
+                "Aprobar",
+                "Cancelar"))
             return;
 
         await EjecutarAccionAsync(async api => await api.AprobarControlGeneracionAsync(_controlId));
     }
 
-    private async void OnRechazarClicked(object sender, EventArgs e)
+    private async void OnObservarClicked(object sender, EventArgs e)
     {
-        var motivo = await DisplayPromptAsync("Rechazar control", "Indica el motivo para que el responsable conozca la observación:", "Rechazar", "Cancelar", "Motivo obligatorio", maxLength: 300);
+        var motivo = await DisplayPromptAsync(
+            "Observar control",
+            "Indica qué debe corregir el responsable:",
+            "Observar",
+            "Cancelar",
+            "Observación obligatoria",
+            maxLength: 300);
+
         if (string.IsNullOrWhiteSpace(motivo))
             return;
 
-        await EjecutarAccionAsync(async api => await api.RechazarControlGeneracionAsync(_controlId, new RechazarControlGeneracionRequest(motivo.Trim())));
+        await EjecutarAccionAsync(async api =>
+            await api.ObservarControlGeneracionAsync(
+                _controlId,
+                new RechazarControlGeneracionRequest(motivo.Trim())));
+    }
+
+    private async void OnIniciarClicked(object sender, EventArgs e)
+    {
+        if (!await DisplayAlert(
+                "Iniciar actividad",
+                "Al iniciar se habilitará el registro de residuos para el personal autorizado. ¿Confirmas?",
+                "Iniciar",
+                "Cancelar"))
+            return;
+
+        await EjecutarAccionAsync(async api => await api.IniciarControlGeneracionAsync(_controlId));
+    }
+
+    private async void OnFinalizarClicked(object sender, EventArgs e)
+    {
+        if (!await DisplayAlert(
+                "Finalizar actividad",
+                "Después de finalizar no podrán crearse nuevos residuos. Los residuos ya registrados continuarán su gestión. ¿Confirmas?",
+                "Finalizar",
+                "Cancelar"))
+            return;
+
+        await EjecutarAccionAsync(async api => await api.FinalizarControlGeneracionAsync(_controlId));
     }
 
     private async Task EjecutarAccionAsync(Func<IReciclaApiClient, Task<ControlGeneracionDetalleDto>> accion)

@@ -56,7 +56,7 @@ public partial class ControlesGeneracionPage : ContentPage
                 : "Controles creados por ti o con una asignación vigente";
         NuevoControlButton.IsVisible = esResponsable;
         EmptyHintLabel.Text = esResponsable
-            ? "Crea un control para solicitar la aprobación de Ambiental."
+            ? "Crea un control, completa el equipo y envíalo a revisión Ambiental."
             : accesoGlobal
                 ? "Los controles creados por los responsables aparecerán aquí."
                 : "Cuando te asignen a un control aparecerá aquí.";

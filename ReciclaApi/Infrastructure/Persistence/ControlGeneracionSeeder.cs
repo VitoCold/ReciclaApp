@@ -8,6 +8,7 @@ public static class ControlGeneracionSeeder
     public static async Task SeedAsync(ReciclaDbContext context, CancellationToken cancellationToken = default)
     {
         await EnsureRolesAsync(context, cancellationToken);
+        await NormalizeLegacyStatesAsync(context, cancellationToken);
         await EnsureStatesAsync(context, cancellationToken);
         await EnsureBaseCompanyAsync(context, cancellationToken);
         await MigrateLegacyRoleAssignmentsAsync(context, cancellationToken);
@@ -30,17 +31,60 @@ public static class ControlGeneracionSeeder
         await context.SaveChangesAsync(cancellationToken);
     }
 
+    private static async Task NormalizeLegacyStatesAsync(ReciclaDbContext context, CancellationToken cancellationToken)
+    {
+        var mappings = new (string Legacy, string Current, string Nombre)[]
+        {
+            ("PENDIENTE_APROBACION", "PENDIENTE_REVISION", "Pendiente de revisión"),
+            ("RECHAZADO", "OBSERVADO", "Observado"),
+            ("CERRADO", "FINALIZADO", "Finalizado")
+        };
+
+        foreach (var (legacyCode, currentCode, currentName) in mappings)
+        {
+            var legacy = await context.Set<EstadoControlGeneracion>()
+                .FirstOrDefaultAsync(x => x.Codigo == legacyCode, cancellationToken);
+            if (legacy is null)
+                continue;
+
+            var current = await context.Set<EstadoControlGeneracion>()
+                .FirstOrDefaultAsync(x => x.Codigo == currentCode, cancellationToken);
+
+            if (current is null)
+            {
+                legacy.Codigo = currentCode;
+                legacy.Nombre = currentName;
+                continue;
+            }
+
+            var controles = await context.Set<ControlGeneracion>()
+                .Where(x => x.EstadoControlGeneracionId == legacy.EstadoControlGeneracionId)
+                .ToListAsync(cancellationToken);
+
+            foreach (var control in controles)
+                control.EstadoControlGeneracionId = current.EstadoControlGeneracionId;
+
+            context.Set<EstadoControlGeneracion>().Remove(legacy);
+        }
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
     private static async Task EnsureStatesAsync(ReciclaDbContext context, CancellationToken cancellationToken)
     {
         var states = await context.Set<EstadoControlGeneracion>()
             .Select(x => x.Codigo)
             .ToListAsync(cancellationToken);
 
-        AddStateIfMissing(context, states, "PENDIENTE_APROBACION", "Pendiente de aprobación");
+        AddStateIfMissing(context, states, "BORRADOR", "Borrador");
+        AddStateIfMissing(context, states, "PENDIENTE_REVISION", "Pendiente de revisión");
+        AddStateIfMissing(context, states, "OBSERVADO", "Observado");
+        AddStateIfMissing(context, states, "APROBADO", "Aprobado");
         AddStateIfMissing(context, states, "ACTIVO", "Activo");
-        AddStateIfMissing(context, states, "RECHAZADO", "Rechazado");
+        AddStateIfMissing(context, states, "FINALIZADO", "Finalizado");
+
+        // Estados excepcionales fuera del flujo normal.
         AddStateIfMissing(context, states, "SUSPENDIDO", "Suspendido");
-        AddStateIfMissing(context, states, "CERRADO", "Cerrado");
         AddStateIfMissing(context, states, "ANULADO", "Anulado");
     }
 
