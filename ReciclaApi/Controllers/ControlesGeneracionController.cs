@@ -98,7 +98,7 @@ public sealed class ControlesGeneracionController(
     }
 
     [HttpPost("{id:guid}/finalizar")]
-    [Authorize(Roles = "RESPONSABLE_OPERATIVO,REGISTRADOR")]
+    [Authorize(Roles = "RESPONSABLE_OPERATIVO")]
     public async Task<IActionResult> Finalizar(Guid id, CancellationToken cancellationToken)
     {
         var result = await controlService.FinalizarAsync(id, UsuarioId, cancellationToken);
