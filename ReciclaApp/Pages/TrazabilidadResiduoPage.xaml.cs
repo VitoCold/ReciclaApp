@@ -73,7 +73,7 @@ public partial class TrazabilidadResiduoPage : ContentPage
                 .Select(x => new EventoVisual(
                     Icono(x.TipoCodigo),
                     x.Titulo,
-                    x.Fecha.ToLocalTime().ToString("dd/MM/yyyy HH:mm"),
+                    x.Fecha.ToString("dd/MM/yyyy HH:mm"),
                     string.IsNullOrWhiteSpace(x.Estado) ? string.Empty : x.Estado,
                     x.Cantidad.HasValue && !string.IsNullOrWhiteSpace(x.Unidad)
                         ? $"{x.Cantidad.Value:0.###} {x.Unidad}"
