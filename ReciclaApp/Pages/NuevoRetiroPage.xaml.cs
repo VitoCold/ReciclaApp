@@ -35,8 +35,7 @@ public partial class NuevoRetiroPage : ContentPage
         }
 
         var usuario = session.CurrentUser;
-        var puedeCrear = usuario?.Roles.Contains("AMBIENTAL") == true ||
-                         usuario?.Roles.Contains("RESPONSABLE_OPERATIVO") == true;
+        var puedeCrear = usuario?.Roles.Contains("AMBIENTAL") == true;
         if (!puedeCrear)
         {
             MostrarError("Tu rol no tiene permiso para registrar retiros.");
@@ -178,8 +177,9 @@ public partial class NuevoRetiroPage : ContentPage
                 OrigenTexto = $"{x.Item.ControlCodigo} · {x.Item.RegistradoPor}",
                 Unidad = x.Item.Unidad,
                 DisponiblePunto = x.Ubicacion!.Cantidad,
-                DisponibleTexto = $"Disponible en almacén: {x.Ubicacion.Cantidad:0.###} {x.Item.Unidad}",
-                CantidadTexto = x.Ubicacion.Cantidad.ToString("0.###", CultureInfo.CurrentCulture)
+                DisponibleTexto = $"Saldo estimado en almacén: {x.Ubicacion.Cantidad:0.###} {x.Item.Unidad}",
+                TipoRetiro = "PARCIAL",
+                PesoEorsTexto = string.Empty
             })
             .OrderBy(x => x.Residuo)
             .ToArray();
@@ -230,20 +230,33 @@ public partial class NuevoRetiroPage : ContentPage
         var detalles = new List<CrearRetiroDetalleRequest>();
         foreach (var item in seleccionados)
         {
-            if (!TryParseDecimal(item.CantidadTexto, out var cantidad) || cantidad <= 0 || cantidad > item.DisponiblePunto)
+            if (!TryParseDecimal(item.PesoEorsTexto, out var pesoEors) || pesoEors <= 0)
             {
-                MostrarError($"La cantidad de {item.Residuo} debe estar entre 0 y {item.DisponiblePunto:0.###} {item.Unidad}.");
+                MostrarError($"Ingresa el peso reportado por la EO-RS para {item.Residuo}.");
                 return;
             }
 
-            detalles.Add(new CrearRetiroDetalleRequest(item.RegistroResiduoId, cantidad));
+            var tipo = item.TipoRetiro?.Trim().ToUpperInvariant();
+            if (tipo is not ("PARCIAL" or "TOTAL"))
+            {
+                MostrarError($"Indica si el retiro de {item.Residuo} es PARCIAL o TOTAL.");
+                return;
+            }
+
+            if (tipo == "PARCIAL" && pesoEors >= item.DisponiblePunto)
+            {
+                MostrarError($"El peso de {item.Residuo} consume o supera el saldo estimado. Si la EO-RS se llevó todo lo existente, marca el retiro como TOTAL.");
+                return;
+            }
+
+            detalles.Add(new CrearRetiroDetalleRequest(item.RegistroResiduoId, pesoEors, tipo));
         }
 
         var fecha = FechaPicker.Date.Date + HoraPicker.Time;
         var totales = seleccionados
-            .Select((x, i) => new { x.Unidad, Cantidad = detalles[i].Cantidad })
+            .Select((x, i) => new { x.Unidad, PesoEors = detalles[i].PesoEors })
             .GroupBy(x => x.Unidad)
-            .Select(g => $"{g.Sum(x => x.Cantidad):0.###} {g.Key}");
+            .Select(g => $"{g.Sum(x => x.PesoEors):0.###} {g.Key} según balanza EO-RS");
 
         var confirmar = await DisplayAlert(
             "Confirmar retiro",
@@ -350,7 +363,9 @@ public partial class NuevoRetiroPage : ContentPage
         public string Unidad { get; init; } = string.Empty;
         public decimal DisponiblePunto { get; init; }
         public string DisponibleTexto { get; init; } = string.Empty;
+        public IReadOnlyList<string> TiposRetiro { get; } = new[] { "PARCIAL", "TOTAL" };
         public bool Seleccionado { get; set; }
-        public string CantidadTexto { get; set; } = string.Empty;
+        public string TipoRetiro { get; set; } = "PARCIAL";
+        public string PesoEorsTexto { get; set; } = string.Empty;
     }
 }
