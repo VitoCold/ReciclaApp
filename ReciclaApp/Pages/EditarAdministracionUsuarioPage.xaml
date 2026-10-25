@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ReciclaApp.Pages.EditarAdministracionUsuarioPage"
+             Style="{StaticResource BasePage}"
+             Shell.NavBarIsVisible="False">
+    <Grid RowDefinitions="Auto,*">
+        <Grid Style="{StaticResource AppHeader}" ColumnDefinitions="Auto,*">
+            <Label Text="‹" TextColor="White" FontSize="34" VerticalOptions="Center">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </Label.GestureRecognizers>
+            </Label>
+            <Label x:Name="HeaderLabel" Grid.Column="1" Text="Nuevo usuario" Style="{StaticResource HeaderTitle}" />
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="18,18,18,34" Spacing="14">
+                <Border x:Name="ErrorBorder" IsVisible="False" BackgroundColor="{StaticResource ColorDangerSoft}" Stroke="Transparent" StrokeShape="RoundRectangle 12" Padding="12,9">
+                    <Label x:Name="ErrorLabel" TextColor="{StaticResource ColorDanger}" FontSize="12" />
+                </Border>
+
+                <ActivityIndicator x:Name="ActivityIndicator" IsVisible="False" IsRunning="False" HorizontalOptions="Center" />
+
+                <VerticalStackLayout x:Name="ContenidoLayout" Spacing="14">
+                    <Border Style="{StaticResource SoftCard}">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Datos de acceso" Style="{StaticResource SectionTitle}" />
+                            <Entry x:Name="UsuarioEntry" Placeholder="Usuario" />
+                            <Entry x:Name="NombresEntry" Placeholder="Nombres" />
+                            <Entry x:Name="ApellidosEntry" Placeholder="Apellidos" />
+                            <Entry x:Name="EmailEntry" Placeholder="Correo electrónico" Keyboard="Email" />
+
+                            <VerticalStackLayout x:Name="PasswordSection" Spacing="4">
+                                <Label Text="Contraseña temporal" Style="{StaticResource TinyMutedText}" />
+                                <Entry x:Name="PasswordEntry" Placeholder="Mínimo 8 caracteres" IsPassword="True" />
+                                <Label Text="El usuario deberá cambiarla al iniciar sesión." Style="{StaticResource TinyMutedText}" />
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Style="{StaticResource SoftCard}">
+                        <VerticalStackLayout Spacing="9">
+                            <Label Text="Roles" Style="{StaticResource SectionTitle}" />
+                            <Label Text="Selecciona al menos un rol." Style="{StaticResource TinyMutedText}" />
+                            <VerticalStackLayout x:Name="RolesStack" Spacing="4">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid ColumnDefinitions="Auto,*" Padding="0,4">
+                                            <CheckBox IsChecked="{Binding Seleccionado, Mode=TwoWay}" />
+                                            <VerticalStackLayout Grid.Column="1" Spacing="0" VerticalOptions="Center">
+                                                <Label Text="{Binding Nombre}" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                                <Label Text="{Binding Codigo}" Style="{StaticResource TinyMutedText}" />
+                                            </VerticalStackLayout>
+                                        </Grid>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Style="{StaticResource SoftCard}">
+                        <VerticalStackLayout Spacing="9">
+                            <Label Text="Sedes" Style="{StaticResource SectionTitle}" />
+                            <Label Text="Responsables y registradores requieren al menos una sede. Ambiental y Administrador tienen acceso global." Style="{StaticResource TinyMutedText}" />
+                            <VerticalStackLayout x:Name="SedesStack" Spacing="4">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid ColumnDefinitions="Auto,*" Padding="0,4">
+                                            <CheckBox IsChecked="{Binding Seleccionado, Mode=TwoWay}" />
+                                            <VerticalStackLayout Grid.Column="1" Spacing="0" VerticalOptions="Center">
+                                                <Label Text="{Binding Nombre}" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                                <Label Text="{Binding Codigo}" Style="{StaticResource TinyMutedText}" />
+                                            </VerticalStackLayout>
+                                        </Grid>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Button x:Name="GuardarButton" Text="Guardar usuario" Style="{StaticResource PrimaryButton}" Clicked="OnGuardarClicked" />
+
+                    <Button x:Name="RestablecerClaveButton"
+                            Text="Restablecer contraseña"
+                            Style="{StaticResource SmallPrimaryButton}"
+                            IsVisible="False"
+                            Clicked="OnRestablecerClaveClicked" />
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>
