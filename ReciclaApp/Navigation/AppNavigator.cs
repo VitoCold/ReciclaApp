@@ -16,6 +16,17 @@ public static class AppNavigator
 
     public static Task IrARegistrosAsync() => IrARaizAsync(AppRoutes.Registros);
 
+    public static Task IrAAdministracionAsync() => IrARaizAsync(AppRoutes.Administracion);
+
+    public static Task IrAAdministracionUsuariosAsync() =>
+        ApilarAsync(AppRoutes.AdministracionUsuarios);
+
+    public static Task IrANuevoAdministracionUsuarioAsync() =>
+        ApilarAsync(AppRoutes.EditarAdministracionUsuario);
+
+    public static Task IrAEditarAdministracionUsuarioAsync(Guid usuarioId) =>
+        ApilarAsync($"{AppRoutes.EditarAdministracionUsuario}?usuarioId={usuarioId}");
+
     public static Task IrAPerfilAsync() => IrARaizAsync(AppRoutes.Perfil);
 
     public static Task IrANuevoControlGeneracionAsync() => ApilarAsync(AppRoutes.NuevoControlGeneracion);
