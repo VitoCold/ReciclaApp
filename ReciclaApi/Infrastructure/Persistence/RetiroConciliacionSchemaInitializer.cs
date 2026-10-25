@@ -29,8 +29,19 @@ public sealed class RetiroConciliacionSchemaInitializer(
                 SET TipoRetiro = ISNULL(TipoRetiro, 'PARCIAL'),
                     SaldoEstimadoAntes = ISNULL(SaldoEstimadoAntes, Cantidad);
 
-                ALTER TABLE dbo.RetiroDetalles ALTER COLUMN TipoRetiro NVARCHAR(10) NOT NULL;
-                ALTER TABLE dbo.RetiroDetalles ALTER COLUMN SaldoEstimadoAntes DECIMAL(18,3) NOT NULL;
+                IF EXISTS (
+                    SELECT 1 FROM sys.columns
+                    WHERE object_id = OBJECT_ID(N'dbo.RetiroDetalles')
+                      AND name = 'TipoRetiro'
+                      AND is_nullable = 1)
+                    ALTER TABLE dbo.RetiroDetalles ALTER COLUMN TipoRetiro NVARCHAR(10) NOT NULL;
+
+                IF EXISTS (
+                    SELECT 1 FROM sys.columns
+                    WHERE object_id = OBJECT_ID(N'dbo.RetiroDetalles')
+                      AND name = 'SaldoEstimadoAntes'
+                      AND is_nullable = 1)
+                    ALTER TABLE dbo.RetiroDetalles ALTER COLUMN SaldoEstimadoAntes DECIMAL(18,3) NOT NULL;
 
                 IF NOT EXISTS (
                     SELECT 1 FROM sys.check_constraints
