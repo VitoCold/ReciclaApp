@@ -445,9 +445,9 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
         if (control is null)
             return ServiceResult<ControlGeneracionDetalleDto>.Fail("Control de generación no encontrado.", StatusCodes.Status404NotFound);
 
-        if (control.EstadoControlGeneracion.Codigo is not ("BORRADOR" or "OBSERVADO"))
+        if (control.EstadoControlGeneracion.Codigo is not ("BORRADOR" or "OBSERVADO" or "APROBADO" or "ACTIVO"))
             return ServiceResult<ControlGeneracionDetalleDto>.Fail(
-                "El equipo solo puede modificarse mientras el control está en borrador u observado.",
+                "El equipo solo puede modificarse en controles en borrador, observados, aprobados o activos.",
                 StatusCodes.Status409Conflict);
 
         var rolControl = request.RolControl.Trim().ToUpperInvariant();
@@ -526,9 +526,9 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
         if (asignacion is null)
             return ServiceResult.Fail("Asignación no encontrada.", StatusCodes.Status404NotFound);
 
-        if (asignacion.ControlGeneracion.EstadoControlGeneracion.Codigo is not ("BORRADOR" or "OBSERVADO"))
+        if (asignacion.ControlGeneracion.EstadoControlGeneracion.Codigo is not ("BORRADOR" or "OBSERVADO" or "APROBADO" or "ACTIVO"))
             return ServiceResult.Fail(
-                "El equipo solo puede modificarse mientras el control está en borrador u observado.",
+                "El equipo solo puede modificarse en controles en borrador, observados, aprobados o activos.",
                 StatusCodes.Status409Conflict);
 
         if (asignacion.RolControl == "RESPONSABLE")
