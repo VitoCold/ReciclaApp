@@ -37,8 +37,7 @@ public partial class StockResiduosPage : ContentPage
         {
             UsuarioHeaderLabel.Text = string.Join(" ", new[] { _usuario.Nombres, _usuario.Apellidos }
                 .Where(x => !string.IsNullOrWhiteSpace(x)));
-            CrearRetiroButton.IsVisible = _usuario.Roles.Contains("AMBIENTAL") ||
-                                          _usuario.Roles.Contains("RESPONSABLE_OPERATIVO");
+            CrearRetiroButton.IsVisible = _usuario.Roles.Contains("AMBIENTAL");
         }
 
         await CargarAsync(_inventario is null);
