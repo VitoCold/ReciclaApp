@@ -225,7 +225,13 @@ public sealed class ReporteResiduosService(
         var movimientos = await context.MovimientosResiduo
             .AsNoTracking()
             .Where(x => ids.Contains(x.RegistroResiduoId) && !x.Eliminado)
-            .Select(x => new { x.RegistroResiduoId, x.Cantidad })
+            .Select(x => new
+            {
+                x.RegistroResiduoId,
+                x.PuntoDestinoId,
+                x.FechaMovimiento,
+                x.Cantidad
+            })
             .ToListAsync(cancellationToken);
 
         var retiros = await context.RetiroDetalles
@@ -234,7 +240,15 @@ public sealed class ReporteResiduosService(
                 ids.Contains(x.RegistroResiduoId) &&
                 !x.Retiro.Eliminado &&
                 x.Retiro.EstadoRetiro.Codigo != "ANULADO")
-            .Select(x => new { x.RegistroResiduoId, x.Cantidad })
+            .Select(x => new
+            {
+                x.RegistroResiduoId,
+                x.Cantidad,
+                x.TipoRetiro,
+                x.Retiro.PuntoAlmacenamientoId,
+                x.Retiro.FechaRetiro,
+                x.Retiro.CreadoUtc
+            })
             .ToListAsync(cancellationToken);
 
         var ubicaciones = await context.Set<RegistroResiduoUbicacion>()
@@ -244,11 +258,43 @@ public sealed class ReporteResiduosService(
 
         var detalle = residuos.Select(x =>
         {
-            var movido = movimientos.Where(m => m.RegistroResiduoId == x.RegistroResiduoId).Sum(m => m.Cantidad);
-            var retirado = retiros.Where(r => r.RegistroResiduoId == x.RegistroResiduoId).Sum(r => r.Cantidad);
-            var saldo = Math.Max(0m, x.Cantidad - retirado);
-            var almacenado = Math.Max(0m, movido - retirado);
-            var pendiente = Math.Max(0m, Math.Min(saldo, x.Cantidad - movido));
+            var movimientosResiduo = movimientos
+                .Where(m => m.RegistroResiduoId == x.RegistroResiduoId)
+                .ToArray();
+            var retirosResiduo = retiros
+                .Where(r => r.RegistroResiduoId == x.RegistroResiduoId)
+                .ToArray();
+
+            var movido = movimientosResiduo.Sum(m => m.Cantidad);
+            var retirado = retirosResiduo.Sum(r => r.Cantidad);
+            var pendiente = Math.Max(0m, x.Cantidad - movido);
+
+            var almacenado = movimientosResiduo
+                .GroupBy(m => m.PuntoDestinoId)
+                .Sum(g =>
+                {
+                    var retirosPunto = retirosResiduo
+                        .Where(r => r.PuntoAlmacenamientoId == g.Key)
+                        .ToArray();
+                    var ultimoTotal = retirosPunto
+                        .Where(r => r.TipoRetiro == "TOTAL")
+                        .OrderByDescending(r => r.FechaRetiro)
+                        .ThenByDescending(r => r.CreadoUtc)
+                        .FirstOrDefault();
+
+                    if (ultimoTotal is null)
+                        return Math.Max(0m, g.Sum(m => m.Cantidad) - retirosPunto.Sum(r => r.Cantidad));
+
+                    var movidoDespues = g
+                        .Where(m => m.FechaMovimiento > ultimoTotal.FechaRetiro)
+                        .Sum(m => m.Cantidad);
+                    var retiradoDespues = retirosPunto
+                        .Where(r => r.FechaRetiro > ultimoTotal.FechaRetiro)
+                        .Sum(r => r.Cantidad);
+                    return Math.Max(0m, movidoDespues - retiradoDespues);
+                });
+
+            var saldo = pendiente + almacenado;
             ubicaciones.TryGetValue(x.RegistroResiduoId, out var ubicacion);
 
             var control = x.Registro.ControlGeneracion!;
