@@ -15,7 +15,6 @@ public partial class EditarAdministracionUsuarioPage : ContentPage
     private bool _loaded;
     private AdministracionUsuarioDto? _usuario;
     private List<RolSeleccion> _roles = [];
-    private List<SedeSeleccion> _sedes = [];
 
     public string UsuarioId
     {
@@ -76,16 +75,7 @@ public partial class EditarAdministracionUsuarioPage : ContentPage
                     _usuario?.Roles.Any(r => r.RolId == x.RolId) == true))
                 .ToList();
 
-            _sedes = catalogos.Sedes
-                .Select(x => new SedeSeleccion(
-                    x.SedeId,
-                    x.Codigo,
-                    x.Nombre,
-                    _usuario?.Sedes.Any(s => s.SedeId == x.SedeId) == true))
-                .ToList();
-
             BindableLayout.SetItemsSource(RolesStack, _roles);
-            BindableLayout.SetItemsSource(SedesStack, _sedes);
 
             if (_usuario is null)
             {
@@ -148,14 +138,12 @@ public partial class EditarAdministracionUsuarioPage : ContentPage
             return;
         }
 
-        var sedes = _sedes.Where(x => x.Seleccionado).Select(x => x.SedeId).ToArray();
         var request = new GuardarAdministracionUsuarioRequest(
             usuario,
             nombres,
             ApellidosEntry.Text,
             EmailEntry.Text,
             roles,
-            sedes,
             _usuarioId == Guid.Empty ? PasswordEntry.Text : null);
 
         try
@@ -282,11 +270,4 @@ public partial class EditarAdministracionUsuarioPage : ContentPage
         public bool Seleccionado { get; set; } = seleccionado;
     }
 
-    private sealed class SedeSeleccion(Guid sedeId, string codigo, string nombre, bool seleccionado)
-    {
-        public Guid SedeId { get; } = sedeId;
-        public string Codigo { get; } = codigo;
-        public string Nombre { get; } = nombre;
-        public bool Seleccionado { get; set; } = seleccionado;
-    }
 }
