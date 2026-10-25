@@ -2,7 +2,8 @@ namespace Recicla.Shared.Contracts;
 
 public sealed record CrearRetiroDetalleRequest(
     Guid RegistroResiduoId,
-    decimal Cantidad);
+    decimal PesoEors,
+    string TipoRetiro);
 
 public sealed record CrearRetiroRequest(
     DateTime FechaRetiro,
@@ -43,7 +44,10 @@ public sealed record RetiroDetalleItemDto(
     string ControlCodigo,
     string Residuo,
     string Clasificacion,
-    decimal Cantidad,
+    decimal PesoEors,
+    string TipoRetiro,
+    decimal SaldoEstimadoAntes,
+    decimal? DiferenciaConciliacion,
     int UnidadMedidaId,
     string Unidad);
 
