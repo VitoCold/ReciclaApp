@@ -10,6 +10,10 @@ namespace ReciclaApi.Application.Services;
 public interface IInventarioResiduoService
 {
     Task<InventarioResiduosDto> ListarAsync(Guid usuarioId, CancellationToken cancellationToken = default);
+    Task<ServiceResult<TrazabilidadResiduoDto>> ObtenerTrazabilidadAsync(
+        Guid registroResiduoId,
+        Guid usuarioId,
+        CancellationToken cancellationToken = default);
     Task<ServiceResult<InventarioResiduoItemDto>> AlmacenarAsync(
         Guid registroResiduoId,
         Guid usuarioId,
@@ -42,6 +46,184 @@ public sealed class InventarioResiduoService(IUnitOfWork unitOfWork) : IInventar
             .ToArray();
 
         return new InventarioResiduosDto(resumen, visibles);
+    }
+
+    public async Task<ServiceResult<TrazabilidadResiduoDto>> ObtenerTrazabilidadAsync(
+        Guid registroResiduoId,
+        Guid usuarioId,
+        CancellationToken cancellationToken = default)
+    {
+        var residuo = await unitOfWork.Repository<RegistroResiduo>().Query()
+            .Where(x =>
+                x.RegistroResiduoId == registroResiduoId &&
+                !x.Eliminado &&
+                !x.Registro.Eliminado &&
+                x.Registro.ControlGeneracionId != null)
+            .Include(x => x.Registro).ThenInclude(x => x.ControlGeneracion)
+            .Include(x => x.Registro).ThenInclude(x => x.Sede)
+            .Include(x => x.Registro).ThenInclude(x => x.PuntoGeneracion)
+            .Include(x => x.Registro).ThenInclude(x => x.RegistradoPorUsuario)
+            .Include(x => x.Residuo).ThenInclude(x => x.ClasificacionResiduo)
+            .Include(x => x.UnidadMedida)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (residuo is null)
+            return ServiceResult<TrazabilidadResiduoDto>.Fail("Residuo no encontrado.", StatusCodes.Status404NotFound);
+
+        var esGlobal = await TieneRolAsync(usuarioId, "AMBIENTAL", cancellationToken) ||
+                       await TieneRolAsync(usuarioId, "ADMINISTRADOR", cancellationToken);
+
+        if (!esGlobal)
+        {
+            var now = DateTime.UtcNow;
+            var tieneAcceso = await unitOfWork.Repository<ControlGeneracionUsuario>().Query()
+                .AnyAsync(x =>
+                    x.ControlGeneracionId == residuo.Registro.ControlGeneracionId!.Value &&
+                    x.UsuarioId == usuarioId &&
+                    x.EsActivo &&
+                    x.FechaDesde <= now &&
+                    (!x.FechaHasta.HasValue || x.FechaHasta.Value >= now),
+                    cancellationToken);
+
+            if (!tieneAcceso)
+                return ServiceResult<TrazabilidadResiduoDto>.Fail("Residuo no encontrado o sin acceso.", StatusCodes.Status404NotFound);
+        }
+
+        var movimientos = await unitOfWork.Repository<MovimientoResiduo>().Query()
+            .Where(x => x.RegistroResiduoId == registroResiduoId && !x.Eliminado)
+            .Include(x => x.PuntoDestino)
+            .Include(x => x.RegistradoPorUsuario)
+            .OrderBy(x => x.FechaMovimiento)
+            .ToListAsync(cancellationToken);
+
+        var retiros = await unitOfWork.Repository<RetiroDetalle>().Query()
+            .Where(x =>
+                x.RegistroResiduoId == registroResiduoId &&
+                !x.Retiro.Eliminado &&
+                x.Retiro.EstadoRetiro.Codigo != "ANULADO")
+            .Include(x => x.Retiro).ThenInclude(x => x.EmpresaGestora)
+            .Include(x => x.Retiro).ThenInclude(x => x.PuntoAlmacenamiento)
+            .Include(x => x.Retiro).ThenInclude(x => x.EstadoRetiro)
+            .OrderBy(x => x.Retiro.FechaRetiro)
+            .ToListAsync(cancellationToken);
+
+        var retiroIds = retiros.Select(x => x.RetiroId).Distinct().ToArray();
+        var disposiciones = retiroIds.Length == 0
+            ? new List<DisposicionFinal>()
+            : await unitOfWork.Repository<DisposicionFinal>().Query()
+                .Where(x =>
+                    retiroIds.Contains(x.RetiroId) &&
+                    !x.Eliminado &&
+                    x.EstadoDisposicion.Codigo != "ANULADA")
+                .Include(x => x.TipoTratamiento)
+                .Include(x => x.EstadoDisposicion)
+                .Include(x => x.EmpresaGestora)
+                .Include(x => x.Evidencias.Where(e => !e.Eliminado))
+                .OrderBy(x => x.FechaDisposicion)
+                .ToListAsync(cancellationToken);
+
+        var eventos = new List<TrazabilidadResiduoEventoDto>
+        {
+            new(
+                residuo.Registro.FechaRegistro,
+                "GENERACION",
+                "Generación y registro",
+                "REGISTRADO",
+                residuo.Cantidad,
+                residuo.UnidadMedida.Codigo,
+                $"Registrado por {NombreUsuario(residuo.Registro.RegistradoPorUsuario)}" +
+                (residuo.Registro.PuntoGeneracion is null
+                    ? string.Empty
+                    : $" · Punto: {residuo.Registro.PuntoGeneracion.Nombre}"))
+        };
+
+        eventos.AddRange(movimientos.Select(x => new TrazabilidadResiduoEventoDto(
+            x.FechaMovimiento,
+            "ALMACENAMIENTO",
+            "Traslado a almacén temporal",
+            "ALMACENADO",
+            x.Cantidad,
+            residuo.UnidadMedida.Codigo,
+            $"{x.PuntoDestino.Nombre} · Registrado por {NombreUsuario(x.RegistradoPorUsuario)}")));
+
+        foreach (var detalle in retiros)
+        {
+            var textoConciliacion = detalle.TipoRetiro == "TOTAL"
+                ? $"Saldo estimado antes: {detalle.SaldoEstimadoAntes:0.###} {residuo.UnidadMedida.Codigo} · Diferencia de conciliación: {(detalle.DiferenciaConciliacion ?? 0):+0.###;-0.###;0} {residuo.UnidadMedida.Codigo} · Saldo operativo: 0"
+                : $"Saldo estimado antes: {detalle.SaldoEstimadoAntes:0.###} {residuo.UnidadMedida.Codigo} · Saldo estimado después: {Math.Max(0m, detalle.SaldoEstimadoAntes - detalle.Cantidad):0.###} {residuo.UnidadMedida.Codigo}";
+
+            eventos.Add(new TrazabilidadResiduoEventoDto(
+                detalle.Retiro.FechaRetiro,
+                "RETIRO",
+                $"Retiro EO-RS · {detalle.TipoRetiro}",
+                detalle.Retiro.EstadoRetiro.Codigo,
+                detalle.Cantidad,
+                residuo.UnidadMedida.Codigo,
+                $"{detalle.Retiro.Codigo} · EO-RS: {NombreEmpresa(detalle.Retiro.EmpresaGestora)} · {textoConciliacion}"));
+
+            foreach (var disposicion in disposiciones.Where(x => x.RetiroId == detalle.RetiroId))
+            {
+                var fechaEvento = disposicion.FechaDisposicion ?? disposicion.CreadoUtc;
+                eventos.Add(new TrazabilidadResiduoEventoDto(
+                    fechaEvento,
+                    "DESTINO_FINAL",
+                    disposicion.TipoTratamiento.EsValorizacion ? "Valorización" : "Destino final / tratamiento",
+                    disposicion.EstadoDisposicion.Codigo,
+                    null,
+                    null,
+                    $"{disposicion.TipoTratamiento.Nombre} · {NombreEmpresa(disposicion.EmpresaGestora)} · {disposicion.Evidencias.Count} evidencia(s)" +
+                    (string.IsNullOrWhiteSpace(disposicion.CodigoDocumento)
+                        ? string.Empty
+                        : $" · Documento: {disposicion.CodigoDocumento}")));
+            }
+        }
+
+        var ultimoTotal = retiros
+            .Where(x => x.TipoRetiro == "TOTAL")
+            .OrderByDescending(x => x.Retiro.FechaRetiro)
+            .ThenByDescending(x => x.CreadoUtc)
+            .FirstOrDefault();
+
+        var hayOperacionPosteriorAlTotal = ultimoTotal is not null &&
+            (movimientos.Any(x => x.FechaMovimiento > ultimoTotal.Retiro.FechaRetiro) ||
+             retiros.Any(x => x.Retiro.FechaRetiro > ultimoTotal.Retiro.FechaRetiro));
+
+        var cierreCompleto = ultimoTotal is not null &&
+            !hayOperacionPosteriorAlTotal &&
+            disposiciones.Any(x =>
+                x.RetiroId == ultimoTotal.RetiroId &&
+                x.EstadoDisposicion.Codigo == "VALIDADA");
+
+        var estadoActual = cierreCompleto
+            ? "Cierre documental completo"
+            : ultimoTotal is not null
+                ? "Retirado · documentación pendiente"
+                : retiros.Count > 0
+                    ? "Retiro parcial"
+                    : movimientos.Count > 0
+                        ? "En almacén temporal"
+                        : "Generado";
+
+        var dto = new TrazabilidadResiduoDto(
+            residuo.RegistroResiduoId,
+            residuo.Residuo.Nombre,
+            residuo.Residuo.ClasificacionResiduo.Nombre,
+            residuo.Registro.ControlGeneracion?.Codigo ?? "Control",
+            residuo.Registro.Sede.Nombre,
+            residuo.Cantidad,
+            residuo.UnidadMedida.Codigo,
+            estadoActual,
+            cierreCompleto,
+            eventos
+                // La disposición final captura fecha calendario, no hora.
+                // Para eventos del mismo día, respetamos la secuencia real del proceso
+                // y dentro de cada etapa conservamos la hora cuando existe.
+                .OrderBy(x => x.Fecha.Date)
+                .ThenBy(x => OrdenEvento(x.TipoCodigo))
+                .ThenBy(x => x.Fecha)
+                .ToArray());
+
+        return ServiceResult<TrazabilidadResiduoDto>.Ok(dto);
     }
 
     public async Task<ServiceResult<InventarioResiduoItemDto>> AlmacenarAsync(
@@ -330,6 +512,24 @@ public sealed class InventarioResiduoService(IUnitOfWork unitOfWork) : IInventar
                 : cantidadPendiente > 0
                     ? "Traslado parcial"
                     : "En almacén temporal";
+
+    private static int OrdenEvento(string tipo) => tipo switch
+    {
+        "GENERACION" => 1,
+        "ALMACENAMIENTO" => 2,
+        "RETIRO" => 3,
+        "DESTINO_FINAL" => 4,
+        _ => 99
+    };
+
+    private static string NombreUsuario(Usuario usuario) =>
+        string.Join(" ", new[] { usuario.Nombres, usuario.Apellidos }
+            .Where(x => !string.IsNullOrWhiteSpace(x)));
+
+    private static string NombreEmpresa(Empresa empresa) =>
+        string.IsNullOrWhiteSpace(empresa.NombreComercial)
+            ? empresa.RazonSocial
+            : empresa.NombreComercial;
 
     private Task<bool> TieneRolAsync(Guid usuarioId, string rol, CancellationToken cancellationToken) =>
         unitOfWork.Repository<UsuarioRol>().Query()

@@ -44,3 +44,25 @@ public sealed record AlmacenarResiduoRequest(
     decimal Cantidad,
     DateTime FechaMovimiento,
     string? Observacion);
+
+
+public sealed record TrazabilidadResiduoEventoDto(
+    DateTime Fecha,
+    string TipoCodigo,
+    string Titulo,
+    string? Estado,
+    decimal? Cantidad,
+    string? Unidad,
+    string Detalle);
+
+public sealed record TrazabilidadResiduoDto(
+    Guid RegistroResiduoId,
+    string Residuo,
+    string Clasificacion,
+    string ControlCodigo,
+    string Sede,
+    decimal CantidadGenerada,
+    string Unidad,
+    string EstadoActual,
+    bool CierreDocumentalCompleto,
+    IReadOnlyCollection<TrazabilidadResiduoEventoDto> Eventos);

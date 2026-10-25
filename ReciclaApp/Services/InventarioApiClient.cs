@@ -6,6 +6,9 @@ namespace ReciclaApp.Services;
 public interface IInventarioApiClient
 {
     Task<InventarioResiduosDto> ObtenerAsync(CancellationToken cancellationToken = default);
+    Task<TrazabilidadResiduoDto> ObtenerTrazabilidadAsync(
+        Guid registroResiduoId,
+        CancellationToken cancellationToken = default);
     Task<InventarioResiduoItemDto> AlmacenarAsync(
         Guid registroResiduoId,
         AlmacenarResiduoRequest request,
@@ -18,6 +21,16 @@ public sealed class InventarioApiClient(HttpClient httpClient) : IInventarioApiC
     {
         var response = await httpClient.GetAsync("api/inventario-residuos", cancellationToken);
         return await ReadAsync<InventarioResiduosDto>(response, cancellationToken);
+    }
+
+    public async Task<TrazabilidadResiduoDto> ObtenerTrazabilidadAsync(
+        Guid registroResiduoId,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.GetAsync(
+            $"api/inventario-residuos/{registroResiduoId}/trazabilidad",
+            cancellationToken);
+        return await ReadAsync<TrazabilidadResiduoDto>(response, cancellationToken);
     }
 
     public async Task<InventarioResiduoItemDto> AlmacenarAsync(

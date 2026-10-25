@@ -293,6 +293,12 @@ public partial class StockResiduosPage : ContentPage
 
     private async void OnCrearRetiroClicked(object sender, EventArgs e) => await AppNavigator.IrANuevoRetiroAsync();
 
+    private async void OnVerTrazabilidadClicked(object sender, EventArgs e)
+    {
+        if (sender is Button button && TryGetGuid(button.CommandParameter, out var registroResiduoId))
+            await AppNavigator.IrATrazabilidadResiduoAsync(registroResiduoId);
+    }
+
     private async void OnRefreshRequested(object sender, EventArgs e) => await CargarAsync(false);
 
     private async void OnReintentarTapped(object sender, TappedEventArgs e) => await CargarAsync(_inventario is null);
