@@ -362,8 +362,8 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
         Guid usuarioId,
         CancellationToken cancellationToken = default)
     {
-        if (!await EsParticipanteOperativoActivoAsync(controlId, usuarioId, cancellationToken))
-            return ServiceResult<ControlGeneracionDetalleDto>.Fail("Solo personal operativo vigente del control puede finalizar la actividad.", StatusCodes.Status403Forbidden);
+        if (!await EsResponsableActivoAsync(controlId, usuarioId, cancellationToken))
+            return ServiceResult<ControlGeneracionDetalleDto>.Fail("Solo un responsable vigente del control puede finalizar la actividad.", StatusCodes.Status403Forbidden);
 
         var control = await QueryControles(tracking: true)
             .FirstOrDefaultAsync(x => x.ControlGeneracionId == controlId && !x.Eliminado, cancellationToken);
