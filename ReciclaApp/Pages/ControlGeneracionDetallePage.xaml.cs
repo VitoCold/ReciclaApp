@@ -144,7 +144,7 @@ public partial class ControlGeneracionDetallePage : ContentPage
         OperativeActions.IsVisible = esParticipante && (aprobado || activo);
         IniciarButton.IsVisible = esParticipante && aprobado && dentroVigencia;
         RegistrarButton.IsVisible = esParticipante && activo && dentroVigencia;
-        FinalizarButton.IsVisible = esParticipante && activo;
+        FinalizarButton.IsVisible = esResponsableControl && activo;
 
         // El equipo aprobado queda congelado. Los cambios durante ACTIVO
         // tendrán su propio flujo de validación Ambiental.
