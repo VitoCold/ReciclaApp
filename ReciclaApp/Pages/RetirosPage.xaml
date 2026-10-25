@@ -26,7 +26,7 @@
             <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="12">
                 <VerticalStackLayout Spacing="2">
                     <Label Text="Retiros de residuos" Style="{StaticResource PageTitle}" FontSize="22" />
-                    <Label Text="Salidas agrupadas desde el almacenamiento temporal" Style="{StaticResource MutedText}" />
+                    <Label Text="Retiros efectivamente ejecutados desde el almacenamiento temporal" Style="{StaticResource MutedText}" />
                 </VerticalStackLayout>
                 <Button x:Name="NuevoRetiroButton"
                         Grid.Column="1"

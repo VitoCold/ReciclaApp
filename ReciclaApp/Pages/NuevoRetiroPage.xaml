@@ -12,14 +12,14 @@
                     <TapGestureRecognizer Tapped="OnBackTapped" />
                 </Label.GestureRecognizers>
             </Label>
-            <Label Grid.Column="1" Text="Nuevo retiro" Style="{StaticResource HeaderTitle}" />
+            <Label Grid.Column="1" Text="Registrar retiro" Style="{StaticResource HeaderTitle}" />
         </Grid>
 
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Padding="18,18,18,34" Spacing="14">
                 <VerticalStackLayout Spacing="2">
-                    <Label Text="Retiro agrupado" Style="{StaticResource PageTitle}" FontSize="22" />
-                    <Label Text="Selecciona un almacén y los residuos que saldrán con el gestor." Style="{StaticResource MutedText}" />
+                    <Label Text="Retiro realizado" Style="{StaticResource PageTitle}" FontSize="22" />
+                    <Label Text="Registra la salida efectiva de residuos desde el almacén temporal hacia la EO-RS." Style="{StaticResource MutedText}" />
                 </VerticalStackLayout>
 
                 <Border x:Name="ErrorBorder" IsVisible="False" BackgroundColor="{StaticResource ColorDangerSoft}" Stroke="Transparent" StrokeShape="RoundRectangle 12" Padding="12,9">
@@ -41,9 +41,9 @@
                                 Title="Selecciona un almacén"
                                 ItemDisplayBinding="{Binding Nombre}"
                                 SelectedIndexChanged="OnPuntoChanged" />
-                        <Label Text="Empresa gestora" Style="{StaticResource TinyMutedText}" />
+                        <Label Text="EO-RS" Style="{StaticResource TinyMutedText}" />
                         <Picker x:Name="GestorPicker"
-                                Title="Selecciona un gestor"
+                                Title="Selecciona la EO-RS"
                                 ItemDisplayBinding="{Binding Nombre}" />
                     </VerticalStackLayout>
                 </Border>
@@ -64,23 +64,35 @@
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate>
                                     <Border Stroke="#E5E7EB" StrokeShape="RoundRectangle 10" Padding="10" Margin="0,0,0,8">
-                                        <Grid ColumnDefinitions="Auto,*,90" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="4">
-                                            <CheckBox IsChecked="{Binding Seleccionado, Mode=TwoWay}"
+                                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="10" RowSpacing="7">
+                                            <CheckBox Grid.RowSpan="3"
+                                                      IsChecked="{Binding Seleccionado, Mode=TwoWay}"
                                                       CheckedChanged="OnSeleccionChanged"
                                                       VerticalOptions="Center" />
                                             <VerticalStackLayout Grid.Column="1" Spacing="1">
                                                 <Label Text="{Binding Residuo}" FontSize="13" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
                                                 <Label Text="{Binding OrigenTexto}" FontSize="10" TextColor="{StaticResource ColorMuted}" />
                                             </VerticalStackLayout>
-                                            <Entry Grid.Column="2"
-                                                   Text="{Binding CantidadTexto, Mode=TwoWay}"
-                                                   Keyboard="Numeric"
-                                                   HorizontalTextAlignment="End"
-                                                   Placeholder="Cantidad" />
-                                            <Label Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
+
+                                            <Label Grid.Row="1" Grid.Column="1"
                                                    Text="{Binding DisponibleTexto}"
                                                    FontSize="10"
                                                    TextColor="{StaticResource ColorPrimary}" />
+
+                                            <Grid Grid.Row="2" Grid.Column="1" ColumnDefinitions="*,*" ColumnSpacing="8">
+                                                <VerticalStackLayout Spacing="2">
+                                                    <Label Text="Tipo de retiro" Style="{StaticResource TinyMutedText}" />
+                                                    <Picker ItemsSource="{Binding TiposRetiro}"
+                                                            SelectedItem="{Binding TipoRetiro, Mode=TwoWay}" />
+                                                </VerticalStackLayout>
+                                                <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                                    <Label Text="Peso EO-RS" Style="{StaticResource TinyMutedText}" />
+                                                    <Entry Text="{Binding PesoEorsTexto, Mode=TwoWay}"
+                                                           Keyboard="Numeric"
+                                                           HorizontalTextAlignment="End"
+                                                           Placeholder="Peso balanza" />
+                                                </VerticalStackLayout>
+                                            </Grid>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>
@@ -111,7 +123,7 @@
                 </Border>
 
                 <Button x:Name="GuardarButton"
-                        Text="Confirmar retiro"
+                        Text="Registrar retiro"
                         Style="{StaticResource PrimaryButton}"
                         Clicked="OnGuardarClicked" />
             </VerticalStackLayout>

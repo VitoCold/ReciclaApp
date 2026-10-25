@@ -90,6 +90,7 @@ builder.Services.AddScoped<IDisposicionFinalService, DisposicionFinalService>();
 builder.Services.AddScoped<IReporteResiduosService, ReporteResiduosService>();
 builder.Services.AddScoped<DatabaseInitializer>();
 builder.Services.AddScoped<RegistroResiduoUbicacionSchemaInitializer>();
+builder.Services.AddScoped<RetiroConciliacionSchemaInitializer>();
 builder.Services.AddScoped<DevelopmentDataSeeder>();
 
 var app = builder.Build();
@@ -101,6 +102,9 @@ using (var scope = app.Services.CreateScope())
 
     var ubicacionSchema = scope.ServiceProvider.GetRequiredService<RegistroResiduoUbicacionSchemaInitializer>();
     await ubicacionSchema.InitializeAsync();
+
+    var retiroConciliacionSchema = scope.ServiceProvider.GetRequiredService<RetiroConciliacionSchemaInitializer>();
+    await retiroConciliacionSchema.InitializeAsync();
 
     var developmentSeeder = scope.ServiceProvider.GetRequiredService<DevelopmentDataSeeder>();
     await developmentSeeder.SeedAsync();

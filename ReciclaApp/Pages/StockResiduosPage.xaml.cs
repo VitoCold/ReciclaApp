@@ -37,8 +37,7 @@ public partial class StockResiduosPage : ContentPage
         {
             UsuarioHeaderLabel.Text = string.Join(" ", new[] { _usuario.Nombres, _usuario.Apellidos }
                 .Where(x => !string.IsNullOrWhiteSpace(x)));
-            CrearRetiroButton.IsVisible = _usuario.Roles.Contains("AMBIENTAL") ||
-                                          _usuario.Roles.Contains("RESPONSABLE_OPERATIVO");
+            CrearRetiroButton.IsVisible = _usuario.Roles.Contains("AMBIENTAL");
         }
 
         await CargarAsync(_inventario is null);
@@ -129,9 +128,9 @@ public partial class StockResiduosPage : ContentPage
 
     private StockVisualItem MapVisual(InventarioResiduoItemDto item)
     {
-        var esAmbiental = _usuario?.Roles.Contains("AMBIENTAL") == true;
         var esResponsable = _usuario?.Roles.Contains("RESPONSABLE_OPERATIVO") == true;
-        var puedeGestionar = esAmbiental || esResponsable;
+        var esRegistrador = _usuario?.Roles.Contains("REGISTRADOR") == true;
+        var puedeGestionar = esResponsable || esRegistrador;
 
         var almacenamientos = item.Almacenamientos.Count == 0
             ? "Aún no trasladado"
@@ -148,6 +147,7 @@ public partial class StockResiduosPage : ContentPage
                 ? $"{item.CantidadPendienteAlmacenamiento:0.###} {item.Unidad}"
                 : "0 · todo ubicado",
             almacenamientos,
+            item.EstadoOperativo,
             puedeGestionar && item.CantidadPendienteAlmacenamiento > 0,
             item);
     }
@@ -252,7 +252,7 @@ public partial class StockResiduosPage : ContentPage
         }
         catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Forbidden)
         {
-            await DisplayAlert("Sin permiso", "Solo el responsable vigente del control o Ambiental puede registrar el traslado a almacenamiento.", "Aceptar");
+            await DisplayAlert("Sin permiso", "Solo personal operativo vigente del control puede registrar el traslado a almacenamiento temporal.", "Aceptar");
         }
         catch (Exception ex)
         {
@@ -308,6 +308,7 @@ public partial class StockResiduosPage : ContentPage
         string RegistroTexto,
         string PendienteTexto,
         string AlmacenamientosTexto,
+        string EstadoOperativo,
         bool PuedeAlmacenar,
         InventarioResiduoItemDto Item);
 }

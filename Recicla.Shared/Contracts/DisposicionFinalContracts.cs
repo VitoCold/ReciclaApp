@@ -8,7 +8,7 @@ public sealed record TipoTratamientoDto(
 
 public sealed record CrearDisposicionFinalRequest(
     Guid EmpresaGestoraId,
-    DateTime FechaDisposicion,
+    DateOnly FechaDisposicion,
     int TipoTratamientoId,
     string? CodigoDocumento,
     string? Observacion);

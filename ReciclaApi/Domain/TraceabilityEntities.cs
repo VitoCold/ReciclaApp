@@ -108,7 +108,13 @@ public sealed class RetiroDetalle
     public Guid RetiroDetalleId { get; set; } = Guid.NewGuid();
     public Guid RetiroId { get; set; }
     public Guid RegistroResiduoId { get; set; }
+
+    // Peso real informado por la balanza de la EO-RS.
     public decimal Cantidad { get; set; }
+    public string TipoRetiro { get; set; } = "PARCIAL";
+    public decimal SaldoEstimadoAntes { get; set; }
+    public decimal? DiferenciaConciliacion { get; set; }
+
     public int UnidadMedidaId { get; set; }
     public string? Observacion { get; set; }
     public DateTime CreadoUtc { get; set; } = DateTime.UtcNow;

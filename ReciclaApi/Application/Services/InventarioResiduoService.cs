@@ -197,10 +197,12 @@ public sealed class InventarioResiduoService(IUnitOfWork unitOfWork) : IInventar
             var movimientosResiduo = movimientos.Where(x => x.RegistroResiduoId == residuo.RegistroResiduoId).ToArray();
             var retirosResiduo = retiros.Where(x => x.RegistroResiduoId == residuo.RegistroResiduoId).ToArray();
 
+            // Cantidad retirada conserva el peso real reportado por la EO-RS.
+            // El saldo operativo se calcula por almacén y respeta los cierres TOTAL,
+            // que llevan a cero el stock físico aunque exista diferencia de pesaje.
             var retirado = retirosResiduo.Sum(x => x.Cantidad);
-            var disponible = Math.Max(0m, residuo.Cantidad - retirado);
             var movido = movimientosResiduo.Sum(x => x.Cantidad);
-            var pendiente = Math.Max(0m, Math.Min(disponible, residuo.Cantidad - movido));
+            var pendiente = Math.Max(0m, residuo.Cantidad - movido);
 
             var almacenamientos = movimientosResiduo
                 .GroupBy(x => new
@@ -211,15 +213,43 @@ public sealed class InventarioResiduoService(IUnitOfWork unitOfWork) : IInventar
                 })
                 .Select(g =>
                 {
-                    var retiradoPunto = retirosResiduo
+                    var retirosPunto = retirosResiduo
                         .Where(r => r.Retiro.PuntoAlmacenamientoId == g.Key.PuntoDestinoId)
-                        .Sum(r => r.Cantidad);
-                    var saldo = Math.Max(0m, g.Sum(m => m.Cantidad) - retiradoPunto);
-                    return new InventarioUbicacionDto(g.Key.PuntoDestinoId, g.Key.Codigo, g.Key.Nombre, saldo);
+                        .ToArray();
+
+                    var ultimoTotal = retirosPunto
+                        .Where(r => r.TipoRetiro == "TOTAL")
+                        .OrderByDescending(r => r.Retiro.FechaRetiro)
+                        .ThenByDescending(r => r.Retiro.CreadoUtc)
+                        .FirstOrDefault();
+
+                    decimal saldo;
+                    if (ultimoTotal is null)
+                    {
+                        saldo = g.Sum(m => m.Cantidad) - retirosPunto.Sum(r => r.Cantidad);
+                    }
+                    else
+                    {
+                        var movidoDespues = g
+                            .Where(m => m.FechaMovimiento > ultimoTotal.Retiro.FechaRetiro)
+                            .Sum(m => m.Cantidad);
+                        var retiradoDespues = retirosPunto
+                            .Where(r => r.Retiro.FechaRetiro > ultimoTotal.Retiro.FechaRetiro)
+                            .Sum(r => r.Cantidad);
+                        saldo = movidoDespues - retiradoDespues;
+                    }
+
+                    return new InventarioUbicacionDto(
+                        g.Key.PuntoDestinoId,
+                        g.Key.Codigo,
+                        g.Key.Nombre,
+                        Math.Max(0m, saldo));
                 })
                 .Where(x => x.Cantidad > 0)
                 .OrderBy(x => x.Punto)
                 .ToArray();
+
+            var disponible = pendiente + almacenamientos.Sum(x => x.Cantidad);
 
             var control = residuo.Registro.ControlGeneracion!;
             var usuario = residuo.Registro.RegistradoPorUsuario;
@@ -243,6 +273,8 @@ public sealed class InventarioResiduoService(IUnitOfWork unitOfWork) : IInventar
                 retirado,
                 disponible,
                 pendiente,
+                EstadoOperativoCodigo(movido, pendiente, disponible, retirosResiduo.Length > 0),
+                EstadoOperativoNombre(movido, pendiente, disponible, retirosResiduo.Length > 0),
                 almacenamientos,
                 residuo.Registro.RegistradoPorUsuarioId,
                 nombreUsuario);
@@ -254,10 +286,11 @@ public sealed class InventarioResiduoService(IUnitOfWork unitOfWork) : IInventar
         Guid usuarioId,
         CancellationToken cancellationToken)
     {
-        if (await TieneRolAsync(usuarioId, "AMBIENTAL", cancellationToken))
-            return true;
+        var tieneRolOperativo =
+            await TieneRolAsync(usuarioId, "RESPONSABLE_OPERATIVO", cancellationToken) ||
+            await TieneRolAsync(usuarioId, "REGISTRADOR", cancellationToken);
 
-        if (!await TieneRolAsync(usuarioId, "RESPONSABLE_OPERATIVO", cancellationToken))
+        if (!tieneRolOperativo)
             return false;
 
         var now = DateTime.UtcNow;
@@ -265,12 +298,38 @@ public sealed class InventarioResiduoService(IUnitOfWork unitOfWork) : IInventar
             .AnyAsync(x =>
                 x.ControlGeneracionId == controlId &&
                 x.UsuarioId == usuarioId &&
-                x.RolControl == "RESPONSABLE" &&
+                (x.RolControl == "RESPONSABLE" || x.RolControl == "REGISTRADOR") &&
                 x.EsActivo &&
                 x.FechaDesde <= now &&
                 (!x.FechaHasta.HasValue || x.FechaHasta.Value >= now),
                 cancellationToken);
     }
+
+    private static string EstadoOperativoCodigo(
+        decimal cantidadMovida,
+        decimal cantidadPendiente,
+        decimal cantidadDisponible,
+        bool tieneRetiros) =>
+        cantidadDisponible <= 0 && tieneRetiros
+            ? "RETIRADO"
+            : cantidadMovida <= 0
+                ? "PENDIENTE_TRASLADO"
+                : cantidadPendiente > 0
+                    ? "TRASLADO_PARCIAL"
+                    : "EN_ALMACEN_TEMPORAL";
+
+    private static string EstadoOperativoNombre(
+        decimal cantidadMovida,
+        decimal cantidadPendiente,
+        decimal cantidadDisponible,
+        bool tieneRetiros) =>
+        cantidadDisponible <= 0 && tieneRetiros
+            ? "Retirado"
+            : cantidadMovida <= 0
+                ? "Pendiente de traslado"
+                : cantidadPendiente > 0
+                    ? "Traslado parcial"
+                    : "En almacén temporal";
 
     private Task<bool> TieneRolAsync(Guid usuarioId, string rol, CancellationToken cancellationToken) =>
         unitOfWork.Repository<UsuarioRol>().Query()

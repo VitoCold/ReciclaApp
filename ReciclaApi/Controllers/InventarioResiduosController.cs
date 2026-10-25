@@ -20,7 +20,7 @@ public sealed class InventarioResiduosController(
     }
 
     [HttpPost("{registroResiduoId:guid}/almacenar")]
-    [Authorize(Roles = "AMBIENTAL,RESPONSABLE_OPERATIVO")]
+    [Authorize(Roles = "RESPONSABLE_OPERATIVO,REGISTRADOR")]
     public async Task<IActionResult> Almacenar(
         Guid registroResiduoId,
         [FromBody] AlmacenarResiduoRequest request,

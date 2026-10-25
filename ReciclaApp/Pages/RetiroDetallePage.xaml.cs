@@ -76,7 +76,7 @@ public partial class RetiroDetallePage : ContentPage
             FechaLabel.Text = retiro.FechaRetiro.ToString("dd/MM/yyyy HH:mm");
             EstadoLabel.Text = retiro.Estado;
             UbicacionLabel.Text = $"{retiro.Sede} · {retiro.PuntoAlmacenamiento}";
-            GestorLabel.Text = $"Gestor de retiro: {retiro.EmpresaGestora}";
+            GestorLabel.Text = $"EO-RS: {retiro.EmpresaGestora}";
             TotalesLabel.Text = retiro.Totales.Count == 0
                 ? "Sin cantidades"
                 : string.Join(" · ", retiro.Totales.Select(x => $"{x.Cantidad:0.###} {x.Unidad}"));
@@ -98,10 +98,20 @@ public partial class RetiroDetallePage : ContentPage
                 : retiro.Observacion;
 
             var detalles = retiro.Detalles
-                .Select(x => new DetalleVisual(
-                    x.Residuo,
-                    $"{x.ControlCodigo} · {x.Clasificacion}",
-                    $"{x.Cantidad:0.###} {x.Unidad}"))
+                .Select(x =>
+                {
+                    var total = string.Equals(x.TipoRetiro, "TOTAL", StringComparison.OrdinalIgnoreCase);
+                    var conciliacion = total
+                        ? $"Saldo estimado antes: {x.SaldoEstimadoAntes:0.###} {x.Unidad} · Diferencia: {(x.DiferenciaConciliacion ?? 0):+0.###;-0.###;0} {x.Unidad} · Saldo final: 0"
+                        : $"Saldo estimado antes: {x.SaldoEstimadoAntes:0.###} {x.Unidad} · Saldo estimado después: {Math.Max(0m, x.SaldoEstimadoAntes - x.PesoEors):0.###} {x.Unidad}";
+
+                    return new DetalleVisual(
+                        x.Residuo,
+                        $"{x.ControlCodigo} · {x.Clasificacion}",
+                        x.TipoRetiro,
+                        $"Peso EO-RS: {x.PesoEors:0.###} {x.Unidad}",
+                        conciliacion);
+                })
                 .ToArray();
             CantidadLabel.Text = detalles.Length == 1 ? "1 residuo" : $"{detalles.Length} residuos";
 
@@ -311,6 +321,11 @@ public partial class RetiroDetallePage : ContentPage
     private sealed record DetailBinding(
         IReadOnlyCollection<DetalleVisual> Detalles,
         IReadOnlyCollection<EvidenciaVisual> Evidencias);
-    private sealed record DetalleVisual(string Residuo, string OrigenTexto, string CantidadTexto);
+    private sealed record DetalleVisual(
+        string Residuo,
+        string OrigenTexto,
+        string TipoRetiro,
+        string PesoTexto,
+        string ConciliacionTexto);
     private sealed record EvidenciaVisual(string NombreArchivo, string TipoTexto);
 }
