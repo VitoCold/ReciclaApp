@@ -34,7 +34,6 @@ public partial class PerfilPage : ContentPage
         LoginLabel.Text = usuario.Usuario;
         EmailLabel.Text = string.IsNullOrWhiteSpace(usuario.Email) ? "Sin correo registrado" : usuario.Email;
         RolesLabel.Text = usuario.Roles.Count == 0 ? "Sin rol asignado" : string.Join(", ", usuario.Roles);
-        SedesLabel.Text = usuario.SedeIds.Count == 1 ? "1 sede" : $"{usuario.SedeIds.Count} sedes";
         InitialsLabel.Text = GetInitials(usuario.Nombres, usuario.Apellidos);
     }
 
