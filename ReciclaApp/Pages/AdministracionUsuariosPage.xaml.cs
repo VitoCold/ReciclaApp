@@ -90,7 +90,6 @@ public partial class AdministracionUsuariosPage : ContentPage
                 NombreCompleto(x),
                 string.IsNullOrWhiteSpace(x.Email) ? $"@{x.Usuario}" : $"@{x.Usuario} · {x.Email}",
                 x.Roles.Count == 0 ? "Sin rol" : string.Join(" · ", x.Roles.Select(r => r.Nombre)),
-                x.Sedes.Count == 0 ? "Acceso global / sin sedes asignadas" : string.Join(" · ", x.Sedes.Select(s => s.Nombre)),
                 x.EsActivo ? "Activo" : "Inactivo",
                 x.EsActivo ? "Desactivar" : "Activar",
                 x.EsActivo))
@@ -171,7 +170,6 @@ public partial class AdministracionUsuariosPage : ContentPage
         string NombreCompleto,
         string CuentaTexto,
         string RolesTexto,
-        string SedesTexto,
         string EstadoTexto,
         string AccionEstadoTexto,
         bool EsActivo);
