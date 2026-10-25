@@ -63,6 +63,12 @@
                                 </Border>
                             </Grid>
 
+                            <Label x:Name="CierreDocumentalLabel"
+                                   Text="Cierre documental pendiente"
+                                   FontSize="11"
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource ColorPrimary}" />
+
                             <VerticalStackLayout x:Name="DestinoDetalleLayout" IsVisible="False" Spacing="5">
                                 <Label x:Name="DestinoTipoLabel" FontSize="13" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
                                 <Label x:Name="DestinoGestorLabel" FontSize="12" TextColor="{StaticResource ColorText}" />
@@ -137,6 +143,10 @@
                                                 </Grid>
                                                 <Label Text="{Binding PesoTexto}" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource ColorPrimary}" />
                                                 <Label Text="{Binding ConciliacionTexto}" FontSize="10" TextColor="{StaticResource ColorMuted}" />
+                                                <Button Text="Ver trazabilidad"
+                                                        Style="{StaticResource SmallPrimaryButton}"
+                                                        CommandParameter="{Binding RegistroResiduoId}"
+                                                        Clicked="OnVerTrazabilidadClicked" />
                                             </VerticalStackLayout>
                                         </Border>
                                     </DataTemplate>
