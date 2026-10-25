@@ -215,8 +215,12 @@ public sealed class InventarioResiduoService(IUnitOfWork unitOfWork) : IInventar
             estadoActual,
             cierreCompleto,
             eventos
-                .OrderBy(x => x.Fecha)
+                // La disposición final captura fecha calendario, no hora.
+                // Para eventos del mismo día, respetamos la secuencia real del proceso
+                // y dentro de cada etapa conservamos la hora cuando existe.
+                .OrderBy(x => x.Fecha.Date)
                 .ThenBy(x => OrdenEvento(x.TipoCodigo))
+                .ThenBy(x => x.Fecha)
                 .ToArray());
 
         return ServiceResult<TrazabilidadResiduoDto>.Ok(dto);
