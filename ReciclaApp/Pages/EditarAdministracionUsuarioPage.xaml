@@ -34,7 +34,7 @@
                             <VerticalStackLayout x:Name="PasswordSection" Spacing="4">
                                 <Label Text="Contraseña temporal" Style="{StaticResource TinyMutedText}" />
                                 <Entry x:Name="PasswordEntry" Placeholder="Mínimo 8 caracteres" IsPassword="True" />
-                                <Label Text="El usuario deberá cambiarla al iniciar sesión." Style="{StaticResource TinyMutedText}" />
+                                <Label Text="Se guardará como contraseña temporal para el acceso inicial." Style="{StaticResource TinyMutedText}" />
                             </VerticalStackLayout>
                         </VerticalStackLayout>
                     </Border>
