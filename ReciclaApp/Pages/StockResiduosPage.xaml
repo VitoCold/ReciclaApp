@@ -108,11 +108,18 @@
                                             <Label Grid.Row="1" Grid.Column="1" Text="{Binding AlmacenamientosTexto}" FontSize="12" TextColor="{StaticResource ColorText}" />
                                         </Grid>
 
-                                        <Button Text="Registrar traslado a almacén temporal"
-                                                Style="{StaticResource SmallPrimaryButton}"
-                                                IsVisible="{Binding PuedeAlmacenar}"
-                                                CommandParameter="{Binding RegistroResiduoId}"
-                                                Clicked="OnAlmacenarClicked" />
+                                        <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                            <Button Text="Ver trazabilidad"
+                                                    Style="{StaticResource SmallPrimaryButton}"
+                                                    CommandParameter="{Binding RegistroResiduoId}"
+                                                    Clicked="OnVerTrazabilidadClicked" />
+                                            <Button Grid.Column="1"
+                                                    Text="Registrar traslado"
+                                                    Style="{StaticResource SmallPrimaryButton}"
+                                                    IsVisible="{Binding PuedeAlmacenar}"
+                                                    CommandParameter="{Binding RegistroResiduoId}"
+                                                    Clicked="OnAlmacenarClicked" />
+                                        </Grid>
                                     </VerticalStackLayout>
                                 </Border>
                             </DataTemplate>
