@@ -69,6 +69,45 @@ builder.Services
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
             ClockSkew = TimeSpan.FromMinutes(1)
         };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var idClaim = context.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (!Guid.TryParse(idClaim, out var usuarioId))
+                {
+                    context.Fail("Usuario inválido.");
+                    return;
+                }
+
+                var db = context.HttpContext.RequestServices.GetRequiredService<ReciclaDbContext>();
+                var usuarioActivo = await db.Usuarios
+                    .AsNoTracking()
+                    .AnyAsync(x => x.UsuarioId == usuarioId && x.EsActivo);
+
+                if (!usuarioActivo)
+                {
+                    context.Fail("El usuario está inactivo.");
+                    return;
+                }
+
+                var rolesActuales = await db.UsuarioRoles
+                    .AsNoTracking()
+                    .Where(x => x.UsuarioId == usuarioId && x.Rol.EsActivo)
+                    .Select(x => x.Rol.Codigo)
+                    .ToListAsync();
+
+                var rolesToken = context.Principal?
+                    .FindAll(System.Security.Claims.ClaimTypes.Role)
+                    .Select(x => x.Value)
+                    .OrderBy(x => x)
+                    .ToArray() ?? [];
+
+                if (!rolesActuales.OrderBy(x => x).SequenceEqual(rolesToken))
+                    context.Fail("Los permisos del usuario cambiaron. Inicia sesión nuevamente.");
+            }
+        };
     });
 
 builder.Services.AddAuthorization();
