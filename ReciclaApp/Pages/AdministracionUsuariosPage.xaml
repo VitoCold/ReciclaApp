@@ -55,7 +55,6 @@
                                         </Grid>
 
                                         <Label Text="{Binding RolesTexto}" FontSize="11" TextColor="{StaticResource ColorText}" />
-                                        <Label Text="{Binding SedesTexto}" Style="{StaticResource TinyMutedText}" />
 
                                         <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
                                             <Button Text="Editar"
