@@ -80,14 +80,7 @@ public sealed class AdministracionUsuarioService(
             .Select(x => new AdministracionRolDto(x.RolId, x.Codigo, x.Nombre))
             .ToListAsync(cancellationToken);
 
-        var sedes = await context.Sedes
-            .AsNoTracking()
-            .Where(x => x.EsActivo)
-            .OrderBy(x => x.Nombre)
-            .Select(x => new AdministracionSedeDto(x.SedeId, x.Codigo, x.Nombre))
-            .ToListAsync(cancellationToken);
-
-        return new AdministracionUsuariosCatalogosDto(roles, sedes);
+        return new AdministracionUsuariosCatalogosDto(roles);
     }
 
     public async Task<ServiceResult<AdministracionUsuarioDto>> CrearAsync(
@@ -101,9 +94,6 @@ public sealed class AdministracionUsuarioService(
 
         var roles = await context.Roles
             .Where(x => request.RolIds.Distinct().Contains(x.RolId) && x.EsActivo && RolesAdministrables.Contains(x.Codigo))
-            .ToListAsync(cancellationToken);
-        var sedes = await context.Sedes
-            .Where(x => request.SedeIds.Distinct().Contains(x.SedeId) && x.EsActivo)
             .ToListAsync(cancellationToken);
 
         var (hash, salt) = passwordService.Hash(request.Password!.Trim());
@@ -123,9 +113,6 @@ public sealed class AdministracionUsuarioService(
         foreach (var rol in roles)
             usuario.UsuarioRoles.Add(new UsuarioRol { Usuario = usuario, Rol = rol });
 
-        foreach (var sede in sedes)
-            usuario.UsuarioSedes.Add(new UsuarioSede { Usuario = usuario, Sede = sede });
-
         context.Usuarios.Add(usuario);
         context.Auditoria.Add(new Auditoria
         {
@@ -139,8 +126,7 @@ public sealed class AdministracionUsuarioService(
                 usuario.Nombres,
                 usuario.Apellidos,
                 usuario.Email,
-                Roles = roles.Select(x => x.Codigo),
-                Sedes = sedes.Select(x => x.Codigo)
+                Roles = roles.Select(x => x.Codigo)
             })
         });
 
@@ -161,7 +147,6 @@ public sealed class AdministracionUsuarioService(
 
         var usuario = await context.Usuarios
             .Include(x => x.UsuarioRoles)
-            .Include(x => x.UsuarioSedes)
             .FirstOrDefaultAsync(x => x.UsuarioId == usuarioId, cancellationToken);
 
         if (usuario is null)
@@ -169,9 +154,6 @@ public sealed class AdministracionUsuarioService(
 
         var roles = await context.Roles
             .Where(x => request.RolIds.Distinct().Contains(x.RolId) && x.EsActivo && RolesAdministrables.Contains(x.Codigo))
-            .ToListAsync(cancellationToken);
-        var sedes = await context.Sedes
-            .Where(x => request.SedeIds.Distinct().Contains(x.SedeId) && x.EsActivo)
             .ToListAsync(cancellationToken);
 
         var eraAdministrador = await context.UsuarioRoles
@@ -197,8 +179,7 @@ public sealed class AdministracionUsuarioService(
             usuario.Nombres,
             usuario.Apellidos,
             usuario.Email,
-            Roles = usuario.UsuarioRoles.Select(x => x.RolId).ToArray(),
-            Sedes = usuario.UsuarioSedes.Select(x => x.SedeId).ToArray()
+            Roles = usuario.UsuarioRoles.Select(x => x.RolId).ToArray()
         };
 
         usuario.UsuarioNombre = request.Usuario.Trim();
@@ -217,16 +198,6 @@ public sealed class AdministracionUsuarioService(
         foreach (var rol in roles.Where(x => !rolIdsActuales.Contains(x.RolId)))
             usuario.UsuarioRoles.Add(new UsuarioRol { UsuarioId = usuario.UsuarioId, RolId = rol.RolId });
 
-        var sedeIdsDeseados = sedes.Select(x => x.SedeId).ToHashSet();
-        var sedesAEliminar = usuario.UsuarioSedes
-            .Where(x => !sedeIdsDeseados.Contains(x.SedeId))
-            .ToArray();
-        context.UsuarioSedes.RemoveRange(sedesAEliminar);
-
-        var sedeIdsActuales = usuario.UsuarioSedes.Select(x => x.SedeId).ToHashSet();
-        foreach (var sede in sedes.Where(x => !sedeIdsActuales.Contains(x.SedeId)))
-            usuario.UsuarioSedes.Add(new UsuarioSede { UsuarioId = usuario.UsuarioId, SedeId = sede.SedeId });
-
         context.Auditoria.Add(new Auditoria
         {
             UsuarioId = actorUsuarioId,
@@ -240,8 +211,7 @@ public sealed class AdministracionUsuarioService(
                 usuario.Nombres,
                 usuario.Apellidos,
                 usuario.Email,
-                Roles = roles.Select(x => x.RolId).ToArray(),
-                Sedes = sedes.Select(x => x.SedeId).ToArray()
+                Roles = roles.Select(x => x.RolId).ToArray()
             })
         });
 
@@ -367,20 +337,6 @@ public sealed class AdministracionUsuarioService(
         if (roles.Count != request.RolIds.Distinct().Count())
             return "Uno o más roles seleccionados no son válidos.";
 
-        var sedeIds = request.SedeIds?.Distinct().ToArray() ?? [];
-        if (sedeIds.Length > 0)
-        {
-            var cantidadSedes = await context.Sedes
-                .AsNoTracking()
-                .CountAsync(x => sedeIds.Contains(x.SedeId) && x.EsActivo, cancellationToken);
-            if (cantidadSedes != sedeIds.Length)
-                return "Una o más sedes seleccionadas no son válidas.";
-        }
-
-        var requiereSede = roles.Any(x => x.Codigo is "RESPONSABLE_OPERATIVO" or "REGISTRADOR");
-        if (requiereSede && sedeIds.Length == 0)
-            return "Responsables y registradores deben tener al menos una sede asignada.";
-
         return null;
     }
 
@@ -399,8 +355,7 @@ public sealed class AdministracionUsuarioService(
     private IQueryable<Usuario> QueryUsuarios() =>
         context.Usuarios
             .AsNoTracking()
-            .Include(x => x.UsuarioRoles).ThenInclude(x => x.Rol)
-            .Include(x => x.UsuarioSedes).ThenInclude(x => x.Sede);
+            .Include(x => x.UsuarioRoles).ThenInclude(x => x.Rol);
 
     private static AdministracionUsuarioDto Map(Usuario usuario) => new(
         usuario.UsuarioId,
@@ -415,10 +370,6 @@ public sealed class AdministracionUsuarioService(
             .Where(x => x.Rol.EsActivo && RolesAdministrables.Contains(x.Rol.Codigo))
             .OrderBy(x => x.Rol.Nombre)
             .Select(x => new AdministracionRolDto(x.RolId, x.Rol.Codigo, x.Rol.Nombre))
-            .ToArray(),
-        usuario.UsuarioSedes
-            .OrderBy(x => x.Sede.Nombre)
-            .Select(x => new AdministracionSedeDto(x.SedeId, x.Sede.Codigo, x.Sede.Nombre))
             .ToArray());
 
     private static string? Limpiar(string? value) =>
