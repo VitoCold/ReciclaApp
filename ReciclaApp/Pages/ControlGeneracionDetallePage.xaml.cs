@@ -146,9 +146,9 @@ public partial class ControlGeneracionDetallePage : ContentPage
         RegistrarButton.IsVisible = esParticipante && activo && dentroVigencia;
         FinalizarButton.IsVisible = esResponsableControl && activo;
 
-        // El equipo aprobado queda congelado. Los cambios durante ACTIVO
-        // tendrán su propio flujo de validación Ambiental.
-        GestionarEquipoButton.IsVisible = puedePreparar;
+        var puedeGestionarEquipo = esResponsableControl &&
+            (borrador || observado || aprobado || activo);
+        GestionarEquipoButton.IsVisible = puedeGestionarEquipo;
     }
 
     private async void OnEditarControlClicked(object sender, EventArgs e) =>
