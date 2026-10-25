@@ -149,9 +149,7 @@ public partial class NuevaDisposicionFinalPage : ContentPage
             return;
         }
 
-        var fechaDisposicion = FechaPicker.Date.Date == _retiro.FechaRetiro.Date
-            ? FechaPicker.Date.Date + _retiro.FechaRetiro.TimeOfDay
-            : FechaPicker.Date.Date;
+        var fechaDisposicion = FechaPicker.Date.Date;
 
         try
         {
