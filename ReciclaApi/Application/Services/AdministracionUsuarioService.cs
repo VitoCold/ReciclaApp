@@ -174,6 +174,23 @@ public sealed class AdministracionUsuarioService(
             .Where(x => request.SedeIds.Distinct().Contains(x.SedeId) && x.EsActivo)
             .ToListAsync(cancellationToken);
 
+        var eraAdministrador = await context.UsuarioRoles
+            .AsNoTracking()
+            .AnyAsync(x =>
+                x.UsuarioId == usuarioId &&
+                x.Rol.EsActivo &&
+                x.Rol.Codigo == "ADMINISTRADOR",
+                cancellationToken);
+        var seguiraAdministrador = roles.Any(x => x.Codigo == "ADMINISTRADOR");
+
+        if (usuario.EsActivo && eraAdministrador && !seguiraAdministrador &&
+            !await ExisteOtroAdministradorActivoAsync(usuarioId, cancellationToken))
+        {
+            return ServiceResult<AdministracionUsuarioDto>.Fail(
+                "No puedes quitar el rol ADMINISTRADOR al último administrador activo.",
+                StatusCodes.Status409Conflict);
+        }
+
         var antes = new
         {
             usuario.UsuarioNombre,
@@ -190,15 +207,24 @@ public sealed class AdministracionUsuarioService(
         usuario.Email = Limpiar(request.Email);
         usuario.ActualizadoUtc = DateTime.UtcNow;
 
-        context.UsuarioRoles.RemoveRange(usuario.UsuarioRoles);
-        context.UsuarioSedes.RemoveRange(usuario.UsuarioSedes);
-        usuario.UsuarioRoles.Clear();
-        usuario.UsuarioSedes.Clear();
+        var rolIdsDeseados = roles.Select(x => x.RolId).ToHashSet();
+        var rolesAEliminar = usuario.UsuarioRoles
+            .Where(x => !rolIdsDeseados.Contains(x.RolId))
+            .ToArray();
+        context.UsuarioRoles.RemoveRange(rolesAEliminar);
 
-        foreach (var rol in roles)
+        var rolIdsActuales = usuario.UsuarioRoles.Select(x => x.RolId).ToHashSet();
+        foreach (var rol in roles.Where(x => !rolIdsActuales.Contains(x.RolId)))
             usuario.UsuarioRoles.Add(new UsuarioRol { UsuarioId = usuario.UsuarioId, RolId = rol.RolId });
 
-        foreach (var sede in sedes)
+        var sedeIdsDeseados = sedes.Select(x => x.SedeId).ToHashSet();
+        var sedesAEliminar = usuario.UsuarioSedes
+            .Where(x => !sedeIdsDeseados.Contains(x.SedeId))
+            .ToArray();
+        context.UsuarioSedes.RemoveRange(sedesAEliminar);
+
+        var sedeIdsActuales = usuario.UsuarioSedes.Select(x => x.SedeId).ToHashSet();
+        foreach (var sede in sedes.Where(x => !sedeIdsActuales.Contains(x.SedeId)))
             usuario.UsuarioSedes.Add(new UsuarioSede { UsuarioId = usuario.UsuarioId, SedeId = sede.SedeId });
 
         context.Auditoria.Add(new Auditoria
@@ -240,6 +266,24 @@ public sealed class AdministracionUsuarioService(
 
         if (usuario is null)
             return ServiceResult<AdministracionUsuarioDto>.Fail("Usuario no encontrado.", StatusCodes.Status404NotFound);
+
+        if (!esActivo)
+        {
+            var esAdministrador = await context.UsuarioRoles
+                .AsNoTracking()
+                .AnyAsync(x =>
+                    x.UsuarioId == usuarioId &&
+                    x.Rol.EsActivo &&
+                    x.Rol.Codigo == "ADMINISTRADOR",
+                    cancellationToken);
+
+            if (esAdministrador && !await ExisteOtroAdministradorActivoAsync(usuarioId, cancellationToken))
+            {
+                return ServiceResult<AdministracionUsuarioDto>.Fail(
+                    "No puedes desactivar al último administrador activo.",
+                    StatusCodes.Status409Conflict);
+            }
+        }
 
         usuario.EsActivo = esActivo;
         usuario.ActualizadoUtc = DateTime.UtcNow;
@@ -339,6 +383,18 @@ public sealed class AdministracionUsuarioService(
 
         return null;
     }
+
+    private Task<bool> ExisteOtroAdministradorActivoAsync(
+        Guid excluirUsuarioId,
+        CancellationToken cancellationToken) =>
+        context.UsuarioRoles
+            .AsNoTracking()
+            .AnyAsync(x =>
+                x.UsuarioId != excluirUsuarioId &&
+                x.Usuario.EsActivo &&
+                x.Rol.EsActivo &&
+                x.Rol.Codigo == "ADMINISTRADOR",
+                cancellationToken);
 
     private IQueryable<Usuario> QueryUsuarios() =>
         context.Usuarios
