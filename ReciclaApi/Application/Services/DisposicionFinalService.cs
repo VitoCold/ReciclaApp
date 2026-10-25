@@ -75,12 +75,15 @@ public sealed class DisposicionFinalService(
         if (retiro.EstadoRetiro.Codigo != "RETIRADO")
             return await FailRollbackAsync("Solo un retiro confirmado puede documentar disposición final o valorización.", StatusCodes.Status409Conflict, transaction, cancellationToken);
 
-        // La disposición se documenta por fecha calendario, no por hora exacta.
-        // El formulario móvil solo captura el día y el retiro puede venir normalizado
-        // en UTC, por lo que comparar timestamps completos puede rechazar falsamente
-        // una disposición ocurrida el mismo día.
-        if (request.FechaDisposicion.Date < retiro.FechaRetiro.Date)
-            return await FailRollbackAsync("La fecha de disposición no puede ser anterior a la fecha del retiro.", StatusCodes.Status400BadRequest, transaction, cancellationToken);
+        var fechaRetiro = DateOnly.FromDateTime(retiro.FechaRetiro);
+        if (request.FechaDisposicion < fechaRetiro)
+        {
+            return await FailRollbackAsync(
+                $"La fecha de disposición ({request.FechaDisposicion:dd/MM/yyyy}) no puede ser anterior a la fecha del retiro ({fechaRetiro:dd/MM/yyyy}).",
+                StatusCodes.Status400BadRequest,
+                transaction,
+                cancellationToken);
+        }
 
         var yaExiste = await context.DisposicionesFinales
             .AnyAsync(x => x.RetiroId == retiroId && !x.Eliminado && x.EstadoDisposicion.Codigo != "ANULADA", cancellationToken);
@@ -106,7 +109,7 @@ public sealed class DisposicionFinalService(
         {
             RetiroId = retiroId,
             EmpresaGestoraId = request.EmpresaGestoraId,
-            FechaDisposicion = request.FechaDisposicion.Date,
+            FechaDisposicion = request.FechaDisposicion.ToDateTime(TimeOnly.MinValue),
             TipoTratamientoId = request.TipoTratamientoId,
             CodigoDocumento = Limpiar(request.CodigoDocumento),
             EstadoDisposicionId = estadoPendiente.EstadoDisposicionId,
