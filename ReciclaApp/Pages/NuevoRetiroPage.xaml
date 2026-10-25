@@ -12,14 +12,14 @@
                     <TapGestureRecognizer Tapped="OnBackTapped" />
                 </Label.GestureRecognizers>
             </Label>
-            <Label Grid.Column="1" Text="Nuevo retiro" Style="{StaticResource HeaderTitle}" />
+            <Label Grid.Column="1" Text="Registrar retiro" Style="{StaticResource HeaderTitle}" />
         </Grid>
 
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Padding="18,18,18,34" Spacing="14">
                 <VerticalStackLayout Spacing="2">
-                    <Label Text="Retiro agrupado" Style="{StaticResource PageTitle}" FontSize="22" />
-                    <Label Text="Selecciona un almacén y los residuos que saldrán con el gestor." Style="{StaticResource MutedText}" />
+                    <Label Text="Retiro realizado" Style="{StaticResource PageTitle}" FontSize="22" />
+                    <Label Text="Registra la salida efectiva de residuos desde el almacén temporal hacia la EO-RS." Style="{StaticResource MutedText}" />
                 </VerticalStackLayout>
 
                 <Border x:Name="ErrorBorder" IsVisible="False" BackgroundColor="{StaticResource ColorDangerSoft}" Stroke="Transparent" StrokeShape="RoundRectangle 12" Padding="12,9">
@@ -111,7 +111,7 @@
                 </Border>
 
                 <Button x:Name="GuardarButton"
-                        Text="Confirmar retiro"
+                        Text="Registrar retiro"
                         Style="{StaticResource PrimaryButton}"
                         Clicked="OnGuardarClicked" />
             </VerticalStackLayout>
