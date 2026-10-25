@@ -92,6 +92,28 @@ public sealed class RetiroConciliacionSchemaInitializer(
                         CASE WHEN "SaldoEstimadoAntes" = 0 THEN "Cantidad" ELSE "SaldoEstimadoAntes" END;
                 """,
                 cancellationToken);
+
+            var columnasVerificadas = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            await using (var verifyCommand = connection.CreateCommand())
+            {
+                verifyCommand.CommandText = """PRAGMA table_info("RetiroDetalles");""";
+                await using var reader = await verifyCommand.ExecuteReaderAsync(cancellationToken);
+                while (await reader.ReadAsync(cancellationToken))
+                    columnasVerificadas.Add(reader.GetString(1));
+            }
+
+            var requeridas = new[] { "TipoRetiro", "SaldoEstimadoAntes", "DiferenciaConciliacion" };
+            var faltantes = requeridas.Where(x => !columnasVerificadas.Contains(x)).ToArray();
+            if (faltantes.Length > 0)
+            {
+                throw new InvalidOperationException(
+                    $"La base SQLite activa no pudo actualizar RetiroDetalles. Faltan columnas: {string.Join(", ", faltantes)}. Archivo: {connection.DataSource}");
+            }
+
+            logger.LogInformation(
+                "Esquema de conciliación de retiros verificado en SQLite {DataSource}.",
+                connection.DataSource);
+            return;
         }
 
         logger.LogInformation("Esquema de conciliación de retiros verificado.");
