@@ -15,6 +15,7 @@ namespace ReciclaApp
             "retiros",
             "reportes",
             "registros",
+            "administracion",
             "perfil"
         };
 
@@ -102,6 +103,9 @@ namespace ReciclaApp
 
             Shell.SetFlyoutItemIsVisible(RetirosShellContent, puedeGestionarSalidaYReportes);
             Shell.SetFlyoutItemIsVisible(ReportesShellContent, puedeGestionarSalidaYReportes);
+            Shell.SetFlyoutItemIsVisible(
+                AdministracionShellContent,
+                usuario?.Roles.Contains("ADMINISTRADOR") == true);
         }
 
         private static bool EsRutaPrincipal(string? location)
@@ -133,6 +137,8 @@ namespace ReciclaApp
             Routing.RegisterRoute(AppRoutes.DetalleResiduoFotos, typeof(DetalleResiduoFotosPage));
             Routing.RegisterRoute(AppRoutes.InicioRegistro, typeof(InicioRegistroPage));
             Routing.RegisterRoute(AppRoutes.RegistrarResiduo, typeof(RegistrarResiduoPage));
+            Routing.RegisterRoute(AppRoutes.AdministracionUsuarios, typeof(AdministracionUsuariosPage));
+            Routing.RegisterRoute(AppRoutes.EditarAdministracionUsuario, typeof(EditarAdministracionUsuarioPage));
         }
     }
 }
