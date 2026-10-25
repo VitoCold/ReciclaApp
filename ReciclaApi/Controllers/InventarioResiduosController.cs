@@ -19,6 +19,16 @@ public sealed class InventarioResiduosController(
         return Ok(result);
     }
 
+    [HttpGet("{registroResiduoId:guid}/trazabilidad")]
+    [Authorize(Roles = "ADMINISTRADOR,AMBIENTAL,RESPONSABLE_OPERATIVO,REGISTRADOR")]
+    public async Task<IActionResult> ObtenerTrazabilidad(
+        Guid registroResiduoId,
+        CancellationToken cancellationToken)
+    {
+        var result = await inventarioService.ObtenerTrazabilidadAsync(registroResiduoId, UsuarioId, cancellationToken);
+        return FromResult(result);
+    }
+
     [HttpPost("{registroResiduoId:guid}/almacenar")]
     [Authorize(Roles = "RESPONSABLE_OPERATIVO,REGISTRADOR")]
     public async Task<IActionResult> Almacenar(
