@@ -8,8 +8,7 @@ public sealed record UsuarioDto(
     string Nombres,
     string? Apellidos,
     string? Email,
-    IReadOnlyCollection<string> Roles,
-    IReadOnlyCollection<Guid> SedeIds);
+    IReadOnlyCollection<string> Roles);
 
 public sealed record LoginResponse(
     string AccessToken,
