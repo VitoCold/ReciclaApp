@@ -106,6 +106,7 @@ public partial class RetiroDetallePage : ContentPage
                         : $"Saldo estimado antes: {x.SaldoEstimadoAntes:0.###} {x.Unidad} · Saldo estimado después: {Math.Max(0m, x.SaldoEstimadoAntes - x.PesoEors):0.###} {x.Unidad}";
 
                     return new DetalleVisual(
+                        x.RegistroResiduoId,
                         x.Residuo,
                         $"{x.ControlCodigo} · {x.Clasificacion}",
                         x.TipoRetiro,
@@ -148,6 +149,7 @@ public partial class RetiroDetallePage : ContentPage
         if (_disposicion is null)
         {
             DestinoEstadoLabel.Text = "Pendiente";
+            CierreDocumentalLabel.Text = "Cierre documental pendiente";
             DestinoDetalleLayout.IsVisible = false;
             DestinoPendienteLabel.IsVisible = true;
             DocumentarDestinoButton.IsVisible = puedeDocumentar;
@@ -185,6 +187,11 @@ public partial class RetiroDetallePage : ContentPage
 
         var validada = string.Equals(_disposicion.Estado, "Validada", StringComparison.OrdinalIgnoreCase);
         var documentada = string.Equals(_disposicion.Estado, "Documentada", StringComparison.OrdinalIgnoreCase);
+        CierreDocumentalLabel.Text = validada
+            ? "✓ Cierre documental completo"
+            : documentada
+                ? "Documentación cargada · pendiente de validación Ambiental"
+                : "Cierre documental pendiente";
         AdjuntarEvidenciaButton.IsVisible = puedeDocumentar && !validada;
         ValidarDestinoButton.IsVisible = esAmbiental && documentada && evidencias.Length > 0;
         return evidencias;
@@ -292,6 +299,16 @@ public partial class RetiroDetallePage : ContentPage
         }
     }
 
+    private async void OnVerTrazabilidadClicked(object sender, EventArgs e)
+    {
+        if (sender is Button button &&
+            Guid.TryParse(button.CommandParameter?.ToString(), out var registroResiduoId) &&
+            registroResiduoId != Guid.Empty)
+        {
+            await AppNavigator.IrATrazabilidadResiduoAsync(registroResiduoId);
+        }
+    }
+
     private void RefrescarDestinoEnVista()
     {
         var detalles = (BindingContext as DetailBinding)?.Detalles ?? Array.Empty<DetalleVisual>();
@@ -322,6 +339,7 @@ public partial class RetiroDetallePage : ContentPage
         IReadOnlyCollection<DetalleVisual> Detalles,
         IReadOnlyCollection<EvidenciaVisual> Evidencias);
     private sealed record DetalleVisual(
+        Guid RegistroResiduoId,
         string Residuo,
         string OrigenTexto,
         string TipoRetiro,
