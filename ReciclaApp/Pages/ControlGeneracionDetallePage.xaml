@@ -54,19 +54,43 @@
                         </VerticalStackLayout>
                     </Border>
 
-                    <VerticalStackLayout x:Name="AmbientalActions" IsVisible="False" Spacing="8">
-                        <Label Text="Acciones de Ambiental" Style="{StaticResource SectionTitle}" />
+                    <VerticalStackLayout x:Name="ResponsableActions" IsVisible="False" Spacing="8">
+                        <Label Text="Acciones del responsable" Style="{StaticResource SectionTitle}" />
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                            <Button x:Name="AprobarButton" Text="Aprobar" Style="{StaticResource PrimaryButton}" Clicked="OnAprobarClicked" />
-                            <Button x:Name="RechazarButton" Grid.Column="1" Text="Rechazar" BackgroundColor="{StaticResource ColorDanger}" TextColor="White" FontAttributes="Bold" CornerRadius="12" Clicked="OnRechazarClicked" />
+                            <Button x:Name="EditarControlButton" Text="Editar control" Style="{StaticResource SmallPrimaryButton}" Clicked="OnEditarControlClicked" />
+                            <Button x:Name="EnviarRevisionButton" Grid.Column="1" Text="Enviar a revisión" Style="{StaticResource PrimaryButton}" Clicked="OnEnviarRevisionClicked" />
                         </Grid>
                     </VerticalStackLayout>
 
-                    <Button x:Name="RegistrarButton"
-                            Text="＋ Registrar residuos en este control"
-                            Style="{StaticResource PrimaryButton}"
-                            IsVisible="False"
-                            Clicked="OnRegistrarClicked" />
+                    <VerticalStackLayout x:Name="AmbientalActions" IsVisible="False" Spacing="8">
+                        <Label Text="Revisión Ambiental" Style="{StaticResource SectionTitle}" />
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <Button x:Name="AprobarButton" Text="Aprobar control" Style="{StaticResource PrimaryButton}" Clicked="OnAprobarClicked" />
+                            <Button x:Name="ObservarButton" Grid.Column="1" Text="Observar" BackgroundColor="{StaticResource ColorDanger}" TextColor="White" FontAttributes="Bold" CornerRadius="12" Clicked="OnObservarClicked" />
+                        </Grid>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout x:Name="OperativeActions" IsVisible="False" Spacing="8">
+                        <Label Text="Ejecución de la actividad" Style="{StaticResource SectionTitle}" />
+                        <Button x:Name="IniciarButton"
+                                Text="Iniciar actividad"
+                                Style="{StaticResource PrimaryButton}"
+                                IsVisible="False"
+                                Clicked="OnIniciarClicked" />
+                        <Button x:Name="RegistrarButton"
+                                Text="＋ Registrar residuos en este control"
+                                Style="{StaticResource PrimaryButton}"
+                                IsVisible="False"
+                                Clicked="OnRegistrarClicked" />
+                        <Button x:Name="FinalizarButton"
+                                Text="Finalizar actividad"
+                                BackgroundColor="{StaticResource ColorWarning}"
+                                TextColor="White"
+                                FontAttributes="Bold"
+                                CornerRadius="12"
+                                IsVisible="False"
+                                Clicked="OnFinalizarClicked" />
+                    </VerticalStackLayout>
 
                     <Border Style="{StaticResource SoftCard}">
                         <VerticalStackLayout Spacing="10">
