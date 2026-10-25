@@ -184,7 +184,12 @@ public sealed class InventarioResiduoService(IUnitOfWork unitOfWork) : IInventar
             .ThenByDescending(x => x.CreadoUtc)
             .FirstOrDefault();
 
+        var hayOperacionPosteriorAlTotal = ultimoTotal is not null &&
+            (movimientos.Any(x => x.FechaMovimiento > ultimoTotal.Retiro.FechaRetiro) ||
+             retiros.Any(x => x.Retiro.FechaRetiro > ultimoTotal.Retiro.FechaRetiro));
+
         var cierreCompleto = ultimoTotal is not null &&
+            !hayOperacionPosteriorAlTotal &&
             disposiciones.Any(x =>
                 x.RetiroId == ultimoTotal.RetiroId &&
                 x.EstadoDisposicion.Codigo == "VALIDADA");
