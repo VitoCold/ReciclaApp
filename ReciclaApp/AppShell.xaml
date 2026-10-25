@@ -62,6 +62,12 @@
         ContentTemplate="{DataTemplate pages:RegistrosPage}" />
 
     <ShellContent
+        x:Name="AdministracionShellContent"
+        Title="Administración"
+        Route="administracion"
+        ContentTemplate="{DataTemplate pages:AdministracionPage}" />
+
+    <ShellContent
         Title="Mi perfil"
         Route="perfil"
         ContentTemplate="{DataTemplate pages:PerfilPage}" />
