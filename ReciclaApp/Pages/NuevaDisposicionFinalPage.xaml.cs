@@ -149,7 +149,7 @@ public partial class NuevaDisposicionFinalPage : ContentPage
             return;
         }
 
-        var fechaDisposicion = FechaPicker.Date.Date;
+        var fechaDisposicion = DateOnly.FromDateTime(FechaPicker.Date);
 
         try
         {
