@@ -59,26 +59,6 @@
                         </VerticalStackLayout>
                     </Border>
 
-                    <Border Style="{StaticResource SoftCard}">
-                        <VerticalStackLayout Spacing="9">
-                            <Label Text="Sedes" Style="{StaticResource SectionTitle}" />
-                            <Label Text="Responsables y registradores requieren al menos una sede. Ambiental y Administrador tienen acceso global." Style="{StaticResource TinyMutedText}" />
-                            <VerticalStackLayout x:Name="SedesStack" Spacing="4">
-                                <BindableLayout.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid ColumnDefinitions="Auto,*" Padding="0,4">
-                                            <CheckBox IsChecked="{Binding Seleccionado, Mode=TwoWay}" />
-                                            <VerticalStackLayout Grid.Column="1" Spacing="0" VerticalOptions="Center">
-                                                <Label Text="{Binding Nombre}" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
-                                                <Label Text="{Binding Codigo}" Style="{StaticResource TinyMutedText}" />
-                                            </VerticalStackLayout>
-                                        </Grid>
-                                    </DataTemplate>
-                                </BindableLayout.ItemTemplate>
-                            </VerticalStackLayout>
-                        </VerticalStackLayout>
-                    </Border>
-
                     <Button x:Name="GuardarButton" Text="Guardar usuario" Style="{StaticResource PrimaryButton}" Clicked="OnGuardarClicked" />
 
                     <Button x:Name="RestablecerClaveButton"
