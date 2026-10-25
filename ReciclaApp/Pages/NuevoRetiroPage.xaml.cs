@@ -247,7 +247,7 @@ public partial class NuevoRetiroPage : ContentPage
 
         var confirmar = await DisplayAlert(
             "Confirmar retiro",
-            $"Se registrará la salida de {seleccionados.Length} residuos desde {punto.Nombre} hacia {gestor.Nombre}.\n\n{string.Join(" · ", totales)}",
+            $"Se registrará la salida realizada de {seleccionados.Length} residuos desde {punto.Nombre} hacia {gestor.Nombre}.\n\n{string.Join(" · ", totales)}",
             "Registrar retiro",
             "Cancelar");
         if (!confirmar)
@@ -294,7 +294,7 @@ public partial class NuevoRetiroPage : ContentPage
         {
             _isLoading = false;
             GuardarButton.IsEnabled = true;
-            GuardarButton.Text = "Confirmar retiro";
+            GuardarButton.Text = "Registrar retiro";
             ActivityIndicator.IsRunning = false;
             ActivityIndicator.IsVisible = false;
         }
