@@ -87,6 +87,7 @@ public sealed class CatalogoService(IUnitOfWork unitOfWork) : ICatalogoService
             .Select(x => x.Rol.Codigo)
             .ToListAsync(cancellationToken);
 
+        var hoy = DateTime.UtcNow.Date;
         var puedeCrearControles = rolesUsuario.Contains("RESPONSABLE_OPERATIVO");
         var accesoGlobal = rolesUsuario.Contains("AMBIENTAL") ||
                            rolesUsuario.Contains("ADMINISTRADOR") ||
@@ -101,8 +102,8 @@ public sealed class CatalogoService(IUnitOfWork unitOfWork) : ICatalogoService
                 .Where(x =>
                     x.UsuarioId == usuarioId &&
                     x.EsActivo &&
-                    x.FechaDesde <= DateTime.UtcNow &&
-                    (!x.FechaHasta.HasValue || x.FechaHasta.Value >= DateTime.UtcNow) &&
+                    x.FechaDesde <= hoy &&
+                    (!x.FechaHasta.HasValue || x.FechaHasta.Value >= hoy) &&
                     x.ControlGeneracion.Sede.EsActivo &&
                     !x.ControlGeneracion.Eliminado)
                 .Select(x => x.ControlGeneracion.SedeId)
