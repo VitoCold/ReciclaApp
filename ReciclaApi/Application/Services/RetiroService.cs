@@ -17,11 +17,15 @@ public interface IRetiroService
 
 public sealed class RetiroService(ReciclaDbContext context) : IRetiroService
 {
+    private const string Parcial = "PARCIAL";
+    private const string Total = "TOTAL";
+
     public async Task<IReadOnlyCollection<RetiroListItemDto>> ListarAsync(
         Guid usuarioId,
         CancellationToken cancellationToken = default)
     {
         var esGlobal = await EsGlobalAsync(usuarioId, cancellationToken);
+        var hoy = DateTime.UtcNow;
 
         IQueryable<Retiro> query = context.Retiros
             .AsNoTracking()
@@ -34,7 +38,16 @@ public sealed class RetiroService(ReciclaDbContext context) : IRetiroService
                 .ThenInclude(x => x.UnidadMedida);
 
         if (!esGlobal)
-            query = query.Where(x => x.CreadoPorUsuarioId == usuarioId);
+        {
+            query = query.Where(x => x.Detalles.Any(d =>
+                d.RegistroResiduo.Registro.ControlGeneracionId != null &&
+                d.RegistroResiduo.Registro.ControlGeneracion!.Usuarios.Any(u =>
+                    u.UsuarioId == usuarioId &&
+                    u.RolControl == "RESPONSABLE" &&
+                    u.EsActivo &&
+                    u.FechaDesde <= hoy &&
+                    (!u.FechaHasta.HasValue || u.FechaHasta.Value >= hoy))));
+        }
 
         var retiros = await query
             .OrderByDescending(x => x.FechaRetiro)
@@ -49,14 +62,13 @@ public sealed class RetiroService(ReciclaDbContext context) : IRetiroService
         Guid usuarioId,
         CancellationToken cancellationToken = default)
     {
-        var retiro = await CargarDetalleAsync(retiroId, cancellationToken);
-        if (retiro is null)
-            return ServiceResult<RetiroDetalleDto>.Fail("Retiro no encontrado.", StatusCodes.Status404NotFound);
-
-        if (!await EsGlobalAsync(usuarioId, cancellationToken) && retiro.CreadoPorUsuarioId != usuarioId)
+        if (!await PuedeConsultarAsync(retiroId, usuarioId, cancellationToken))
             return ServiceResult<RetiroDetalleDto>.Fail("Retiro no encontrado o sin acceso.", StatusCodes.Status404NotFound);
 
-        return ServiceResult<RetiroDetalleDto>.Ok(MapDetalle(retiro));
+        var retiro = await CargarDetalleAsync(retiroId, cancellationToken);
+        return retiro is null
+            ? ServiceResult<RetiroDetalleDto>.Fail("Retiro no encontrado.", StatusCodes.Status404NotFound)
+            : ServiceResult<RetiroDetalleDto>.Ok(MapDetalle(retiro));
     }
 
     public async Task<ServiceResult<RetiroDetalleDto>> CrearAsync(
@@ -64,19 +76,20 @@ public sealed class RetiroService(ReciclaDbContext context) : IRetiroService
         CrearRetiroRequest request,
         CancellationToken cancellationToken = default)
     {
+        if (!await TieneRolAsync(usuarioId, "AMBIENTAL", cancellationToken))
+            return ServiceResult<RetiroDetalleDto>.Fail("Solo Ambiental puede registrar retiros de la EO-RS.", StatusCodes.Status403Forbidden);
+
         if (request.Detalles is null || request.Detalles.Count == 0)
             return ServiceResult<RetiroDetalleDto>.Fail("Selecciona al menos un residuo para el retiro.", StatusCodes.Status400BadRequest);
 
-        if (request.Detalles.Any(x => x.Cantidad <= 0))
-            return ServiceResult<RetiroDetalleDto>.Fail("Todas las cantidades del retiro deben ser mayores a cero.", StatusCodes.Status400BadRequest);
+        if (request.Detalles.Any(x => x.PesoEors <= 0))
+            return ServiceResult<RetiroDetalleDto>.Fail("Todos los pesos reportados por la EO-RS deben ser mayores a cero.", StatusCodes.Status400BadRequest);
+
+        if (request.Detalles.Any(x => NormalizarTipo(x.TipoRetiro) is null))
+            return ServiceResult<RetiroDetalleDto>.Fail("Cada residuo debe indicar si el retiro es PARCIAL o TOTAL.", StatusCodes.Status400BadRequest);
 
         if (request.Detalles.Select(x => x.RegistroResiduoId).Distinct().Count() != request.Detalles.Count)
             return ServiceResult<RetiroDetalleDto>.Fail("Un residuo no puede aparecer más de una vez en el mismo retiro.", StatusCodes.Status400BadRequest);
-
-        var esAmbiental = await TieneRolAsync(usuarioId, "AMBIENTAL", cancellationToken);
-        var esResponsable = await TieneRolAsync(usuarioId, "RESPONSABLE_OPERATIVO", cancellationToken);
-        if (!esAmbiental && !esResponsable)
-            return ServiceResult<RetiroDetalleDto>.Fail("No tienes permiso para registrar retiros.", StatusCodes.Status403Forbidden);
 
         await using var transaction = await context.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
 
@@ -97,7 +110,7 @@ public sealed class RetiroService(ReciclaDbContext context) : IRetiroService
             .FirstOrDefaultAsync(x => x.EmpresaId == request.EmpresaGestoraId && x.EsActivo && x.EsGestoraResiduos, cancellationToken);
 
         if (gestor is null)
-            return await FailRollbackAsync("Selecciona una empresa gestora de residuos válida.", StatusCodes.Status400BadRequest, transaction, cancellationToken);
+            return await FailRollbackAsync("Selecciona una EO-RS válida.", StatusCodes.Status400BadRequest, transaction, cancellationToken);
 
         var ids = request.Detalles.Select(x => x.RegistroResiduoId).ToArray();
         var residuos = await context.RegistroResiduos
@@ -111,10 +124,12 @@ public sealed class RetiroService(ReciclaDbContext context) : IRetiroService
         if (residuos.Count != ids.Length)
             return await FailRollbackAsync("Uno o más residuos seleccionados ya no existen.", StatusCodes.Status409Conflict, transaction, cancellationToken);
 
-        var now = DateTime.UtcNow;
+        var conciliaciones = new Dictionary<Guid, ConciliacionDetalle>();
+
         foreach (var detalle in request.Detalles)
         {
             var residuo = residuos.Single(x => x.RegistroResiduoId == detalle.RegistroResiduoId);
+            var tipo = NormalizarTipo(detalle.TipoRetiro)!;
 
             if (residuo.Registro.EstadoRegistro.Codigo != "REGISTRADO" || residuo.Registro.ControlGeneracionId is null)
                 return await FailRollbackAsync("Solo se pueden retirar residuos de registros finalizados dentro de un control de generación.", StatusCodes.Status409Conflict, transaction, cancellationToken);
@@ -122,53 +137,32 @@ public sealed class RetiroService(ReciclaDbContext context) : IRetiroService
             if (residuo.Registro.SedeId != request.SedeId)
                 return await FailRollbackAsync("Todos los residuos del retiro deben pertenecer a la misma sede.", StatusCodes.Status400BadRequest, transaction, cancellationToken);
 
-            if (!esAmbiental)
-            {
-                var autorizado = await context.Set<ControlGeneracionUsuario>()
-                    .AsNoTracking()
-                    .AnyAsync(x =>
-                        x.ControlGeneracionId == residuo.Registro.ControlGeneracionId.Value &&
-                        x.UsuarioId == usuarioId &&
-                        x.RolControl == "RESPONSABLE" &&
-                        x.EsActivo &&
-                        x.FechaDesde <= now &&
-                        (!x.FechaHasta.HasValue || x.FechaHasta.Value >= now),
-                        cancellationToken);
+            var saldo = await CalcularSaldoOperativoPuntoAsync(
+                detalle.RegistroResiduoId,
+                request.PuntoAlmacenamientoId,
+                request.FechaRetiro,
+                cancellationToken);
 
-                if (!autorizado)
-                    return await FailRollbackAsync("El retiro incluye residuos de un control que no administras.", StatusCodes.Status403Forbidden, transaction, cancellationToken);
-            }
+            if (saldo <= 0)
+                return await FailRollbackAsync(
+                    $"{residuo.Residuo.Nombre} ya no tiene saldo operativo en {punto.Nombre} para la fecha indicada.",
+                    StatusCodes.Status409Conflict,
+                    transaction,
+                    cancellationToken);
 
-            var movimientos = await context.MovimientosResiduo
-                .AsNoTracking()
-                .Where(x =>
-                    x.RegistroResiduoId == detalle.RegistroResiduoId &&
-                    x.PuntoDestinoId == request.PuntoAlmacenamientoId &&
-                    !x.Eliminado)
-                .Select(x => x.Cantidad)
-                .ToListAsync(cancellationToken);
-            var almacenado = movimientos.Sum();
-
-            var retirosPrevios = await context.RetiroDetalles
-                .AsNoTracking()
-                .Where(x =>
-                    x.RegistroResiduoId == detalle.RegistroResiduoId &&
-                    x.Retiro.PuntoAlmacenamientoId == request.PuntoAlmacenamientoId &&
-                    !x.Retiro.Eliminado &&
-                    x.Retiro.EstadoRetiro.Codigo != "ANULADO")
-                .Select(x => x.Cantidad)
-                .ToListAsync(cancellationToken);
-            var retirado = retirosPrevios.Sum();
-            var saldo = almacenado - retirado;
-
-            if (detalle.Cantidad > saldo)
+            if (tipo == Parcial && detalle.PesoEors >= saldo)
             {
                 return await FailRollbackAsync(
-                    $"El saldo de {residuo.Residuo.Nombre} en {punto.Nombre} cambió. Disponible: {Math.Max(0m, saldo):0.###} {residuo.UnidadMedida.Codigo}.",
+                    $"El peso EO-RS de {residuo.Residuo.Nombre} ({detalle.PesoEors:0.###} {residuo.UnidadMedida.Codigo}) consume o supera el saldo estimado ({saldo:0.###}). Si la EO-RS se llevó todo lo existente, marca este residuo como retiro TOTAL.",
                     StatusCodes.Status409Conflict,
                     transaction,
                     cancellationToken);
             }
+
+            conciliaciones[detalle.RegistroResiduoId] = new ConciliacionDetalle(
+                tipo,
+                saldo,
+                tipo == Total ? detalle.PesoEors - saldo : null);
         }
 
         var estadoRetirado = await context.EstadosRetiro.FirstAsync(x => x.Codigo == "RETIRADO", cancellationToken);
@@ -195,10 +189,15 @@ public sealed class RetiroService(ReciclaDbContext context) : IRetiroService
         foreach (var detalle in request.Detalles)
         {
             var residuo = residuos.Single(x => x.RegistroResiduoId == detalle.RegistroResiduoId);
+            var conciliacion = conciliaciones[detalle.RegistroResiduoId];
+
             retiro.Detalles.Add(new RetiroDetalle
             {
                 RegistroResiduoId = detalle.RegistroResiduoId,
-                Cantidad = detalle.Cantidad,
+                Cantidad = detalle.PesoEors,
+                TipoRetiro = conciliacion.TipoRetiro,
+                SaldoEstimadoAntes = conciliacion.SaldoEstimadoAntes,
+                DiferenciaConciliacion = conciliacion.DiferenciaConciliacion,
                 UnidadMedidaId = residuo.UnidadMedidaId
             });
         }
@@ -209,7 +208,7 @@ public sealed class RetiroService(ReciclaDbContext context) : IRetiroService
             UsuarioId = usuarioId,
             Entidad = "Retiro",
             EntidadId = retiro.RetiroId,
-            Accion = "CREAR",
+            Accion = "REGISTRAR_RETIRO_EORS",
             DatosDespuesJson = JsonSerializer.Serialize(new
             {
                 retiro.Codigo,
@@ -217,7 +216,14 @@ public sealed class RetiroService(ReciclaDbContext context) : IRetiroService
                 retiro.SedeId,
                 retiro.PuntoAlmacenamientoId,
                 retiro.EmpresaGestoraId,
-                Detalles = request.Detalles
+                Detalles = retiro.Detalles.Select(x => new
+                {
+                    x.RegistroResiduoId,
+                    PesoEors = x.Cantidad,
+                    x.TipoRetiro,
+                    x.SaldoEstimadoAntes,
+                    x.DiferenciaConciliacion
+                })
             })
         });
 
@@ -228,6 +234,83 @@ public sealed class RetiroService(ReciclaDbContext context) : IRetiroService
         return creado is null
             ? ServiceResult<RetiroDetalleDto>.Fail("El retiro fue registrado, pero no pudo recargarse.", StatusCodes.Status500InternalServerError)
             : ServiceResult<RetiroDetalleDto>.Ok(MapDetalle(creado), StatusCodes.Status201Created);
+    }
+
+    private async Task<decimal> CalcularSaldoOperativoPuntoAsync(
+        Guid registroResiduoId,
+        Guid puntoAlmacenamientoId,
+        DateTime fechaCorte,
+        CancellationToken cancellationToken)
+    {
+        var movimientos = await context.MovimientosResiduo
+            .AsNoTracking()
+            .Where(x =>
+                x.RegistroResiduoId == registroResiduoId &&
+                x.PuntoDestinoId == puntoAlmacenamientoId &&
+                !x.Eliminado &&
+                x.FechaMovimiento <= fechaCorte)
+            .Select(x => new { x.FechaMovimiento, x.Cantidad })
+            .ToListAsync(cancellationToken);
+
+        var retiros = await context.RetiroDetalles
+            .AsNoTracking()
+            .Where(x =>
+                x.RegistroResiduoId == registroResiduoId &&
+                x.Retiro.PuntoAlmacenamientoId == puntoAlmacenamientoId &&
+                !x.Retiro.Eliminado &&
+                x.Retiro.EstadoRetiro.Codigo != "ANULADO" &&
+                x.Retiro.FechaRetiro <= fechaCorte)
+            .Select(x => new
+            {
+                x.Cantidad,
+                x.TipoRetiro,
+                x.Retiro.FechaRetiro,
+                x.Retiro.CreadoUtc
+            })
+            .ToListAsync(cancellationToken);
+
+        var ultimoTotal = retiros
+            .Where(x => x.TipoRetiro == Total)
+            .OrderByDescending(x => x.FechaRetiro)
+            .ThenByDescending(x => x.CreadoUtc)
+            .FirstOrDefault();
+
+        if (ultimoTotal is null)
+            return Math.Max(0m, movimientos.Sum(x => x.Cantidad) - retiros.Sum(x => x.Cantidad));
+
+        var movidoDespues = movimientos
+            .Where(x => x.FechaMovimiento > ultimoTotal.FechaRetiro)
+            .Sum(x => x.Cantidad);
+
+        var retiradoDespues = retiros
+            .Where(x => x.FechaRetiro > ultimoTotal.FechaRetiro)
+            .Sum(x => x.Cantidad);
+
+        return Math.Max(0m, movidoDespues - retiradoDespues);
+    }
+
+    private async Task<bool> PuedeConsultarAsync(
+        Guid retiroId,
+        Guid usuarioId,
+        CancellationToken cancellationToken)
+    {
+        if (await EsGlobalAsync(usuarioId, cancellationToken))
+            return true;
+
+        var hoy = DateTime.UtcNow;
+        return await context.RetiroDetalles
+            .AsNoTracking()
+            .AnyAsync(x =>
+                x.RetiroId == retiroId &&
+                !x.Retiro.Eliminado &&
+                x.RegistroResiduo.Registro.ControlGeneracionId != null &&
+                x.RegistroResiduo.Registro.ControlGeneracion!.Usuarios.Any(u =>
+                    u.UsuarioId == usuarioId &&
+                    u.RolControl == "RESPONSABLE" &&
+                    u.EsActivo &&
+                    u.FechaDesde <= hoy &&
+                    (!u.FechaHasta.HasValue || u.FechaHasta.Value >= hoy)),
+                cancellationToken);
     }
 
     private async Task<Retiro?> CargarDetalleAsync(Guid retiroId, CancellationToken cancellationToken) =>
@@ -294,6 +377,9 @@ public sealed class RetiroService(ReciclaDbContext context) : IRetiroService
             x.RegistroResiduo.Residuo.Nombre,
             x.RegistroResiduo.Residuo.ClasificacionResiduo.Nombre,
             x.Cantidad,
+            x.TipoRetiro,
+            x.SaldoEstimadoAntes,
+            x.DiferenciaConciliacion,
             x.UnidadMedidaId,
             x.UnidadMedida.Codigo)).ToArray();
 
@@ -327,6 +413,12 @@ public sealed class RetiroService(ReciclaDbContext context) : IRetiroService
             .OrderBy(x => x.Unidad)
             .ToArray();
 
+    private static string? NormalizarTipo(string? tipo)
+    {
+        var normalizado = tipo?.Trim().ToUpperInvariant();
+        return normalizado is Parcial or Total ? normalizado : null;
+    }
+
     private static string NombreEmpresa(Empresa empresa) =>
         string.IsNullOrWhiteSpace(empresa.NombreComercial) ? empresa.RazonSocial : empresa.NombreComercial;
 
@@ -341,4 +433,9 @@ public sealed class RetiroService(ReciclaDbContext context) : IRetiroService
         await transaction.RollbackAsync(cancellationToken);
         return ServiceResult<RetiroDetalleDto>.Fail(error, statusCode);
     }
+
+    private sealed record ConciliacionDetalle(
+        string TipoRetiro,
+        decimal SaldoEstimadoAntes,
+        decimal? DiferenciaConciliacion);
 }
