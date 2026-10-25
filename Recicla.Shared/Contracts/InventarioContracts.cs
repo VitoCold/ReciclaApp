@@ -23,6 +23,8 @@ public sealed record InventarioResiduoItemDto(
     decimal CantidadRetirada,
     decimal CantidadDisponible,
     decimal CantidadPendienteAlmacenamiento,
+    string EstadoOperativoCodigo,
+    string EstadoOperativo,
     IReadOnlyCollection<InventarioUbicacionDto> Almacenamientos,
     Guid RegistradoPorUsuarioId,
     string RegistradoPor);
