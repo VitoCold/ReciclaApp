@@ -243,6 +243,8 @@ public sealed class InventarioResiduoService(IUnitOfWork unitOfWork) : IInventar
                 retirado,
                 disponible,
                 pendiente,
+                EstadoOperativoCodigo(movido, pendiente),
+                EstadoOperativoNombre(movido, pendiente),
                 almacenamientos,
                 residuo.Registro.RegistradoPorUsuarioId,
                 nombreUsuario);
@@ -254,10 +256,11 @@ public sealed class InventarioResiduoService(IUnitOfWork unitOfWork) : IInventar
         Guid usuarioId,
         CancellationToken cancellationToken)
     {
-        if (await TieneRolAsync(usuarioId, "AMBIENTAL", cancellationToken))
-            return true;
+        var tieneRolOperativo =
+            await TieneRolAsync(usuarioId, "RESPONSABLE_OPERATIVO", cancellationToken) ||
+            await TieneRolAsync(usuarioId, "REGISTRADOR", cancellationToken);
 
-        if (!await TieneRolAsync(usuarioId, "RESPONSABLE_OPERATIVO", cancellationToken))
+        if (!tieneRolOperativo)
             return false;
 
         var now = DateTime.UtcNow;
@@ -265,12 +268,26 @@ public sealed class InventarioResiduoService(IUnitOfWork unitOfWork) : IInventar
             .AnyAsync(x =>
                 x.ControlGeneracionId == controlId &&
                 x.UsuarioId == usuarioId &&
-                x.RolControl == "RESPONSABLE" &&
+                (x.RolControl == "RESPONSABLE" || x.RolControl == "REGISTRADOR") &&
                 x.EsActivo &&
                 x.FechaDesde <= now &&
                 (!x.FechaHasta.HasValue || x.FechaHasta.Value >= now),
                 cancellationToken);
     }
+
+    private static string EstadoOperativoCodigo(decimal cantidadMovida, decimal cantidadPendiente) =>
+        cantidadMovida <= 0
+            ? "PENDIENTE_TRASLADO"
+            : cantidadPendiente > 0
+                ? "TRASLADO_PARCIAL"
+                : "EN_ALMACEN_TEMPORAL";
+
+    private static string EstadoOperativoNombre(decimal cantidadMovida, decimal cantidadPendiente) =>
+        cantidadMovida <= 0
+            ? "Pendiente de traslado"
+            : cantidadPendiente > 0
+                ? "Traslado parcial"
+                : "En almacén temporal";
 
     private Task<bool> TieneRolAsync(Guid usuarioId, string rol, CancellationToken cancellationToken) =>
         unitOfWork.Repository<UsuarioRol>().Query()
