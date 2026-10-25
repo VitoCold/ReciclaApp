@@ -101,6 +101,8 @@ public sealed class CatalogoService(IUnitOfWork unitOfWork) : ICatalogoService
                 .Where(x =>
                     x.UsuarioId == usuarioId &&
                     x.EsActivo &&
+                    x.FechaDesde <= DateTime.UtcNow &&
+                    (!x.FechaHasta.HasValue || x.FechaHasta.Value >= DateTime.UtcNow) &&
                     x.ControlGeneracion.Sede.EsActivo &&
                     !x.ControlGeneracion.Eliminado)
                 .Select(x => x.ControlGeneracion.SedeId)
