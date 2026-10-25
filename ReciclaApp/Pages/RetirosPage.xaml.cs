@@ -40,8 +40,7 @@ public partial class RetirosPage : ContentPage
         var puedeVer = usuario.Roles.Contains("AMBIENTAL") ||
                        usuario.Roles.Contains("RESPONSABLE_OPERATIVO") ||
                        usuario.Roles.Contains("ADMINISTRADOR");
-        var puedeCrear = usuario.Roles.Contains("AMBIENTAL") ||
-                         usuario.Roles.Contains("RESPONSABLE_OPERATIVO");
+        var puedeCrear = usuario.Roles.Contains("AMBIENTAL");
 
         NuevoRetiroButton.IsVisible = puedeCrear;
         if (!puedeVer)
