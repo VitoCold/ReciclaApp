@@ -46,6 +46,9 @@ public static class AppNavigator
     public static Task IrANuevaDisposicionFinalAsync(Guid retiroId) =>
         ApilarAsync($"{AppRoutes.NuevaDisposicionFinal}?retiroId={retiroId}");
 
+    public static Task IrATrazabilidadResiduoAsync(Guid registroResiduoId) =>
+        ApilarAsync($"{AppRoutes.TrazabilidadResiduo}?registroResiduoId={registroResiduoId}");
+
     public static Task IrADetalleRetiroDesdeCreacionAsync(Guid retiroId) =>
         ReemplazarActualAsync($"{AppRoutes.DetalleRetiro}?retiroId={retiroId}");
 
