@@ -144,7 +144,10 @@ public sealed class RetiroDetalleConfiguration : IEntityTypeConfiguration<Retiro
     public void Configure(EntityTypeBuilder<RetiroDetalle> entity)
     {
         entity.ToTable("RetiroDetalles", table =>
-            table.HasCheckConstraint("CK_RetiroDetalles_Cantidad", "[Cantidad] > 0"));
+        {
+            table.HasCheckConstraint("CK_RetiroDetalles_Cantidad", "[Cantidad] > 0");
+            table.HasCheckConstraint("CK_RetiroDetalles_TipoRetiro", "[TipoRetiro] IN ('PARCIAL','TOTAL')");
+        });
         entity.HasKey(x => x.RetiroDetalleId);
         entity.Property(x => x.Cantidad).HasPrecision(18, 3);
         entity.Property(x => x.Observacion).HasMaxLength(500);
