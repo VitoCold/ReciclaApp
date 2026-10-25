@@ -20,6 +20,9 @@ public static class AppNavigator
 
     public static Task IrANuevoControlGeneracionAsync() => ApilarAsync(AppRoutes.NuevoControlGeneracion);
 
+    public static Task IrAEditarControlGeneracionAsync(Guid controlId) =>
+        ApilarAsync($"{AppRoutes.NuevoControlGeneracion}?controlId={controlId}");
+
     public static Task IrADetalleControlGeneracionAsync(Guid controlId) =>
         ApilarAsync($"{AppRoutes.DetalleControlGeneracion}?controlId={controlId}");
 
