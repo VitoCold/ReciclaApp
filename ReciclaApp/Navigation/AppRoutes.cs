@@ -9,6 +9,7 @@ public static class AppRoutes
     public const string Retiros = "//retiros";
     public const string Reportes = "//reportes";
     public const string Registros = "//registros";
+    public const string Administracion = "//administracion";
     public const string Perfil = "//perfil";
 
     // Rutas relativas: se apilan sobre la pantalla actual.
@@ -25,4 +26,6 @@ public static class AppRoutes
     public const string DetalleResiduoFotos = "detalle-residuo-fotos";
     public const string InicioRegistro = "inicio-registro";
     public const string RegistrarResiduo = "registrar-residuo";
+    public const string AdministracionUsuarios = "administracion-usuarios";
+    public const string EditarAdministracionUsuario = "editar-administracion-usuario";
 }
