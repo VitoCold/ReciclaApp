@@ -124,13 +124,21 @@
                             <VerticalStackLayout BindableLayout.ItemsSource="{Binding Detalles}">
                                 <BindableLayout.ItemTemplate>
                                     <DataTemplate>
-                                        <Grid ColumnDefinitions="*,Auto" Padding="0,8">
-                                            <VerticalStackLayout Spacing="2">
-                                                <Label Text="{Binding Residuo}" FontSize="13" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
-                                                <Label Text="{Binding OrigenTexto}" FontSize="10" TextColor="{StaticResource ColorMuted}" />
+                                        <Border Stroke="#E5E7EB" StrokeShape="RoundRectangle 10" Padding="10" Margin="0,0,0,8">
+                                            <VerticalStackLayout Spacing="4">
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <VerticalStackLayout Spacing="1">
+                                                        <Label Text="{Binding Residuo}" FontSize="13" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                                        <Label Text="{Binding OrigenTexto}" FontSize="10" TextColor="{StaticResource ColorMuted}" />
+                                                    </VerticalStackLayout>
+                                                    <Border Grid.Column="1" Style="{StaticResource Chip}" BackgroundColor="{StaticResource ColorBlueSoft}">
+                                                        <Label Text="{Binding TipoRetiro}" FontSize="10" FontAttributes="Bold" TextColor="{StaticResource ColorPrimary}" />
+                                                    </Border>
+                                                </Grid>
+                                                <Label Text="{Binding PesoTexto}" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource ColorPrimary}" />
+                                                <Label Text="{Binding ConciliacionTexto}" FontSize="10" TextColor="{StaticResource ColorMuted}" />
                                             </VerticalStackLayout>
-                                            <Label Grid.Column="1" Text="{Binding CantidadTexto}" FontSize="12" FontAttributes="Bold" TextColor="{StaticResource ColorPrimary}" VerticalOptions="Center" />
-                                        </Grid>
+                                        </Border>
                                     </DataTemplate>
                                 </BindableLayout.ItemTemplate>
                             </VerticalStackLayout>
