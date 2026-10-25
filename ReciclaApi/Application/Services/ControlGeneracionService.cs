@@ -445,8 +445,10 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
         if (control is null)
             return ServiceResult<ControlGeneracionDetalleDto>.Fail("Control de generación no encontrado.", StatusCodes.Status404NotFound);
 
-        if (control.EstadoControlGeneracion.Codigo is "FINALIZADO" or "ANULADO")
-            return ServiceResult<ControlGeneracionDetalleDto>.Fail("No se pueden cambiar asignaciones en un control finalizado o anulado.", StatusCodes.Status409Conflict);
+        if (control.EstadoControlGeneracion.Codigo is not ("BORRADOR" or "OBSERVADO"))
+            return ServiceResult<ControlGeneracionDetalleDto>.Fail(
+                "El equipo solo puede modificarse mientras el control está en borrador u observado.",
+                StatusCodes.Status409Conflict);
 
         var rolControl = request.RolControl.Trim().ToUpperInvariant();
         if (!RolesControl.Contains(rolControl))
@@ -524,7 +526,12 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
         if (asignacion is null)
             return ServiceResult.Fail("Asignación no encontrada.", StatusCodes.Status404NotFound);
 
-        if (asignacion.RolControl == "RESPONSABLE" && asignacion.ControlGeneracion.EstadoControlGeneracion.Codigo == "ACTIVO")
+        if (asignacion.ControlGeneracion.EstadoControlGeneracion.Codigo is not ("BORRADOR" or "OBSERVADO"))
+            return ServiceResult.Fail(
+                "El equipo solo puede modificarse mientras el control está en borrador u observado.",
+                StatusCodes.Status409Conflict);
+
+        if (asignacion.RolControl == "RESPONSABLE")
         {
             var hoy = DateTime.UtcNow.Date;
             var otrosResponsables = await unitOfWork.Repository<ControlGeneracionUsuario>().Query()
@@ -538,7 +545,9 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
                     cancellationToken);
 
             if (otrosResponsables == 0)
-                return ServiceResult.Fail("Un control activo debe conservar al menos un responsable vigente.", StatusCodes.Status409Conflict);
+                return ServiceResult.Fail(
+                    "El control debe conservar al menos un responsable vigente.",
+                    StatusCodes.Status409Conflict);
         }
 
         asignacion.EsActivo = false;
