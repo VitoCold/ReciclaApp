@@ -31,7 +31,7 @@
                     </VerticalStackLayout>
                     <Button x:Name="CrearRetiroButton"
                             Grid.Column="1"
-                            Text="Crear retiro"
+                            Text="Registrar retiro"
                             Style="{StaticResource SmallPrimaryButton}"
                             VerticalOptions="Center"
                             IsVisible="False"
