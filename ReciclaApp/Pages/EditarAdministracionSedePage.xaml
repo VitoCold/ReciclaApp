@@ -33,7 +33,7 @@
                             <Label Text="Datos de la sede" Style="{StaticResource SectionTitle}" />
                             <Label Text="El código identifica la sede en catálogos y reportes." Style="{StaticResource TinyMutedText}" />
                             <Entry x:Name="CodigoEntry" Placeholder="Código, por ejemplo PISCO" MaxLength="30" />
-                            <Entry x:Name="NombreEntry" Placeholder="Nombre de la sede" MaxLength="120" />
+                            <Entry x:Name="NombreEntry" Placeholder="Nombre de la sede" MaxLength="100" />
                         </VerticalStackLayout>
                     </Border>
 
