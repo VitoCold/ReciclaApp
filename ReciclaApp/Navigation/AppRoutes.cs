@@ -28,4 +28,6 @@ public static class AppRoutes
     public const string RegistrarResiduo = "registrar-residuo";
     public const string AdministracionUsuarios = "administracion-usuarios";
     public const string EditarAdministracionUsuario = "editar-administracion-usuario";
+    public const string AdministracionSedes = "administracion-sedes";
+    public const string EditarAdministracionSede = "editar-administracion-sede";
 }
