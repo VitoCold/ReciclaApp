@@ -39,11 +39,25 @@
                 <Label Text="Siguiente ola" Style="{StaticResource SectionTitle}" />
 
                 <Border Style="{StaticResource SoftCard}">
-                    <Grid ColumnDefinitions="44,*">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnSedesTapped" />
+                    </Border.GestureRecognizers>
+                    <Grid ColumnDefinitions="44,*,Auto" ColumnSpacing="10">
                         <Label Text="🏢" FontSize="22" VerticalOptions="Center" />
                         <VerticalStackLayout Grid.Column="1">
-                            <Label Text="Sedes y puntos de residuo" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
-                            <Label Text="Pendiente · generación, almacenamiento y ambos" Style="{StaticResource TinyMutedText}" />
+                            <Label Text="Sedes" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                            <Label Text="Maestro de sedes operativas" Style="{StaticResource TinyMutedText}" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="2" Text="Administrar ›" TextColor="{StaticResource ColorPrimary}" FontSize="11" FontAttributes="Bold" VerticalOptions="Center" />
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource SoftCard}">
+                    <Grid ColumnDefinitions="44,*">
+                        <Label Text="📍" FontSize="22" VerticalOptions="Center" />
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Puntos de residuo" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                            <Label Text="Próximo · generación, almacenamiento y ambos" Style="{StaticResource TinyMutedText}" />
                         </VerticalStackLayout>
                     </Grid>
                 </Border>
