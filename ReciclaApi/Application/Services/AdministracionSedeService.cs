@@ -187,8 +187,8 @@ public sealed class AdministracionSedeService(ReciclaDbContext context) : IAdmin
         var codigo = NormalizarCodigo(request.Codigo);
         if (codigo.Length > 30)
             return "El código de la sede no puede superar 30 caracteres.";
-        if (request.Nombre.Trim().Length > 120)
-            return "El nombre de la sede no puede superar 120 caracteres.";
+        if (request.Nombre.Trim().Length > 100)
+            return "El nombre de la sede no puede superar 100 caracteres.";
 
         var codigoDuplicado = await context.Sedes
             .AsNoTracking()
