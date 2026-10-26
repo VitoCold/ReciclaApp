@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ReciclaApp.Pages.EditarAdministracionSedePage"
+             Style="{StaticResource BasePage}"
+             Shell.NavBarIsVisible="False">
+    <Grid RowDefinitions="Auto,*">
+        <Grid Style="{StaticResource AppHeader}" ColumnDefinitions="Auto,*">
+            <Label Text="‹" TextColor="White" FontSize="34" VerticalOptions="Center">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </Label.GestureRecognizers>
+            </Label>
+            <Label x:Name="HeaderLabel" Grid.Column="1" Text="Nueva sede" Style="{StaticResource HeaderTitle}" />
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="18,18,18,34" Spacing="14">
+                <Border x:Name="ErrorBorder" IsVisible="False"
+                        BackgroundColor="{StaticResource ColorDangerSoft}"
+                        Stroke="Transparent" StrokeShape="RoundRectangle 12" Padding="12,9">
+                    <Label x:Name="ErrorLabel" TextColor="{StaticResource ColorDanger}" FontSize="12" />
+                </Border>
+
+                <ActivityIndicator x:Name="ActivityIndicator"
+                                   IsVisible="False"
+                                   IsRunning="False"
+                                   HorizontalOptions="Center" />
+
+                <VerticalStackLayout x:Name="ContenidoLayout" Spacing="14">
+                    <Border Style="{StaticResource SoftCard}">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Datos de la sede" Style="{StaticResource SectionTitle}" />
+                            <Label Text="El código identifica la sede en catálogos y reportes." Style="{StaticResource TinyMutedText}" />
+                            <Entry x:Name="CodigoEntry" Placeholder="Código, por ejemplo PISCO" MaxLength="30" />
+                            <Entry x:Name="NombreEntry" Placeholder="Nombre de la sede" MaxLength="120" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border x:Name="UsoBorder" Style="{StaticResource SoftCard}" IsVisible="False">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Uso actual" Style="{StaticResource SectionTitle}" />
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                <VerticalStackLayout>
+                                    <Label Text="Puntos activos" Style="{StaticResource TinyMutedText}" />
+                                    <Label x:Name="PuntosLabel" Text="0" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="1">
+                                    <Label Text="Controles abiertos" Style="{StaticResource TinyMutedText}" />
+                                    <Label x:Name="ControlesLabel" Text="0" FontSize="15" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                </VerticalStackLayout>
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Button x:Name="GuardarButton"
+                            Text="Crear sede"
+                            Style="{StaticResource PrimaryButton}"
+                            Clicked="OnGuardarClicked" />
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>
