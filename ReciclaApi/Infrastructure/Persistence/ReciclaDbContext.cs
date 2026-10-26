@@ -32,6 +32,7 @@ public sealed class ReciclaDbContext(DbContextOptions<ReciclaDbContext> options)
     public DbSet<RetiroDetalle> RetiroDetalles => Set<RetiroDetalle>();
     public DbSet<DisposicionFinal> DisposicionesFinales => Set<DisposicionFinal>();
     public DbSet<DisposicionFinalEvidencia> DisposicionFinalEvidencias => Set<DisposicionFinalEvidencia>();
+    public DbSet<ControlGeneracion> ControlesGeneracion => Set<ControlGeneracion>();
 
     // Legado: se conserva mientras API y app migran al flujo Retiro -> DisposicionFinal.
     public DbSet<Disposicion> Disposiciones => Set<Disposicion>();
