@@ -32,24 +32,59 @@ public sealed class AdministracionSedeService(ReciclaDbContext context) : IAdmin
     public async Task<IReadOnlyCollection<AdministracionSedeDto>> ListarAsync(
         CancellationToken cancellationToken = default)
     {
-        var sedes = await Query()
-            .OrderByDescending(x => x.Sede.EsActivo)
-            .ThenBy(x => x.Sede.Nombre)
+        var sedes = await context.Sedes
+            .AsNoTracking()
+            .OrderByDescending(x => x.EsActivo)
+            .ThenBy(x => x.Nombre)
             .ToListAsync(cancellationToken);
 
-        return sedes.Select(Map).ToArray();
+        if (sedes.Count == 0)
+            return Array.Empty<AdministracionSedeDto>();
+
+        var sedeIds = sedes.Select(x => x.SedeId).ToArray();
+
+        var puntosActivos = await context.PuntosResiduo
+            .AsNoTracking()
+            .Where(x => x.EsActivo && sedeIds.Contains(x.SedeId))
+            .GroupBy(x => x.SedeId)
+            .Select(g => new { SedeId = g.Key, Cantidad = g.Count() })
+            .ToDictionaryAsync(x => x.SedeId, x => x.Cantidad, cancellationToken);
+
+        var controlesAbiertos = await context.ControlesGeneracion
+            .AsNoTracking()
+            .Where(x =>
+                sedeIds.Contains(x.SedeId) &&
+                !x.Eliminado &&
+                x.EstadoControlGeneracion.Codigo != "FINALIZADO" &&
+                x.EstadoControlGeneracion.Codigo != "ANULADO")
+            .GroupBy(x => x.SedeId)
+            .Select(g => new { SedeId = g.Key, Cantidad = g.Count() })
+            .ToDictionaryAsync(x => x.SedeId, x => x.Cantidad, cancellationToken);
+
+        return sedes
+            .Select(sede => new AdministracionSedeDto(
+                sede.SedeId,
+                sede.Codigo,
+                sede.Nombre,
+                sede.EsActivo,
+                puntosActivos.GetValueOrDefault(sede.SedeId),
+                controlesAbiertos.GetValueOrDefault(sede.SedeId)))
+            .ToArray();
     }
 
     public async Task<ServiceResult<AdministracionSedeDto>> ObtenerAsync(
         Guid sedeId,
         CancellationToken cancellationToken = default)
     {
-        var sede = await Query()
-            .FirstOrDefaultAsync(x => x.Sede.SedeId == sedeId, cancellationToken);
+        var sede = await context.Sedes
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.SedeId == sedeId, cancellationToken);
 
-        return sede is null
-            ? ServiceResult<AdministracionSedeDto>.Fail("Sede no encontrada.", StatusCodes.Status404NotFound)
-            : ServiceResult<AdministracionSedeDto>.Ok(Map(sede));
+        if (sede is null)
+            return ServiceResult<AdministracionSedeDto>.Fail("Sede no encontrada.", StatusCodes.Status404NotFound);
+
+        return ServiceResult<AdministracionSedeDto>.Ok(
+            await CrearDtoAsync(sede, cancellationToken));
     }
 
     public async Task<ServiceResult<AdministracionSedeDto>> CrearAsync(
@@ -110,8 +145,8 @@ public sealed class AdministracionSedeService(ReciclaDbContext context) : IAdmin
         });
 
         await context.SaveChangesAsync(cancellationToken);
-        var actualizada = await Query().FirstAsync(x => x.Sede.SedeId == sedeId, cancellationToken);
-        return ServiceResult<AdministracionSedeDto>.Ok(Map(actualizada));
+        return ServiceResult<AdministracionSedeDto>.Ok(
+            await CrearDtoAsync(sede, cancellationToken));
     }
 
     public async Task<ServiceResult<AdministracionSedeDto>> CambiarEstadoAsync(
@@ -128,8 +163,8 @@ public sealed class AdministracionSedeService(ReciclaDbContext context) : IAdmin
 
         if (sede.EsActivo == esActivo)
         {
-            var sinCambios = await Query().FirstAsync(x => x.Sede.SedeId == sedeId, cancellationToken);
-            return ServiceResult<AdministracionSedeDto>.Ok(Map(sinCambios));
+            return ServiceResult<AdministracionSedeDto>.Ok(
+                await CrearDtoAsync(sede, cancellationToken));
         }
 
         if (!esActivo)
@@ -170,8 +205,8 @@ public sealed class AdministracionSedeService(ReciclaDbContext context) : IAdmin
             new { sede.EsActivo });
 
         await context.SaveChangesAsync(cancellationToken);
-        var actualizada = await Query().FirstAsync(x => x.Sede.SedeId == sedeId, cancellationToken);
-        return ServiceResult<AdministracionSedeDto>.Ok(Map(actualizada));
+        return ServiceResult<AdministracionSedeDto>.Ok(
+            await CrearDtoAsync(sede, cancellationToken));
     }
 
     private async Task<string?> ValidarAsync(
@@ -203,25 +238,31 @@ public sealed class AdministracionSedeService(ReciclaDbContext context) : IAdmin
         return null;
     }
 
-    private IQueryable<SedeResumen> Query() =>
-        context.Sedes
+    private async Task<AdministracionSedeDto> CrearDtoAsync(
+        Sede sede,
+        CancellationToken cancellationToken)
+    {
+        var puntosActivos = await context.PuntosResiduo
             .AsNoTracking()
-            .Select(s => new SedeResumen(
-                s,
-                context.PuntosResiduo.Count(p => p.SedeId == s.SedeId && p.EsActivo),
-                context.ControlesGeneracion.Count(c =>
-                    c.SedeId == s.SedeId &&
-                    !c.Eliminado &&
-                    c.EstadoControlGeneracion.Codigo != "FINALIZADO" &&
-                    c.EstadoControlGeneracion.Codigo != "ANULADO")));
+            .CountAsync(x => x.SedeId == sede.SedeId && x.EsActivo, cancellationToken);
 
-    private static AdministracionSedeDto Map(SedeResumen item) => new(
-        item.Sede.SedeId,
-        item.Sede.Codigo,
-        item.Sede.Nombre,
-        item.Sede.EsActivo,
-        item.PuntosActivos,
-        item.ControlesAbiertos);
+        var controlesAbiertos = await context.ControlesGeneracion
+            .AsNoTracking()
+            .CountAsync(x =>
+                x.SedeId == sede.SedeId &&
+                !x.Eliminado &&
+                x.EstadoControlGeneracion.Codigo != "FINALIZADO" &&
+                x.EstadoControlGeneracion.Codigo != "ANULADO",
+                cancellationToken);
+
+        return new AdministracionSedeDto(
+            sede.SedeId,
+            sede.Codigo,
+            sede.Nombre,
+            sede.EsActivo,
+            puntosActivos,
+            controlesAbiertos);
+    }
 
     private void Auditar(Guid actorUsuarioId, Guid sedeId, string accion, object? antes, object? despues)
     {
@@ -239,5 +280,4 @@ public sealed class AdministracionSedeService(ReciclaDbContext context) : IAdmin
     private static string NormalizarCodigo(string codigo) =>
         codigo.Trim().ToUpperInvariant().Replace(' ', '_');
 
-    private sealed record SedeResumen(Sede Sede, int PuntosActivos, int ControlesAbiertos);
 }
