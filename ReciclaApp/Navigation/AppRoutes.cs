@@ -30,4 +30,6 @@ public static class AppRoutes
     public const string EditarAdministracionUsuario = "editar-administracion-usuario";
     public const string AdministracionSedes = "administracion-sedes";
     public const string EditarAdministracionSede = "editar-administracion-sede";
+    public const string AdministracionPuntosResiduo = "administracion-puntos-residuo";
+    public const string EditarAdministracionPuntoResiduo = "editar-administracion-punto-residuo";
 }
