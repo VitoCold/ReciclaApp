@@ -252,11 +252,22 @@ public sealed class AdministracionPuntoResiduoService(ReciclaDbContext context) 
         if (request.Nombre.Trim().Length > 160)
             return "El nombre del punto no puede superar 160 caracteres.";
 
-        var sedeActiva = await context.Sedes
+        var sede = await context.Sedes
             .AsNoTracking()
-            .AnyAsync(x => x.SedeId == request.SedeId && x.EsActivo, cancellationToken);
-        if (!sedeActiva)
-            return "La sede seleccionada no existe o está inactiva.";
+            .FirstOrDefaultAsync(x => x.SedeId == request.SedeId, cancellationToken);
+        if (sede is null)
+            return "La sede seleccionada no existe.";
+
+        var mantieneSedeActual = puntoResiduoId.HasValue &&
+            await context.PuntosResiduo
+                .AsNoTracking()
+                .AnyAsync(x =>
+                    x.PuntoResiduoId == puntoResiduoId.Value &&
+                    x.SedeId == request.SedeId,
+                    cancellationToken);
+
+        if (!sede.EsActivo && !mantieneSedeActual)
+            return "No puedes asignar el punto a una sede inactiva.";
 
         var duplicado = await context.PuntosResiduo
             .AsNoTracking()
