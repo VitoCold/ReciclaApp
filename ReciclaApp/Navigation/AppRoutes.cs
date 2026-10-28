@@ -40,4 +40,6 @@ public static class AppRoutes
     public const string EditarAdministracionTipoResiduo = "editar-administracion-tipo-residuo";
     public const string AdministracionResiduos = "administracion-residuos";
     public const string EditarAdministracionResiduo = "editar-administracion-residuo";
+    public const string AdministracionEmpresas = "administracion-empresas";
+    public const string EditarAdministracionEmpresa = "editar-administracion-empresa";
 }
