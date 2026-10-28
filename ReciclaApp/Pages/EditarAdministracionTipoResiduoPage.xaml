@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ReciclaApp.Pages.EditarAdministracionTipoResiduoPage"
+             Style="{StaticResource BasePage}"
+             Shell.NavBarIsVisible="False">
+    <Grid RowDefinitions="Auto,*">
+        <Grid Style="{StaticResource AppHeader}" ColumnDefinitions="Auto,*">
+            <Label Text="‹" TextColor="White" FontSize="34" VerticalOptions="Center">
+                <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnBackTapped" /></Label.GestureRecognizers>
+            </Label>
+            <Label x:Name="HeaderLabel" Grid.Column="1" Text="Nuevo tipo" Style="{StaticResource HeaderTitle}" />
+        </Grid>
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="18,18,18,34" Spacing="14">
+                <Border x:Name="ErrorBorder" IsVisible="False" BackgroundColor="{StaticResource ColorDangerSoft}" Stroke="Transparent" StrokeShape="RoundRectangle 12" Padding="12,9">
+                    <Label x:Name="ErrorLabel" TextColor="{StaticResource ColorDanger}" FontSize="12" />
+                </Border>
+                <Border Style="{StaticResource SoftCard}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Datos del tipo" Style="{StaticResource SectionTitle}" />
+                        <Entry x:Name="CodigoEntry" Placeholder="Código" MaxLength="40" />
+                        <Entry x:Name="NombreEntry" Placeholder="Nombre" MaxLength="120" />
+                    </VerticalStackLayout>
+                </Border>
+                <Label x:Name="UsoLabel" IsVisible="False" Style="{StaticResource TinyMutedText}" />
+                <Button x:Name="GuardarButton" Text="Crear tipo" Style="{StaticResource PrimaryButton}" Clicked="OnGuardarClicked" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>
