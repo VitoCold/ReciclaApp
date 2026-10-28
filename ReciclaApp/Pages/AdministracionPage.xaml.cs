@@ -31,4 +31,5 @@ public partial class AdministracionPage : ContentPage
     private async void OnActividadesTapped(object sender, TappedEventArgs e) => await AppNavigator.IrAAdministracionActividadesAsync();
     private async void OnTiposResiduoTapped(object sender, TappedEventArgs e) => await AppNavigator.IrAAdministracionTiposResiduoAsync();
     private async void OnResiduosTapped(object sender, TappedEventArgs e) => await AppNavigator.IrAAdministracionResiduosAsync();
+    private async void OnEmpresasTapped(object sender, TappedEventArgs e) => await AppNavigator.IrAAdministracionEmpresasAsync();
 }
