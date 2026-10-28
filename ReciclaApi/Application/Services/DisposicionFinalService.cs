@@ -94,7 +94,7 @@ public sealed class DisposicionFinalService(
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.EmpresaId == request.EmpresaGestoraId && x.EsActivo && x.EsGestoraResiduos, cancellationToken);
         if (gestor is null)
-            return await FailRollbackAsync("Selecciona una empresa gestora válida.", StatusCodes.Status400BadRequest, transaction, cancellationToken);
+            return await FailRollbackAsync("Selecciona una EO-RS válida.", StatusCodes.Status400BadRequest, transaction, cancellationToken);
 
         var tratamiento = await context.TiposTratamiento
             .AsNoTracking()
