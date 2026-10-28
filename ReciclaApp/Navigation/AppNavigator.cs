@@ -63,6 +63,14 @@ public static class AppNavigator
     public static Task IrAEditarAdministracionActividadAsync(Guid actividadId) =>
         ApilarAsync($"{AppRoutes.EditarAdministracionActividad}?actividadId={actividadId}");
 
+    public static Task IrAAdministracionTiposResiduoAsync() => ApilarAsync(AppRoutes.AdministracionTiposResiduo);
+    public static Task IrANuevoAdministracionTipoResiduoAsync() => ApilarAsync(AppRoutes.EditarAdministracionTipoResiduo);
+    public static Task IrAEditarAdministracionTipoResiduoAsync(Guid id) => ApilarAsync($"{AppRoutes.EditarAdministracionTipoResiduo}?tipoResiduoId={id}");
+
+    public static Task IrAAdministracionResiduosAsync() => ApilarAsync(AppRoutes.AdministracionResiduos);
+    public static Task IrANuevoAdministracionResiduoAsync() => ApilarAsync(AppRoutes.EditarAdministracionResiduo);
+    public static Task IrAEditarAdministracionResiduoAsync(Guid id) => ApilarAsync($"{AppRoutes.EditarAdministracionResiduo}?residuoId={id}");
+
     public static Task IrAPerfilAsync() => IrARaizAsync(AppRoutes.Perfil);
 
     public static Task IrANuevoControlGeneracionAsync() => ApilarAsync(AppRoutes.NuevoControlGeneracion);
