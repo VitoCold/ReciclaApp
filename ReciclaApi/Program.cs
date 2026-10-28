@@ -121,6 +121,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICatalogoService, CatalogoService>();
 builder.Services.AddScoped<IAdministracionUsuarioService, AdministracionUsuarioService>();
 builder.Services.AddScoped<IAdministracionSedeService, AdministracionSedeService>();
+builder.Services.AddScoped<IAdministracionPuntoResiduoService, AdministracionPuntoResiduoService>();
 builder.Services.AddScoped<IRegistroService, RegistroService>();
 builder.Services.AddScoped<IRegistroResiduoEvidenciaService, RegistroResiduoEvidenciaService>();
 builder.Services.AddScoped<IControlGeneracionService, ControlGeneracionService>();
