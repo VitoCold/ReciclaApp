@@ -168,10 +168,13 @@ public sealed class AdministracionProyectoActividadService(ReciclaDbContext cont
         var actividades = await context.Actividades
             .AsNoTracking()
             .Include(x => x.Proyecto)
-            .OrderByDescending(x => x.EsActivo)
-            .ThenBy(x => x.Proyecto != null ? x.Proyecto.Nombre : "")
-            .ThenBy(x => x.Nombre)
             .ToListAsync(cancellationToken);
+
+        actividades = actividades
+            .OrderByDescending(x => x.EsActivo)
+            .ThenBy(x => x.Proyecto?.Nombre ?? string.Empty)
+            .ThenBy(x => x.Nombre)
+            .ToList();
 
         var resultado = new List<AdministracionActividadDto>(actividades.Count);
         foreach (var actividad in actividades)
