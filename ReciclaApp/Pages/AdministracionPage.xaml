@@ -95,12 +95,30 @@
                 </Border>
 
                 <Border Style="{StaticResource SoftCard}">
-                    <Grid ColumnDefinitions="44,*">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnTiposResiduoTapped" />
+                    </Border.GestureRecognizers>
+                    <Grid ColumnDefinitions="44,*,Auto" ColumnSpacing="10">
                         <Label Text="♻️" FontSize="22" VerticalOptions="Center" />
                         <VerticalStackLayout Grid.Column="1">
-                            <Label Text="Tipos y catálogo de residuos" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
-                            <Label Text="Pendiente · clasificación y unidad predeterminada" Style="{StaticResource TinyMutedText}" />
+                            <Label Text="Tipos de residuo" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                            <Label Text="Agrupación administrable del catálogo" Style="{StaticResource TinyMutedText}" />
                         </VerticalStackLayout>
+                        <Label Grid.Column="2" Text="Administrar ›" TextColor="{StaticResource ColorPrimary}" FontSize="11" FontAttributes="Bold" VerticalOptions="Center" />
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource SoftCard}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnResiduosTapped" />
+                    </Border.GestureRecognizers>
+                    <Grid ColumnDefinitions="44,*,Auto" ColumnSpacing="10">
+                        <Label Text="🗂️" FontSize="22" VerticalOptions="Center" />
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Catálogo de residuos" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                            <Label Text="Clasificación y unidad predeterminada" Style="{StaticResource TinyMutedText}" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="2" Text="Administrar ›" TextColor="{StaticResource ColorPrimary}" FontSize="11" FontAttributes="Bold" VerticalOptions="Center" />
                     </Grid>
                 </Border>
 
