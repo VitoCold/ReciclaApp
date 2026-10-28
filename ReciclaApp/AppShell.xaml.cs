@@ -143,6 +143,10 @@ namespace ReciclaApp
             Routing.RegisterRoute(AppRoutes.EditarAdministracionSede, typeof(EditarAdministracionSedePage));
             Routing.RegisterRoute(AppRoutes.AdministracionPuntosResiduo, typeof(AdministracionPuntosResiduoPage));
             Routing.RegisterRoute(AppRoutes.EditarAdministracionPuntoResiduo, typeof(EditarAdministracionPuntoResiduoPage));
+            Routing.RegisterRoute(AppRoutes.AdministracionProyectos, typeof(AdministracionProyectosPage));
+            Routing.RegisterRoute(AppRoutes.EditarAdministracionProyecto, typeof(EditarAdministracionProyectoPage));
+            Routing.RegisterRoute(AppRoutes.AdministracionActividades, typeof(AdministracionActividadesPage));
+            Routing.RegisterRoute(AppRoutes.EditarAdministracionActividad, typeof(EditarAdministracionActividadPage));
         }
     }
 }
