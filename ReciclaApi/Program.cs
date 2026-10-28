@@ -123,6 +123,7 @@ builder.Services.AddScoped<IAdministracionUsuarioService, AdministracionUsuarioS
 builder.Services.AddScoped<IAdministracionSedeService, AdministracionSedeService>();
 builder.Services.AddScoped<IAdministracionPuntoResiduoService, AdministracionPuntoResiduoService>();
 builder.Services.AddScoped<IAdministracionProyectoActividadService, AdministracionProyectoActividadService>();
+builder.Services.AddScoped<IAdministracionResiduoService, AdministracionResiduoService>();
 builder.Services.AddScoped<IRegistroService, RegistroService>();
 builder.Services.AddScoped<IRegistroResiduoEvidenciaService, RegistroResiduoEvidenciaService>();
 builder.Services.AddScoped<IControlGeneracionService, ControlGeneracionService>();
