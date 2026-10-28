@@ -139,7 +139,7 @@ public partial class NuevaDisposicionFinalPage : ContentPage
 
         if (GestorPicker.SelectedItem is not GestorOpcion gestor)
         {
-            MostrarError("Selecciona la empresa gestora.");
+            MostrarError("Selecciona la EO-RS.");
             return;
         }
 
