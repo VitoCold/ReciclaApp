@@ -26,4 +26,5 @@ public partial class AdministracionPage : ContentPage
     private void OnMenuTapped(object sender, TappedEventArgs e) => Shell.Current.FlyoutIsPresented = true;
     private async void OnUsuariosTapped(object sender, TappedEventArgs e) => await AppNavigator.IrAAdministracionUsuariosAsync();
     private async void OnSedesTapped(object sender, TappedEventArgs e) => await AppNavigator.IrAAdministracionSedesAsync();
+    private async void OnPuntosTapped(object sender, TappedEventArgs e) => await AppNavigator.IrAAdministracionPuntosResiduoAsync();
 }
