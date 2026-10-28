@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ReciclaApp.Pages.AdministracionPuntosResiduoPage"
+             Style="{StaticResource BasePage}"
+             Shell.NavBarIsVisible="False">
+    <Grid RowDefinitions="Auto,*">
+        <Grid Style="{StaticResource AppHeader}" ColumnDefinitions="Auto,*">
+            <Label Text="‹" TextColor="White" FontSize="34" VerticalOptions="Center">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </Label.GestureRecognizers>
+            </Label>
+            <Label Grid.Column="1" Text="Puntos de residuo" Style="{StaticResource HeaderTitle}" />
+        </Grid>
+
+        <Grid Grid.Row="1" Padding="18,18,18,24" RowDefinitions="Auto,Auto,Auto,*" RowSpacing="12">
+            <Grid ColumnDefinitions="*,Auto">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="Administrar puntos" Style="{StaticResource PageTitle}" FontSize="22" />
+                    <Label Text="Generación, almacenamiento o ambos, siempre asociados a una sede." Style="{StaticResource MutedText}" />
+                </VerticalStackLayout>
+                <Button Grid.Column="1" Text="+ Nuevo" Style="{StaticResource SmallPrimaryButton}" Clicked="OnNuevoClicked" VerticalOptions="Center" />
+            </Grid>
+
+            <Border Grid.Row="1" Style="{StaticResource SoftCard}" Padding="10,4">
+                <Entry x:Name="BuscarEntry" Placeholder="Buscar por punto, código, sede o tipo" TextChanged="OnBuscarChanged" />
+            </Border>
+
+            <Border x:Name="ErrorBorder" Grid.Row="2" IsVisible="False"
+                    BackgroundColor="{StaticResource ColorDangerSoft}"
+                    Stroke="Transparent" StrokeShape="RoundRectangle 12" Padding="12,9">
+                <Label x:Name="ErrorLabel" TextColor="{StaticResource ColorDanger}" FontSize="12" />
+            </Border>
+
+            <Grid Grid.Row="3">
+                <RefreshView x:Name="PuntosRefreshView" Refreshing="OnRefreshRequested">
+                    <CollectionView x:Name="PuntosCollectionView" SelectionMode="None" ItemsLayout="VerticalList">
+                        <CollectionView.EmptyView>
+                            <VerticalStackLayout Padding="20,44" Spacing="8" HorizontalOptions="Center">
+                                <Label Text="📍" FontSize="30" HorizontalOptions="Center" />
+                                <Label Text="No hay puntos para mostrar" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                            </VerticalStackLayout>
+                        </CollectionView.EmptyView>
+
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource SoftCard}" Margin="0,0,0,10">
+                                    <VerticalStackLayout Spacing="7">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <VerticalStackLayout Spacing="1">
+                                                <Label Text="{Binding Nombre}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                                <Label Text="{Binding SedeTexto}" Style="{StaticResource TinyMutedText}" />
+                                            </VerticalStackLayout>
+                                            <Border Grid.Column="1" Style="{StaticResource Chip}" BackgroundColor="{StaticResource ColorBlueSoft}">
+                                                <Label Text="{Binding EstadoTexto}" FontSize="10" FontAttributes="Bold" TextColor="{StaticResource ColorPrimary}" />
+                                            </Border>
+                                        </Grid>
+
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                            <Label Text="{Binding CodigoTexto}" FontSize="11" TextColor="{StaticResource ColorMuted}" />
+                                            <Label Grid.Column="1" Text="{Binding TipoTexto}" FontSize="11" FontAttributes="Bold" TextColor="{StaticResource ColorPrimary}" />
+                                        </Grid>
+
+                                        <Label Text="{Binding UsoTexto}" Style="{StaticResource TinyMutedText}" />
+
+                                        <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                            <Button Text="Editar"
+                                                    Style="{StaticResource SmallPrimaryButton}"
+                                                    CommandParameter="{Binding PuntoResiduoId}"
+                                                    Clicked="OnEditarClicked" />
+                                            <Button Grid.Column="1"
+                                                    Text="{Binding AccionEstadoTexto}"
+                                                    Style="{StaticResource SmallPrimaryButton}"
+                                                    CommandParameter="{Binding PuntoResiduoId}"
+                                                    Clicked="OnEstadoClicked" />
+                                        </Grid>
+                                    </VerticalStackLayout>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </RefreshView>
+
+                <ActivityIndicator x:Name="ActivityIndicator"
+                                   IsVisible="False"
+                                   IsRunning="False"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center" />
+            </Grid>
+        </Grid>
+    </Grid>
+</ContentPage>
