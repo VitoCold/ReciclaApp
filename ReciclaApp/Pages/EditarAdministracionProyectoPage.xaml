@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ReciclaApp.Pages.EditarAdministracionProyectoPage"
+             Style="{StaticResource BasePage}"
+             Shell.NavBarIsVisible="False">
+    <Grid RowDefinitions="Auto,*">
+        <Grid Style="{StaticResource AppHeader}" ColumnDefinitions="Auto,*">
+            <Label Text="‹" TextColor="White" FontSize="34" VerticalOptions="Center">
+                <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnBackTapped" /></Label.GestureRecognizers>
+            </Label>
+            <Label x:Name="HeaderLabel" Grid.Column="1" Text="Nuevo proyecto" Style="{StaticResource HeaderTitle}" />
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="18,18,18,34" Spacing="14">
+                <Border x:Name="ErrorBorder" IsVisible="False" BackgroundColor="{StaticResource ColorDangerSoft}"
+                        Stroke="Transparent" StrokeShape="RoundRectangle 12" Padding="12,9">
+                    <Label x:Name="ErrorLabel" TextColor="{StaticResource ColorDanger}" FontSize="12" />
+                </Border>
+
+                <ActivityIndicator x:Name="ActivityIndicator" IsVisible="False" IsRunning="False" HorizontalOptions="Center" />
+
+                <VerticalStackLayout x:Name="ContenidoLayout" Spacing="14">
+                    <Border Style="{StaticResource SoftCard}">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Datos del proyecto" Style="{StaticResource SectionTitle}" />
+                            <Entry x:Name="CodigoEntry" Placeholder="Código" MaxLength="40" />
+                            <Entry x:Name="NombreEntry" Placeholder="Nombre del proyecto" MaxLength="160" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border x:Name="UsoBorder" Style="{StaticResource SoftCard}" IsVisible="False">
+                        <VerticalStackLayout Spacing="5">
+                            <Label Text="Uso actual" Style="{StaticResource SectionTitle}" />
+                            <Label x:Name="UsoLabel" Style="{StaticResource TinyMutedText}" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Button x:Name="GuardarButton" Text="Crear proyecto" Style="{StaticResource PrimaryButton}" Clicked="OnGuardarClicked" />
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

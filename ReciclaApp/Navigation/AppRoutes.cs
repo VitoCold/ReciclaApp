@@ -9,6 +9,7 @@ public static class AppRoutes
     public const string Retiros = "//retiros";
     public const string Reportes = "//reportes";
     public const string Registros = "//registros";
+    public const string Administracion = "//administracion";
     public const string Perfil = "//perfil";
 
     // Rutas relativas: se apilan sobre la pantalla actual.
@@ -25,4 +26,20 @@ public static class AppRoutes
     public const string DetalleResiduoFotos = "detalle-residuo-fotos";
     public const string InicioRegistro = "inicio-registro";
     public const string RegistrarResiduo = "registrar-residuo";
+    public const string AdministracionUsuarios = "administracion-usuarios";
+    public const string EditarAdministracionUsuario = "editar-administracion-usuario";
+    public const string AdministracionSedes = "administracion-sedes";
+    public const string EditarAdministracionSede = "editar-administracion-sede";
+    public const string AdministracionPuntosResiduo = "administracion-puntos-residuo";
+    public const string EditarAdministracionPuntoResiduo = "editar-administracion-punto-residuo";
+    public const string AdministracionProyectos = "administracion-proyectos";
+    public const string EditarAdministracionProyecto = "editar-administracion-proyecto";
+    public const string AdministracionActividades = "administracion-actividades";
+    public const string EditarAdministracionActividad = "editar-administracion-actividad";
+    public const string AdministracionTiposResiduo = "administracion-tipos-residuo";
+    public const string EditarAdministracionTipoResiduo = "editar-administracion-tipo-residuo";
+    public const string AdministracionResiduos = "administracion-residuos";
+    public const string EditarAdministracionResiduo = "editar-administracion-residuo";
+    public const string AdministracionEmpresas = "administracion-empresas";
+    public const string EditarAdministracionEmpresa = "editar-administracion-empresa";
 }

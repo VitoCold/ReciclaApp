@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ReciclaApp.Pages.AdministracionPage"
+             Style="{StaticResource BasePage}"
+             Shell.NavBarIsVisible="False">
+    <Grid RowDefinitions="Auto,*">
+        <Grid Style="{StaticResource AppHeader}" ColumnDefinitions="Auto,*,Auto">
+            <Label Text="☰" TextColor="White" FontSize="24" VerticalOptions="Center">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnMenuTapped" />
+                </Label.GestureRecognizers>
+            </Label>
+            <Label Grid.Column="1" Text="Administración" Style="{StaticResource HeaderTitle}" />
+            <Label Grid.Column="2" Text="⚙" TextColor="White" FontSize="18" VerticalOptions="Center" />
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="18,18,18,34" Spacing="14">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="Maestros y configuración" Style="{StaticResource PageTitle}" FontSize="22" />
+                    <Label Text="Configura los datos que alimentan la operación de GIRA." Style="{StaticResource MutedText}" />
+                </VerticalStackLayout>
+
+                <Border Style="{StaticResource SoftCard}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnUsuariosTapped" />
+                    </Border.GestureRecognizers>
+                    <Grid ColumnDefinitions="44,*,Auto" ColumnSpacing="10">
+                        <Label Text="👥" FontSize="24" VerticalOptions="Center" />
+                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                            <Label Text="Usuarios" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                            <Label Text="Roles, estado y acceso" Style="{StaticResource TinyMutedText}" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="2" Text="Administrar ›" TextColor="{StaticResource ColorPrimary}" FontSize="11" FontAttributes="Bold" VerticalOptions="Center" />
+                    </Grid>
+                </Border>
+
+                <Label Text="Maestros operativos" Style="{StaticResource SectionTitle}" />
+
+                <Border Style="{StaticResource SoftCard}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnSedesTapped" />
+                    </Border.GestureRecognizers>
+                    <Grid ColumnDefinitions="44,*,Auto" ColumnSpacing="10">
+                        <Label Text="🏢" FontSize="22" VerticalOptions="Center" />
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Sedes" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                            <Label Text="Maestro de sedes operativas" Style="{StaticResource TinyMutedText}" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="2" Text="Administrar ›" TextColor="{StaticResource ColorPrimary}" FontSize="11" FontAttributes="Bold" VerticalOptions="Center" />
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource SoftCard}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnPuntosTapped" />
+                    </Border.GestureRecognizers>
+                    <Grid ColumnDefinitions="44,*,Auto" ColumnSpacing="10">
+                        <Label Text="📍" FontSize="22" VerticalOptions="Center" />
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Puntos de residuo" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                            <Label Text="Generación, almacenamiento y ambos" Style="{StaticResource TinyMutedText}" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="2" Text="Administrar ›" TextColor="{StaticResource ColorPrimary}" FontSize="11" FontAttributes="Bold" VerticalOptions="Center" />
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource SoftCard}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnProyectosTapped" />
+                    </Border.GestureRecognizers>
+                    <Grid ColumnDefinitions="44,*,Auto" ColumnSpacing="10">
+                        <Label Text="📁" FontSize="22" VerticalOptions="Center" />
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Proyectos" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                            <Label Text="Estructura principal de los Controles" Style="{StaticResource TinyMutedText}" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="2" Text="Administrar ›" TextColor="{StaticResource ColorPrimary}" FontSize="11" FontAttributes="Bold" VerticalOptions="Center" />
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource SoftCard}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnActividadesTapped" />
+                    </Border.GestureRecognizers>
+                    <Grid ColumnDefinitions="44,*,Auto" ColumnSpacing="10">
+                        <Label Text="🧩" FontSize="22" VerticalOptions="Center" />
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Actividades" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                            <Label Text="Actividades vinculadas a cada proyecto" Style="{StaticResource TinyMutedText}" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="2" Text="Administrar ›" TextColor="{StaticResource ColorPrimary}" FontSize="11" FontAttributes="Bold" VerticalOptions="Center" />
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource SoftCard}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnTiposResiduoTapped" />
+                    </Border.GestureRecognizers>
+                    <Grid ColumnDefinitions="44,*,Auto" ColumnSpacing="10">
+                        <Label Text="♻️" FontSize="22" VerticalOptions="Center" />
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Tipos de residuo" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                            <Label Text="Agrupación administrable del catálogo" Style="{StaticResource TinyMutedText}" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="2" Text="Administrar ›" TextColor="{StaticResource ColorPrimary}" FontSize="11" FontAttributes="Bold" VerticalOptions="Center" />
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource SoftCard}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnResiduosTapped" />
+                    </Border.GestureRecognizers>
+                    <Grid ColumnDefinitions="44,*,Auto" ColumnSpacing="10">
+                        <Label Text="🗂️" FontSize="22" VerticalOptions="Center" />
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Catálogo de residuos" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                            <Label Text="Clasificación y unidad predeterminada" Style="{StaticResource TinyMutedText}" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="2" Text="Administrar ›" TextColor="{StaticResource ColorPrimary}" FontSize="11" FontAttributes="Bold" VerticalOptions="Center" />
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource SoftCard}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnEmpresasTapped" />
+                    </Border.GestureRecognizers>
+                    <Grid ColumnDefinitions="44,*,Auto" ColumnSpacing="10">
+                        <Label Text="🚛" FontSize="22" VerticalOptions="Center" />
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Empresas / EO-RS" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                            <Label Text="Empresas responsables, EO-RS y datos de autorización" Style="{StaticResource TinyMutedText}" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="2" Text="Administrar ›" TextColor="{StaticResource ColorPrimary}" FontSize="11" FontAttributes="Bold" VerticalOptions="Center" />
+                    </Grid>
+                </Border>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

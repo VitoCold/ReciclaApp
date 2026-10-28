@@ -16,6 +16,65 @@ public static class AppNavigator
 
     public static Task IrARegistrosAsync() => IrARaizAsync(AppRoutes.Registros);
 
+    public static Task IrAAdministracionAsync() => IrARaizAsync(AppRoutes.Administracion);
+
+    public static Task IrAAdministracionUsuariosAsync() =>
+        ApilarAsync(AppRoutes.AdministracionUsuarios);
+
+    public static Task IrANuevoAdministracionUsuarioAsync() =>
+        ApilarAsync(AppRoutes.EditarAdministracionUsuario);
+
+    public static Task IrAEditarAdministracionUsuarioAsync(Guid usuarioId) =>
+        ApilarAsync($"{AppRoutes.EditarAdministracionUsuario}?usuarioId={usuarioId}");
+
+    public static Task IrAAdministracionSedesAsync() =>
+        ApilarAsync(AppRoutes.AdministracionSedes);
+
+    public static Task IrANuevaAdministracionSedeAsync() =>
+        ApilarAsync(AppRoutes.EditarAdministracionSede);
+
+    public static Task IrAEditarAdministracionSedeAsync(Guid sedeId) =>
+        ApilarAsync($"{AppRoutes.EditarAdministracionSede}?sedeId={sedeId}");
+
+    public static Task IrAAdministracionPuntosResiduoAsync() =>
+        ApilarAsync(AppRoutes.AdministracionPuntosResiduo);
+
+    public static Task IrANuevoAdministracionPuntoResiduoAsync() =>
+        ApilarAsync(AppRoutes.EditarAdministracionPuntoResiduo);
+
+    public static Task IrAEditarAdministracionPuntoResiduoAsync(Guid puntoResiduoId) =>
+        ApilarAsync($"{AppRoutes.EditarAdministracionPuntoResiduo}?puntoResiduoId={puntoResiduoId}");
+
+    public static Task IrAAdministracionProyectosAsync() =>
+        ApilarAsync(AppRoutes.AdministracionProyectos);
+
+    public static Task IrANuevoAdministracionProyectoAsync() =>
+        ApilarAsync(AppRoutes.EditarAdministracionProyecto);
+
+    public static Task IrAEditarAdministracionProyectoAsync(Guid proyectoId) =>
+        ApilarAsync($"{AppRoutes.EditarAdministracionProyecto}?proyectoId={proyectoId}");
+
+    public static Task IrAAdministracionActividadesAsync() =>
+        ApilarAsync(AppRoutes.AdministracionActividades);
+
+    public static Task IrANuevaAdministracionActividadAsync() =>
+        ApilarAsync(AppRoutes.EditarAdministracionActividad);
+
+    public static Task IrAEditarAdministracionActividadAsync(Guid actividadId) =>
+        ApilarAsync($"{AppRoutes.EditarAdministracionActividad}?actividadId={actividadId}");
+
+    public static Task IrAAdministracionTiposResiduoAsync() => ApilarAsync(AppRoutes.AdministracionTiposResiduo);
+    public static Task IrANuevoAdministracionTipoResiduoAsync() => ApilarAsync(AppRoutes.EditarAdministracionTipoResiduo);
+    public static Task IrAEditarAdministracionTipoResiduoAsync(Guid id) => ApilarAsync($"{AppRoutes.EditarAdministracionTipoResiduo}?tipoResiduoId={id}");
+
+    public static Task IrAAdministracionResiduosAsync() => ApilarAsync(AppRoutes.AdministracionResiduos);
+    public static Task IrANuevoAdministracionResiduoAsync() => ApilarAsync(AppRoutes.EditarAdministracionResiduo);
+    public static Task IrAEditarAdministracionResiduoAsync(Guid id) => ApilarAsync($"{AppRoutes.EditarAdministracionResiduo}?residuoId={id}");
+
+    public static Task IrAAdministracionEmpresasAsync() => ApilarAsync(AppRoutes.AdministracionEmpresas);
+    public static Task IrANuevaAdministracionEmpresaAsync() => ApilarAsync(AppRoutes.EditarAdministracionEmpresa);
+    public static Task IrAEditarAdministracionEmpresaAsync(Guid id) => ApilarAsync($"{AppRoutes.EditarAdministracionEmpresa}?empresaId={id}");
+
     public static Task IrAPerfilAsync() => IrARaizAsync(AppRoutes.Perfil);
 
     public static Task IrANuevoControlGeneracionAsync() => ApilarAsync(AppRoutes.NuevoControlGeneracion);

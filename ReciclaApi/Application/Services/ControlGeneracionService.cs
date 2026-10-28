@@ -777,8 +777,9 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
         if (!await unitOfWork.Repository<Sede>().Query().AnyAsync(x => x.SedeId == sedeId && x.EsActivo, cancellationToken))
             return "Sede inválida.";
 
-        if (!await unitOfWork.Repository<Empresa>().Query().AnyAsync(x => x.EmpresaId == empresaId && x.EsActivo, cancellationToken))
-            return "Empresa responsable inválida.";
+        if (!await unitOfWork.Repository<Empresa>().Query()
+            .AnyAsync(x => x.EmpresaId == empresaId && x.EsActivo && !x.EsGestoraResiduos, cancellationToken))
+            return "Empresa responsable inválida. Una EO-RS no puede asignarse como empresa responsable del Control.";
 
         if (!await unitOfWork.Repository<Proyecto>().Query().AnyAsync(x => x.ProyectoId == proyectoId && x.EsActivo, cancellationToken))
             return "Proyecto inválido.";

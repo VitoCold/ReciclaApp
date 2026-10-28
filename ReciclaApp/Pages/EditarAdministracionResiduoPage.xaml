@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ReciclaApp.Pages.EditarAdministracionResiduoPage"
+             Style="{StaticResource BasePage}"
+             Shell.NavBarIsVisible="False">
+    <Grid RowDefinitions="Auto,*">
+        <Grid Style="{StaticResource AppHeader}" ColumnDefinitions="Auto,*">
+            <Label Text="‹" TextColor="White" FontSize="34" VerticalOptions="Center">
+                <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnBackTapped" /></Label.GestureRecognizers>
+            </Label>
+            <Label x:Name="HeaderLabel" Grid.Column="1" Text="Nuevo residuo" Style="{StaticResource HeaderTitle}" />
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="18,18,18,34" Spacing="14">
+                <Border x:Name="ErrorBorder" IsVisible="False" BackgroundColor="{StaticResource ColorDangerSoft}" Stroke="Transparent" StrokeShape="RoundRectangle 12" Padding="12,9">
+                    <Label x:Name="ErrorLabel" TextColor="{StaticResource ColorDanger}" FontSize="12" />
+                </Border>
+
+                <Border Style="{StaticResource SoftCard}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Clasificación" Style="{StaticResource SectionTitle}" />
+                        <Label Text="Tipo de residuo" Style="{StaticResource TinyMutedText}" />
+                        <Picker x:Name="TipoPicker" ItemDisplayBinding="{Binding Nombre}" Title="Selecciona un tipo" />
+                        <Label Text="Clasificación" Style="{StaticResource TinyMutedText}" />
+                        <Picker x:Name="ClasificacionPicker" ItemDisplayBinding="{Binding Nombre}" Title="Selecciona una clasificación" />
+                        <Label x:Name="BloqueoLabel" Text="Tipo y clasificación están bloqueados porque este residuo ya tiene historial operativo." FontSize="11" TextColor="{StaticResource ColorPrimary}" IsVisible="False" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource SoftCard}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Identificación" Style="{StaticResource SectionTitle}" />
+                        <Entry x:Name="CodigoEntry" Placeholder="Código" MaxLength="40" />
+                        <Entry x:Name="NombreEntry" Placeholder="Nombre del residuo" MaxLength="160" />
+                        <Editor x:Name="DescripcionEditor" Placeholder="Descripción opcional" MaxLength="250" AutoSize="TextChanges" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource SoftCard}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Unidad predeterminada" Style="{StaticResource SectionTitle}" />
+                        <Picker x:Name="UnidadPicker" ItemDisplayBinding="{Binding Nombre}" Title="Selecciona una unidad" />
+                        <Label Text="La unidad predeterminada puede cambiarse sin alterar los registros históricos." Style="{StaticResource TinyMutedText}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Button x:Name="GuardarButton" Text="Crear residuo" Style="{StaticResource PrimaryButton}" Clicked="OnGuardarClicked" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

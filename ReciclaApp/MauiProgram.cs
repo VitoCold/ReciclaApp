@@ -35,6 +35,12 @@ namespace ReciclaApp
             builder.Services.AddSingleton<IDisposicionFinalApiClient, DisposicionFinalApiClient>();
             builder.Services.AddSingleton<IReporteApiClient, ReporteApiClient>();
             builder.Services.AddSingleton<IAuthSessionService, AuthSessionService>();
+            builder.Services.AddSingleton<IAdministracionUsuarioApiClient, AdministracionUsuarioApiClient>();
+            builder.Services.AddSingleton<IAdministracionSedeApiClient, AdministracionSedeApiClient>();
+            builder.Services.AddSingleton<IAdministracionPuntoResiduoApiClient, AdministracionPuntoResiduoApiClient>();
+            builder.Services.AddSingleton<IAdministracionProyectoActividadApiClient, AdministracionProyectoActividadApiClient>();
+            builder.Services.AddSingleton<IAdministracionResiduoApiClient, AdministracionResiduoApiClient>();
+            builder.Services.AddSingleton<IAdministracionEmpresaApiClient, AdministracionEmpresaApiClient>();
             builder.Services.AddSingleton<IRegistroResiduoEvidenciaApiClient, RegistroResiduoEvidenciaApiClient>();
 
 #if DEBUG

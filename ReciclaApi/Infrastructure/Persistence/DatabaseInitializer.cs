@@ -146,8 +146,6 @@ public sealed class DatabaseInitializer(
 
         var (hash, salt) = passwordService.Hash(password);
         var adminRole = await context.Roles.FirstAsync(x => x.Codigo == "ADMINISTRADOR", cancellationToken);
-        var sedes = await context.Sedes.ToListAsync(cancellationToken);
-
         var usuario = new Usuario
         {
             UsuarioNombre = userName,
@@ -159,8 +157,6 @@ public sealed class DatabaseInitializer(
         };
 
         usuario.UsuarioRoles.Add(new UsuarioRol { Usuario = usuario, Rol = adminRole });
-        foreach (var sede in sedes)
-            usuario.UsuarioSedes.Add(new UsuarioSede { Usuario = usuario, Sede = sede });
 
         context.Usuarios.Add(usuario);
         await context.SaveChangesAsync(cancellationToken);

@@ -23,7 +23,6 @@ public sealed class DevelopmentDataSeeder(
             "Pruebas",
             ["AMBIENTAL"],
             password,
-            assignAllSites: true,
             cancellationToken);
 
         await EnsureUserAsync(
@@ -32,7 +31,6 @@ public sealed class DevelopmentDataSeeder(
             "Operativo",
             ["RESPONSABLE_OPERATIVO"],
             password,
-            assignAllSites: true,
             cancellationToken);
 
         await EnsureUserAsync(
@@ -41,7 +39,6 @@ public sealed class DevelopmentDataSeeder(
             "Registrador",
             ["REGISTRADOR"],
             password,
-            assignAllSites: true,
             cancellationToken);
 
         await EnsureWasteManagerAsync(cancellationToken);
@@ -100,7 +97,6 @@ public sealed class DevelopmentDataSeeder(
         string apellidos,
         IReadOnlyCollection<string> roleCodes,
         string password,
-        bool assignAllSites,
         CancellationToken cancellationToken)
     {
         if (await context.Usuarios.AnyAsync(x => x.UsuarioNombre == userName, cancellationToken))
@@ -124,13 +120,6 @@ public sealed class DevelopmentDataSeeder(
 
         foreach (var rol in roles)
             usuario.UsuarioRoles.Add(new UsuarioRol { Usuario = usuario, Rol = rol });
-
-        if (assignAllSites)
-        {
-            var sedes = await context.Sedes.Where(x => x.EsActivo).ToListAsync(cancellationToken);
-            foreach (var sede in sedes)
-                usuario.UsuarioSedes.Add(new UsuarioSede { Usuario = usuario, Sede = sede });
-        }
 
         context.Usuarios.Add(usuario);
     }

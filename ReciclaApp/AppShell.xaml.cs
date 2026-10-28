@@ -15,6 +15,7 @@ namespace ReciclaApp
             "retiros",
             "reportes",
             "registros",
+            "administracion",
             "perfil"
         };
 
@@ -102,6 +103,9 @@ namespace ReciclaApp
 
             Shell.SetFlyoutItemIsVisible(RetirosShellContent, puedeGestionarSalidaYReportes);
             Shell.SetFlyoutItemIsVisible(ReportesShellContent, puedeGestionarSalidaYReportes);
+            Shell.SetFlyoutItemIsVisible(
+                AdministracionShellContent,
+                usuario?.Roles.Contains("ADMINISTRADOR") == true);
         }
 
         private static bool EsRutaPrincipal(string? location)
@@ -133,6 +137,22 @@ namespace ReciclaApp
             Routing.RegisterRoute(AppRoutes.DetalleResiduoFotos, typeof(DetalleResiduoFotosPage));
             Routing.RegisterRoute(AppRoutes.InicioRegistro, typeof(InicioRegistroPage));
             Routing.RegisterRoute(AppRoutes.RegistrarResiduo, typeof(RegistrarResiduoPage));
+            Routing.RegisterRoute(AppRoutes.AdministracionUsuarios, typeof(AdministracionUsuariosPage));
+            Routing.RegisterRoute(AppRoutes.EditarAdministracionUsuario, typeof(EditarAdministracionUsuarioPage));
+            Routing.RegisterRoute(AppRoutes.AdministracionSedes, typeof(AdministracionSedesPage));
+            Routing.RegisterRoute(AppRoutes.EditarAdministracionSede, typeof(EditarAdministracionSedePage));
+            Routing.RegisterRoute(AppRoutes.AdministracionPuntosResiduo, typeof(AdministracionPuntosResiduoPage));
+            Routing.RegisterRoute(AppRoutes.EditarAdministracionPuntoResiduo, typeof(EditarAdministracionPuntoResiduoPage));
+            Routing.RegisterRoute(AppRoutes.AdministracionProyectos, typeof(AdministracionProyectosPage));
+            Routing.RegisterRoute(AppRoutes.EditarAdministracionProyecto, typeof(EditarAdministracionProyectoPage));
+            Routing.RegisterRoute(AppRoutes.AdministracionActividades, typeof(AdministracionActividadesPage));
+            Routing.RegisterRoute(AppRoutes.EditarAdministracionActividad, typeof(EditarAdministracionActividadPage));
+            Routing.RegisterRoute(AppRoutes.AdministracionTiposResiduo, typeof(AdministracionTiposResiduoPage));
+            Routing.RegisterRoute(AppRoutes.EditarAdministracionTipoResiduo, typeof(EditarAdministracionTipoResiduoPage));
+            Routing.RegisterRoute(AppRoutes.AdministracionResiduos, typeof(AdministracionResiduosPage));
+            Routing.RegisterRoute(AppRoutes.EditarAdministracionResiduo, typeof(EditarAdministracionResiduoPage));
+            Routing.RegisterRoute(AppRoutes.AdministracionEmpresas, typeof(AdministracionEmpresasPage));
+            Routing.RegisterRoute(AppRoutes.EditarAdministracionEmpresa, typeof(EditarAdministracionEmpresaPage));
         }
     }
 }

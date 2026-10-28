@@ -95,7 +95,7 @@
                                FontAttributes="Bold"
                                FontSize="15" />
 
-                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="12">
+                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="12">
                             <Label Text="✉" FontSize="16" VerticalOptions="Center" />
                             <VerticalStackLayout Grid.Column="1" Spacing="1">
                                 <Label Text="Correo" FontSize="11" Style="{StaticResource MutedText}" />
@@ -108,14 +108,8 @@
                                 <Label x:Name="RolesLabel" Text="General" TextColor="{StaticResource ColorText}" FontSize="13" />
                             </VerticalStackLayout>
 
-                            <Label Grid.Row="2" Text="📍" FontSize="16" VerticalOptions="Center" />
+                            <Label Grid.Row="2" Text="🔑" FontSize="16" VerticalOptions="Center" />
                             <VerticalStackLayout Grid.Row="2" Grid.Column="1" Spacing="1">
-                                <Label Text="Sedes asignadas" FontSize="11" Style="{StaticResource MutedText}" />
-                                <Label x:Name="SedesLabel" Text="0 sedes" TextColor="{StaticResource ColorText}" FontSize="13" />
-                            </VerticalStackLayout>
-
-                            <Label Grid.Row="3" Text="🔑" FontSize="16" VerticalOptions="Center" />
-                            <VerticalStackLayout Grid.Row="3" Grid.Column="1" Spacing="1">
                                 <Label Text="Usuario" FontSize="11" Style="{StaticResource MutedText}" />
                                 <Label x:Name="LoginLabel" Text="usuario" TextColor="{StaticResource ColorText}" FontSize="13" />
                             </VerticalStackLayout>

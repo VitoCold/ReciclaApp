@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ReciclaApp.Pages.EditarAdministracionEmpresaPage"
+             Style="{StaticResource BasePage}"
+             Shell.NavBarIsVisible="False">
+    <Grid RowDefinitions="Auto,*">
+        <Grid Style="{StaticResource AppHeader}" ColumnDefinitions="Auto,*">
+            <Label Text="‹" TextColor="White" FontSize="34" VerticalOptions="Center">
+                <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnBackTapped" /></Label.GestureRecognizers>
+            </Label>
+            <Label x:Name="HeaderLabel" Grid.Column="1" Text="Nueva empresa" Style="{StaticResource HeaderTitle}" />
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="18,18,18,34" Spacing="14">
+                <Border x:Name="ErrorBorder" IsVisible="False"
+                        BackgroundColor="{StaticResource ColorDangerSoft}"
+                        Stroke="Transparent" StrokeShape="RoundRectangle 12" Padding="12,9">
+                    <Label x:Name="ErrorLabel" TextColor="{StaticResource ColorDanger}" FontSize="12" />
+                </Border>
+
+                <Border Style="{StaticResource SoftCard}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Tipo de empresa" Style="{StaticResource SectionTitle}" />
+                        <Grid ColumnDefinitions="*,Auto">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="Empresa Operadora de Residuos Sólidos (EO-RS)" TextColor="{StaticResource ColorText}" FontSize="13" />
+                                <Label Text="Actívalo si la empresa participa en retiros o disposición/valorización." Style="{StaticResource TinyMutedText}" />
+                            </VerticalStackLayout>
+                            <Switch x:Name="EorsSwitch" Grid.Column="1" Toggled="OnEorsToggled" VerticalOptions="Center" />
+                        </Grid>
+                        <Label x:Name="RolBloqueadoLabel"
+                               Text="El rol está bloqueado porque la empresa ya tiene uso operativo."
+                               FontSize="11"
+                               TextColor="{StaticResource ColorPrimary}"
+                               IsVisible="False" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource SoftCard}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Identificación" Style="{StaticResource SectionTitle}" />
+                        <Entry x:Name="CodigoEntry" Placeholder="Código" MaxLength="40" />
+                        <Entry x:Name="RucEntry" Placeholder="RUC (opcional)" MaxLength="20" Keyboard="Numeric" />
+                        <Entry x:Name="RazonSocialEntry" Placeholder="Razón social" MaxLength="180" />
+                        <Entry x:Name="NombreComercialEntry" Placeholder="Nombre comercial (opcional)" MaxLength="180" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border x:Name="AutorizacionBorder" Style="{StaticResource SoftCard}" IsVisible="False">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Datos EO-RS" Style="{StaticResource SectionTitle}" />
+                        <Entry x:Name="AutorizacionEntry"
+                               Placeholder="Número de autorización / registro"
+                               MaxLength="120" />
+                        <Label Text="Se conserva como dato documental de la EO-RS. En este MVP no se valida contra registros externos." Style="{StaticResource TinyMutedText}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource SoftCard}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Contacto" Style="{StaticResource SectionTitle}" />
+                        <Editor x:Name="DireccionEditor" Placeholder="Dirección (opcional)" MaxLength="250" AutoSize="TextChanges" />
+                        <Entry x:Name="TelefonoEntry" Placeholder="Teléfono (opcional)" MaxLength="50" Keyboard="Telephone" />
+                        <Entry x:Name="EmailEntry" Placeholder="Correo (opcional)" MaxLength="160" Keyboard="Email" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border x:Name="UsoBorder" Style="{StaticResource SoftCard}" IsVisible="False">
+                    <VerticalStackLayout Spacing="5">
+                        <Label Text="Uso operativo" Style="{StaticResource SectionTitle}" />
+                        <Label x:Name="UsoLabel" Style="{StaticResource TinyMutedText}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Button x:Name="GuardarButton"
+                        Text="Crear empresa"
+                        Style="{StaticResource PrimaryButton}"
+                        Clicked="OnGuardarClicked" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

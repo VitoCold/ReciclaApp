@@ -29,7 +29,6 @@ public sealed class AuthService(
             .Query(tracking: true)
             .Include(x => x.UsuarioRoles)
                 .ThenInclude(x => x.Rol)
-            .Include(x => x.UsuarioSedes)
             .FirstOrDefaultAsync(
                 x => x.UsuarioNombre == request.Usuario && x.EsActivo,
                 cancellationToken);
@@ -56,7 +55,6 @@ public sealed class AuthService(
             .Query()
             .Include(x => x.UsuarioRoles)
                 .ThenInclude(x => x.Rol)
-            .Include(x => x.UsuarioSedes)
             .FirstOrDefaultAsync(x => x.UsuarioId == usuarioId && x.EsActivo, cancellationToken);
 
         return usuario is null
@@ -70,8 +68,7 @@ public sealed class AuthService(
         usuario.Nombres,
         usuario.Apellidos,
         usuario.Email,
-        usuario.UsuarioRoles.Where(x => x.Rol.EsActivo).Select(x => x.Rol.Codigo).ToArray(),
-        usuario.UsuarioSedes.Select(x => x.SedeId).ToArray());
+        usuario.UsuarioRoles.Where(x => x.Rol.EsActivo).Select(x => x.Rol.Codigo).ToArray());
 }
 
 public interface ICatalogoService
@@ -90,16 +87,27 @@ public sealed class CatalogoService(IUnitOfWork unitOfWork) : ICatalogoService
             .Select(x => x.Rol.Codigo)
             .ToListAsync(cancellationToken);
 
-        var accesoGlobal = rolesUsuario.Contains("AMBIENTAL") || rolesUsuario.Contains("ADMINISTRADOR");
+        var hoy = DateTime.UtcNow.Date;
+        var puedeCrearControles = rolesUsuario.Contains("RESPONSABLE_OPERATIVO");
+        var accesoGlobal = rolesUsuario.Contains("AMBIENTAL") ||
+                           rolesUsuario.Contains("ADMINISTRADOR") ||
+                           puedeCrearControles;
 
         var sedeIds = accesoGlobal
             ? await unitOfWork.Repository<Sede>().Query()
                 .Where(x => x.EsActivo)
                 .Select(x => x.SedeId)
                 .ToListAsync(cancellationToken)
-            : await unitOfWork.Repository<UsuarioSede>().Query()
-                .Where(x => x.UsuarioId == usuarioId)
-                .Select(x => x.SedeId)
+            : await unitOfWork.Repository<ControlGeneracionUsuario>().Query()
+                .Where(x =>
+                    x.UsuarioId == usuarioId &&
+                    x.EsActivo &&
+                    x.FechaDesde <= hoy &&
+                    (!x.FechaHasta.HasValue || x.FechaHasta.Value >= hoy) &&
+                    x.ControlGeneracion.Sede.EsActivo &&
+                    !x.ControlGeneracion.Eliminado)
+                .Select(x => x.ControlGeneracion.SedeId)
+                .Distinct()
                 .ToListAsync(cancellationToken);
 
         var sedes = await unitOfWork.Repository<Sede>().Query()
