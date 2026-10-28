@@ -27,4 +27,6 @@ public partial class AdministracionPage : ContentPage
     private async void OnUsuariosTapped(object sender, TappedEventArgs e) => await AppNavigator.IrAAdministracionUsuariosAsync();
     private async void OnSedesTapped(object sender, TappedEventArgs e) => await AppNavigator.IrAAdministracionSedesAsync();
     private async void OnPuntosTapped(object sender, TappedEventArgs e) => await AppNavigator.IrAAdministracionPuntosResiduoAsync();
+    private async void OnProyectosTapped(object sender, TappedEventArgs e) => await AppNavigator.IrAAdministracionProyectosAsync();
+    private async void OnActividadesTapped(object sender, TappedEventArgs e) => await AppNavigator.IrAAdministracionActividadesAsync();
 }
