@@ -38,7 +38,7 @@
                         </VerticalStackLayout>
 
                         <VerticalStackLayout Spacing="5">
-                            <Label Text="Empresa gestora" Style="{StaticResource FieldLabel}" />
+                            <Label Text="EO-RS" Style="{StaticResource FieldLabel}" />
                             <Border Style="{StaticResource InputBorder}">
                                 <Picker x:Name="GestorPicker"
                                         Title="Selecciona la empresa"
