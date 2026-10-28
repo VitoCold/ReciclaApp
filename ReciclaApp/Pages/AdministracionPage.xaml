@@ -30,13 +30,13 @@
                         <Label Text="👥" FontSize="24" VerticalOptions="Center" />
                         <VerticalStackLayout Grid.Column="1" Spacing="2">
                             <Label Text="Usuarios" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
-                            <Label Text="Roles, sedes, estado y acceso" Style="{StaticResource TinyMutedText}" />
+                            <Label Text="Roles, estado y acceso" Style="{StaticResource TinyMutedText}" />
                         </VerticalStackLayout>
                         <Label Grid.Column="2" Text="Administrar ›" TextColor="{StaticResource ColorPrimary}" FontSize="11" FontAttributes="Bold" VerticalOptions="Center" />
                     </Grid>
                 </Border>
 
-                <Label Text="Siguiente ola" Style="{StaticResource SectionTitle}" />
+                <Label Text="Maestros operativos" Style="{StaticResource SectionTitle}" />
 
                 <Border Style="{StaticResource SoftCard}">
                     <Border.GestureRecognizers>
