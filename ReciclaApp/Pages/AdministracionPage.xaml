@@ -67,12 +67,30 @@
                 </Border>
 
                 <Border Style="{StaticResource SoftCard}">
-                    <Grid ColumnDefinitions="44,*">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnProyectosTapped" />
+                    </Border.GestureRecognizers>
+                    <Grid ColumnDefinitions="44,*,Auto" ColumnSpacing="10">
                         <Label Text="📁" FontSize="22" VerticalOptions="Center" />
                         <VerticalStackLayout Grid.Column="1">
-                            <Label Text="Proyectos y actividades" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
-                            <Label Text="Pendiente · estructura operativa de los controles" Style="{StaticResource TinyMutedText}" />
+                            <Label Text="Proyectos" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                            <Label Text="Estructura principal de los Controles" Style="{StaticResource TinyMutedText}" />
                         </VerticalStackLayout>
+                        <Label Grid.Column="2" Text="Administrar ›" TextColor="{StaticResource ColorPrimary}" FontSize="11" FontAttributes="Bold" VerticalOptions="Center" />
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource SoftCard}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnActividadesTapped" />
+                    </Border.GestureRecognizers>
+                    <Grid ColumnDefinitions="44,*,Auto" ColumnSpacing="10">
+                        <Label Text="🧩" FontSize="22" VerticalOptions="Center" />
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Actividades" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                            <Label Text="Actividades vinculadas a cada proyecto" Style="{StaticResource TinyMutedText}" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="2" Text="Administrar ›" TextColor="{StaticResource ColorPrimary}" FontSize="11" FontAttributes="Bold" VerticalOptions="Center" />
                     </Grid>
                 </Border>
 
