@@ -66,7 +66,13 @@ public partial class EditarAdministracionPuntoResiduoPage : ContentPage
             if (puntoTask is not null)
                 _punto = await puntoTask;
 
-            SedePicker.ItemsSource = catalogos.Sedes;
+            var sedes = catalogos.Sedes.ToList();
+            if (_punto is not null && sedes.All(x => x.SedeId != _punto.SedeId))
+                sedes.Add(new SedeDto(_punto.SedeId, _punto.SedeCodigo, _punto.SedeNombre));
+
+            SedePicker.ItemsSource = sedes
+                .OrderBy(x => x.Nombre)
+                .ToArray();
             TipoPicker.ItemsSource = catalogos.Tipos
                 .Select(TipoVisual)
                 .ToArray();
@@ -82,7 +88,8 @@ public partial class EditarAdministracionPuntoResiduoPage : ContentPage
                 GuardarButton.Text = "Guardar cambios";
                 CodigoEntry.Text = _punto.Codigo;
                 NombreEntry.Text = _punto.Nombre;
-                SedePicker.SelectedItem = catalogos.Sedes.FirstOrDefault(x => x.SedeId == _punto.SedeId);
+                SedePicker.SelectedItem = ((IEnumerable<SedeDto>)SedePicker.ItemsSource)
+                    .FirstOrDefault(x => x.SedeId == _punto.SedeId);
                 TipoPicker.SelectedItem = TipoVisual(_punto.Tipo);
 
                 UsoBorder.IsVisible = true;
