@@ -36,4 +36,8 @@ public static class AppRoutes
     public const string EditarAdministracionProyecto = "editar-administracion-proyecto";
     public const string AdministracionActividades = "administracion-actividades";
     public const string EditarAdministracionActividad = "editar-administracion-actividad";
+    public const string AdministracionTiposResiduo = "administracion-tipos-residuo";
+    public const string EditarAdministracionTipoResiduo = "editar-administracion-tipo-residuo";
+    public const string AdministracionResiduos = "administracion-residuos";
+    public const string EditarAdministracionResiduo = "editar-administracion-residuo";
 }
