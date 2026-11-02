@@ -17,6 +17,24 @@ public sealed record ReporteResumenUnidadDto(
     decimal Saldo,
     decimal PendienteAlmacenamiento);
 
+public sealed record ReporteCumplimientoDocumentalDto(
+    int ElegiblesCierre,
+    int CierresCompletos,
+    int PendientesValidacion,
+    int SinDocumentacion);
+
+public sealed record ReporteConciliacionUnidadDto(
+    string Unidad,
+    int RetirosParciales,
+    int RetirosTotales,
+    decimal DiferenciaConciliacion);
+
+public sealed record ReporteDestinoUnidadDto(
+    string Unidad,
+    decimal Valorizado,
+    decimal DisposicionFinal,
+    decimal PendienteDocumental);
+
 public sealed record ReporteResiduoItemDto(
     Guid RegistroResiduoId,
     Guid RegistroId,
@@ -53,6 +71,9 @@ public sealed record ReporteResiduosDto(
     DateTime Desde,
     DateTime Hasta,
     IReadOnlyCollection<ReporteResumenUnidadDto> Resumen,
+    ReporteCumplimientoDocumentalDto CumplimientoDocumental,
+    IReadOnlyCollection<ReporteConciliacionUnidadDto> Conciliacion,
+    IReadOnlyCollection<ReporteDestinoUnidadDto> Destino,
     IReadOnlyCollection<ReporteResiduoItemDto> Detalle);
 
 public sealed record ReporteArchivoHistoricoDto(
