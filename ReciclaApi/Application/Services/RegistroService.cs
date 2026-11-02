@@ -54,35 +54,14 @@ public sealed class RegistroService(
             "El registro independiente fue retirado. Inicia el registro desde un Control de Generación activo.",
             StatusCodes.Status410Gone));
 
-    public async Task<ServiceResult<RegistroDetalleDto>> ActualizarAsync(
+    public Task<ServiceResult<RegistroDetalleDto>> ActualizarAsync(
         Guid registroId,
         Guid usuarioId,
         ActualizarRegistroRequest request,
-        CancellationToken cancellationToken = default)
-    {
-        var registro = await unitOfWork.Registros.ObtenerDetalleAsync(registroId, usuarioId, true, cancellationToken);
-        if (registro is null)
-            return ServiceResult<RegistroDetalleDto>.Fail("Registro no encontrado.", StatusCodes.Status404NotFound);
-
-        if (!EsBorrador(registro))
-            return ServiceResult<RegistroDetalleDto>.Fail("Solo se pueden editar registros en borrador.", StatusCodes.Status409Conflict);
-
-        var validation = await ValidarCabeceraAsync(request.ProyectoId, request.ActividadId, request.SedeId, cancellationToken);
-        if (validation is not null)
-            return ServiceResult<RegistroDetalleDto>.Fail(validation, StatusCodes.Status400BadRequest);
-
-        registro.FechaRegistro = request.FechaRegistro;
-        registro.ProyectoId = request.ProyectoId;
-        registro.ActividadId = request.ActividadId;
-        registro.SedeId = request.SedeId;
-        registro.Observacion = request.Observacion;
-        registro.ActualizadoUtc = DateTime.UtcNow;
-
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-
-        var detalle = await unitOfWork.Registros.ObtenerDetalleAsync(registroId, usuarioId, false, cancellationToken);
-        return ServiceResult<RegistroDetalleDto>.Ok(MapDetalle(detalle!));
-    }
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(ServiceResult<RegistroDetalleDto>.Fail(
+            "La edición independiente de la cabecera fue retirada. La cabecera operativa se administra desde el Control de Generación.",
+            StatusCodes.Status410Gone));
 
     public async Task<ServiceResult<RegistroResiduoDto>> AgregarResiduoAsync(
         Guid registroId,
@@ -282,47 +261,17 @@ public sealed class RegistroService(
         return ServiceResult<RegistroResiduoFotoDto>.Ok(MapFoto(foto), StatusCodes.Status201Created);
     }
 
-    public async Task<ServiceResult<DisposicionEvidenciaDto>> SubirEvidenciaAsync(
+    public Task<ServiceResult<DisposicionEvidenciaDto>> SubirEvidenciaAsync(
         Guid disposicionId,
         Guid usuarioId,
         Stream content,
         string fileName,
         string? contentType,
         string tipoEvidencia,
-        CancellationToken cancellationToken = default)
-    {
-        var disposicion = await unitOfWork.Repository<Disposicion>().Query(tracking: true)
-            .Include(x => x.Registro)
-            .FirstOrDefaultAsync(
-                x => x.DisposicionId == disposicionId && !x.Eliminado &&
-                     x.Registro.RegistradoPorUsuarioId == usuarioId && !x.Registro.Eliminado,
-                cancellationToken);
-
-        if (disposicion is null)
-            return ServiceResult<DisposicionEvidenciaDto>.Fail("Disposición no encontrada.", StatusCodes.Status404NotFound);
-
-        var stored = await fileStorage.SaveAsync(content, fileName, $"uploads/disposiciones/{disposicionId:N}", cancellationToken);
-        var estadoSync = await GetEstadoSyncAsync(cancellationToken);
-
-        var evidencia = new DisposicionEvidencia
-        {
-            DisposicionId = disposicionId,
-            TipoEvidencia = string.IsNullOrWhiteSpace(tipoEvidencia) ? "ARCHIVO" : tipoEvidencia.Trim(),
-            NombreArchivo = stored.NombreArchivo,
-            RutaLocal = stored.RutaLocal,
-            UrlNube = stored.UrlPublica,
-            ContentType = contentType,
-            HashArchivo = stored.HashSha256,
-            TamanoBytes = stored.TamanoBytes,
-            EstadoSincronizacionId = estadoSync.EstadoSincronizacionId,
-            CreadoPorUsuarioId = usuarioId
-        };
-
-        await unitOfWork.Repository<DisposicionEvidencia>().AddAsync(evidencia, cancellationToken);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-
-        return ServiceResult<DisposicionEvidenciaDto>.Ok(MapEvidencia(evidencia), StatusCodes.Status201Created);
-    }
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(ServiceResult<DisposicionEvidenciaDto>.Fail(
+            "La evidencia de disposición legacy fue retirada. Usa el cierre documental del Retiro EO-RS.",
+            StatusCodes.Status410Gone));
 
     private async Task<string?> ValidarOperacionControlAsync(
         Registro registro,
