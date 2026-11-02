@@ -13,8 +13,8 @@
                 </Label.GestureRecognizers>
             </Label>
             <VerticalStackLayout Grid.Column="1" Spacing="0">
-                <Label Text="Reportes" Style="{StaticResource HeaderTitle}" />
-                <Label Text="Generación, almacenamiento y retiros" TextColor="#D7E9FA" FontSize="10" />
+                <Label Text="Dashboard / Reportes" Style="{StaticResource HeaderTitle}" />
+                <Label Text="Operación, conciliación y cierre documental" TextColor="#D7E9FA" FontSize="10" />
             </VerticalStackLayout>
         </Grid>
 
@@ -160,6 +160,92 @@
                                 </Border>
                             </DataTemplate>
                         </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+
+                    <Border Style="{StaticResource SoftCard}">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Cumplimiento documental" Style="{StaticResource SectionTitle}" />
+                            <Label Text="Se consideran residuos con un retiro TOTAL vigente y sin operaciones posteriores."
+                                   Style="{StaticResource TinyMutedText}" />
+                            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="8">
+                                <Border BackgroundColor="#F1F5F9" Stroke="Transparent" Padding="10">
+                                    <VerticalStackLayout Spacing="1">
+                                        <Label Text="Cierre completo" Style="{StaticResource TinyMutedText}" />
+                                        <Label Text="{Binding Cumplimiento.CierresCompletos}" FontSize="18" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                    </VerticalStackLayout>
+                                </Border>
+                                <Border Grid.Column="1" BackgroundColor="#F1F5F9" Stroke="Transparent" Padding="10">
+                                    <VerticalStackLayout Spacing="1">
+                                        <Label Text="Pendiente validar" Style="{StaticResource TinyMutedText}" />
+                                        <Label Text="{Binding Cumplimiento.PendientesValidacion}" FontSize="18" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                    </VerticalStackLayout>
+                                </Border>
+                                <Border Grid.Row="1" BackgroundColor="#F1F5F9" Stroke="Transparent" Padding="10">
+                                    <VerticalStackLayout Spacing="1">
+                                        <Label Text="Sin documentación" Style="{StaticResource TinyMutedText}" />
+                                        <Label Text="{Binding Cumplimiento.SinDocumentacion}" FontSize="18" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                                    </VerticalStackLayout>
+                                </Border>
+                                <Border Grid.Row="1" Grid.Column="1" BackgroundColor="#F1F5F9" Stroke="Transparent" Padding="10">
+                                    <VerticalStackLayout Spacing="1">
+                                        <Label Text="Elegibles a cierre" Style="{StaticResource TinyMutedText}" />
+                                        <Label Text="{Binding Cumplimiento.ElegiblesCierre}" FontSize="18" FontAttributes="Bold" TextColor="{StaticResource ColorPrimary}" />
+                                    </VerticalStackLayout>
+                                </Border>
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Conciliación EO-RS" Style="{StaticResource SectionTitle}" />
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Conciliacion}" Spacing="8">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Style="{StaticResource SoftCard}">
+                                        <Grid ColumnDefinitions="Auto,*,*" ColumnSpacing="12">
+                                            <Label Text="{Binding Unidad}" FontAttributes="Bold" TextColor="{StaticResource ColorPrimary}" VerticalOptions="Center" />
+                                            <VerticalStackLayout Grid.Column="1" Spacing="1">
+                                                <Label Text="Retiros P / T" Style="{StaticResource TinyMutedText}" />
+                                                <Label Text="{Binding RetirosTexto}" FontAttributes="Bold" />
+                                            </VerticalStackLayout>
+                                            <VerticalStackLayout Grid.Column="2" Spacing="1">
+                                                <Label Text="Diferencia TOTAL" Style="{StaticResource TinyMutedText}" />
+                                                <Label Text="{Binding Diferencia}" FontAttributes="Bold" />
+                                            </VerticalStackLayout>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Destino de lo retirado" Style="{StaticResource SectionTitle}" />
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Destino}" Spacing="8">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Style="{StaticResource SoftCard}">
+                                        <VerticalStackLayout Spacing="7">
+                                            <Label Text="{Binding Unidad}" FontAttributes="Bold" TextColor="{StaticResource ColorPrimary}" />
+                                            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                                                <VerticalStackLayout Spacing="1">
+                                                    <Label Text="Valorizado" Style="{StaticResource TinyMutedText}" />
+                                                    <Label Text="{Binding Valorizado}" FontAttributes="Bold" />
+                                                </VerticalStackLayout>
+                                                <VerticalStackLayout Grid.Column="1" Spacing="1">
+                                                    <Label Text="Disposición" Style="{StaticResource TinyMutedText}" />
+                                                    <Label Text="{Binding DisposicionFinal}" FontAttributes="Bold" />
+                                                </VerticalStackLayout>
+                                                <VerticalStackLayout Grid.Column="2" Spacing="1">
+                                                    <Label Text="Pendiente doc." Style="{StaticResource TinyMutedText}" />
+                                                    <Label Text="{Binding PendienteDocumental}" FontAttributes="Bold" />
+                                                </VerticalStackLayout>
+                                            </Grid>
+                                        </VerticalStackLayout>
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
                     </VerticalStackLayout>
 
                     <Button x:Name="ExportarButton"
