@@ -135,7 +135,6 @@ namespace ReciclaApp
             Routing.RegisterRoute(AppRoutes.DetalleRegistro, typeof(DetalleRegistroDetallePage));
             Routing.RegisterRoute(AppRoutes.DetalleResiduoDetalle, typeof(DetalleResiduoDetallePage));
             Routing.RegisterRoute(AppRoutes.DetalleResiduoFotos, typeof(DetalleResiduoFotosPage));
-            Routing.RegisterRoute(AppRoutes.InicioRegistro, typeof(InicioRegistroPage));
             Routing.RegisterRoute(AppRoutes.RegistrarResiduo, typeof(RegistrarResiduoPage));
             Routing.RegisterRoute(AppRoutes.AdministracionUsuarios, typeof(AdministracionUsuariosPage));
             Routing.RegisterRoute(AppRoutes.EditarAdministracionUsuario, typeof(EditarAdministracionUsuarioPage));
