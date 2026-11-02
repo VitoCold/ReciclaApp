@@ -625,6 +625,66 @@ public sealed class ReporteResiduosService(
         }
 
         AplicarCabecera(resumen.Range(4, 1, 4, headersResumen.Length));
+
+        fila += 1;
+        resumen.Cell(fila, 1).Value = "Cumplimiento documental";
+        resumen.Range(fila, 1, fila, 4).Merge();
+        resumen.Cell(fila, 1).Style.Font.Bold = true;
+        fila++;
+
+        var headersCumplimiento = new[] { "Elegibles a cierre", "Cierre completo", "Pendiente de validar", "Sin documentación" };
+        for (var c = 0; c < headersCumplimiento.Length; c++)
+            resumen.Cell(fila, c + 1).Value = headersCumplimiento[c];
+        AplicarCabecera(resumen.Range(fila, 1, fila, headersCumplimiento.Length));
+        fila++;
+
+        resumen.Cell(fila, 1).Value = reporte.CumplimientoDocumental.ElegiblesCierre;
+        resumen.Cell(fila, 2).Value = reporte.CumplimientoDocumental.CierresCompletos;
+        resumen.Cell(fila, 3).Value = reporte.CumplimientoDocumental.PendientesValidacion;
+        resumen.Cell(fila, 4).Value = reporte.CumplimientoDocumental.SinDocumentacion;
+
+        fila += 2;
+        resumen.Cell(fila, 1).Value = "Conciliación EO-RS";
+        resumen.Range(fila, 1, fila, 4).Merge();
+        resumen.Cell(fila, 1).Style.Font.Bold = true;
+        fila++;
+
+        var headersConciliacion = new[] { "Unidad", "Retiros parciales", "Retiros totales", "Diferencia de conciliación" };
+        for (var c = 0; c < headersConciliacion.Length; c++)
+            resumen.Cell(fila, c + 1).Value = headersConciliacion[c];
+        AplicarCabecera(resumen.Range(fila, 1, fila, headersConciliacion.Length));
+        fila++;
+
+        foreach (var item in reporte.Conciliacion)
+        {
+            resumen.Cell(fila, 1).Value = item.Unidad;
+            resumen.Cell(fila, 2).Value = item.RetirosParciales;
+            resumen.Cell(fila, 3).Value = item.RetirosTotales;
+            resumen.Cell(fila, 4).Value = item.DiferenciaConciliacion;
+            fila++;
+        }
+
+        fila += 1;
+        resumen.Cell(fila, 1).Value = "Destino de lo retirado";
+        resumen.Range(fila, 1, fila, 4).Merge();
+        resumen.Cell(fila, 1).Style.Font.Bold = true;
+        fila++;
+
+        var headersDestino = new[] { "Unidad", "Valorizado", "Disposición final", "Pendiente documental" };
+        for (var c = 0; c < headersDestino.Length; c++)
+            resumen.Cell(fila, c + 1).Value = headersDestino[c];
+        AplicarCabecera(resumen.Range(fila, 1, fila, headersDestino.Length));
+        fila++;
+
+        foreach (var item in reporte.Destino)
+        {
+            resumen.Cell(fila, 1).Value = item.Unidad;
+            resumen.Cell(fila, 2).Value = item.Valorizado;
+            resumen.Cell(fila, 3).Value = item.DisposicionFinal;
+            resumen.Cell(fila, 4).Value = item.PendienteDocumental;
+            fila++;
+        }
+
         resumen.SheetView.FreezeRows(4);
         resumen.Columns().AdjustToContents();
 
