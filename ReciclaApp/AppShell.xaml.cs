@@ -14,7 +14,6 @@ namespace ReciclaApp
             "stock-residuos",
             "retiros",
             "reportes",
-            "registros",
             "administracion",
             "perfil"
         };
