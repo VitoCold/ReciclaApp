@@ -24,7 +24,8 @@ public interface IControlGeneracionRegistroConsultaService
 
 public sealed class ControlGeneracionRegistroConsultaService(
     IUnitOfWork unitOfWork,
-    ReciclaDbContext context)
+    ReciclaDbContext context,
+    IControlAccessService controlAccess)
     : IControlGeneracionRegistroConsultaService
 {
     public async Task<ServiceResult<RegistroControlDetalleDto>> ObtenerAsync(
@@ -52,6 +53,11 @@ public sealed class ControlGeneracionRegistroConsultaService(
     {
         if (!await PuedeVerControlAsync(controlId, usuarioId, cancellationToken))
             return ServiceResult<RegistroControlDetalleDto>.Fail("Control de generación no encontrado o sin acceso.", StatusCodes.Status404NotFound);
+
+        if (!await controlAccess.EsParticipanteOperativoVigenteAsync(controlId, usuarioId, cancellationToken))
+            return ServiceResult<RegistroControlDetalleDto>.Fail(
+                "No tienes una asignación vigente para finalizar registros en este Control.",
+                StatusCodes.Status403Forbidden);
 
         var registro = await QueryRegistro(controlId, registroId, tracking: true)
             .FirstOrDefaultAsync(cancellationToken);
@@ -129,28 +135,13 @@ public sealed class ControlGeneracionRegistroConsultaService(
         Guid usuarioId,
         CancellationToken cancellationToken)
     {
-        var global = await unitOfWork.Repository<UsuarioRol>().Query()
-            .AnyAsync(x =>
-                x.UsuarioId == usuarioId &&
-                x.Rol.EsActivo &&
-                (x.Rol.Codigo == "AMBIENTAL" || x.Rol.Codigo == "ADMINISTRADOR"),
-                cancellationToken);
-
-        if (global)
+        if (await controlAccess.EsGlobalAsync(usuarioId, cancellationToken))
             return true;
 
-        var hoy = DateTime.UtcNow.Date;
-        return await unitOfWork.Repository<ControlGeneracion>().Query()
-            .AnyAsync(x =>
-                x.ControlGeneracionId == controlId &&
-                !x.Eliminado &&
-                (x.CreadoPorUsuarioId == usuarioId ||
-                 x.Usuarios.Any(u =>
-                    u.UsuarioId == usuarioId &&
-                    u.EsActivo &&
-                    u.FechaDesde <= hoy &&
-                    (!u.FechaHasta.HasValue || u.FechaHasta.Value >= hoy))),
-                cancellationToken);
+        return await controlAccess.TieneAsignacionVigenteAsync(
+            controlId,
+            usuarioId,
+            cancellationToken: cancellationToken);
     }
 
     private static RegistroControlDetalleDto MapDetalle(Registro registro, Guid controlId) => new(
