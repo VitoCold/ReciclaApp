@@ -218,7 +218,14 @@ public sealed class ReporteResiduosService(
             .ToListAsync(cancellationToken);
 
         if (residuos.Count == 0)
-            return new ReporteResiduosDto(desde, hasta, Array.Empty<ReporteResumenUnidadDto>(), Array.Empty<ReporteResiduoItemDto>());
+            return new ReporteResiduosDto(
+                desde,
+                hasta,
+                Array.Empty<ReporteResumenUnidadDto>(),
+                new ReporteCumplimientoDocumentalDto(0, 0, 0, 0),
+                Array.Empty<ReporteConciliacionUnidadDto>(),
+                Array.Empty<ReporteDestinoUnidadDto>(),
+                Array.Empty<ReporteResiduoItemDto>());
 
         var ids = residuos.Select(x => x.RegistroResiduoId).ToArray();
 
@@ -242,14 +249,40 @@ public sealed class ReporteResiduosService(
                 x.Retiro.EstadoRetiro.Codigo != "ANULADO")
             .Select(x => new
             {
+                x.RetiroId,
                 x.RegistroResiduoId,
                 x.Cantidad,
                 x.TipoRetiro,
+                x.SaldoEstimadoAntes,
+                x.DiferenciaConciliacion,
+                Unidad = x.UnidadMedida.Codigo,
                 x.Retiro.PuntoAlmacenamientoId,
                 x.Retiro.FechaRetiro,
                 x.Retiro.CreadoUtc
             })
             .ToListAsync(cancellationToken);
+
+        var retiroIds = retiros
+            .Select(x => x.RetiroId)
+            .Distinct()
+            .ToArray();
+
+        var disposiciones = retiroIds.Length == 0
+            ? []
+            : await context.DisposicionesFinales
+                .AsNoTracking()
+                .Where(x =>
+                    retiroIds.Contains(x.RetiroId) &&
+                    !x.Eliminado &&
+                    x.EstadoDisposicion.Codigo != "ANULADA")
+                .Select(x => new
+                {
+                    x.RetiroId,
+                    Estado = x.EstadoDisposicion.Codigo,
+                    x.TipoTratamiento.EsValorizacion,
+                    x.CreadoUtc
+                })
+                .ToListAsync(cancellationToken);
 
         var ubicaciones = await context.Set<RegistroResiduoUbicacion>()
             .AsNoTracking()
@@ -346,7 +379,126 @@ public sealed class ReporteResiduosService(
             .OrderBy(x => x.Unidad)
             .ToArray();
 
-        return new ReporteResiduosDto(desde, hasta, resumen, detalle);
+        var conciliacion = retiros
+            .GroupBy(x => x.Unidad)
+            .Select(g => new ReporteConciliacionUnidadDto(
+                g.Key,
+                g.Count(x => x.TipoRetiro == "PARCIAL"),
+                g.Count(x => x.TipoRetiro == "TOTAL"),
+                g.Where(x => x.TipoRetiro == "TOTAL")
+                    .Sum(x => x.DiferenciaConciliacion ?? 0m)))
+            .OrderBy(x => x.Unidad)
+            .ToArray();
+
+        var disposicionPorRetiro = disposiciones
+            .GroupBy(x => x.RetiroId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderByDescending(x => x.CreadoUtc).First());
+
+        var destino = retiros
+            .GroupBy(x => x.Unidad)
+            .Select(g =>
+            {
+                decimal valorizado = 0m;
+                decimal disposicionFinal = 0m;
+                decimal pendienteDocumental = 0m;
+
+                foreach (var retiro in g)
+                {
+                    if (!disposicionPorRetiro.TryGetValue(retiro.RetiroId, out var disposicion) ||
+                        disposicion.Estado != "VALIDADA")
+                    {
+                        pendienteDocumental += retiro.Cantidad;
+                        continue;
+                    }
+
+                    if (disposicion.EsValorizacion)
+                        valorizado += retiro.Cantidad;
+                    else
+                        disposicionFinal += retiro.Cantidad;
+                }
+
+                return new ReporteDestinoUnidadDto(
+                    g.Key,
+                    valorizado,
+                    disposicionFinal,
+                    pendienteDocumental);
+            })
+            .OrderBy(x => x.Unidad)
+            .ToArray();
+
+        var elegiblesCierre = 0;
+        var cierresCompletos = 0;
+        var pendientesValidacion = 0;
+        var sinDocumentacion = 0;
+
+        foreach (var registroResiduoId in ids)
+        {
+            var retirosResiduo = retiros
+                .Where(x => x.RegistroResiduoId == registroResiduoId)
+                .OrderBy(x => x.FechaRetiro)
+                .ThenBy(x => x.CreadoUtc)
+                .ToArray();
+
+            var ultimoTotal = retirosResiduo
+                .Where(x => x.TipoRetiro == "TOTAL")
+                .OrderByDescending(x => x.FechaRetiro)
+                .ThenByDescending(x => x.CreadoUtc)
+                .FirstOrDefault();
+
+            if (ultimoTotal is null)
+                continue;
+
+            var hayMovimientoPosterior = movimientos.Any(x =>
+                x.RegistroResiduoId == registroResiduoId &&
+                x.FechaMovimiento > ultimoTotal.FechaRetiro);
+
+            var hayRetiroPosterior = retirosResiduo.Any(x =>
+                x.FechaRetiro > ultimoTotal.FechaRetiro ||
+                (x.FechaRetiro == ultimoTotal.FechaRetiro &&
+                 x.CreadoUtc > ultimoTotal.CreadoUtc));
+
+            if (hayMovimientoPosterior || hayRetiroPosterior)
+                continue;
+
+            elegiblesCierre++;
+
+            if (!disposicionPorRetiro.TryGetValue(ultimoTotal.RetiroId, out var disposicionCierre))
+            {
+                sinDocumentacion++;
+                continue;
+            }
+
+            if (disposicionCierre.Estado == "VALIDADA")
+            {
+                cierresCompletos++;
+                continue;
+            }
+
+            if (disposicionCierre.Estado == "DOCUMENTADA")
+            {
+                pendientesValidacion++;
+                continue;
+            }
+
+            sinDocumentacion++;
+        }
+
+        var cumplimiento = new ReporteCumplimientoDocumentalDto(
+            elegiblesCierre,
+            cierresCompletos,
+            pendientesValidacion,
+            sinDocumentacion);
+
+        return new ReporteResiduosDto(
+            desde,
+            hasta,
+            resumen,
+            cumplimiento,
+            conciliacion,
+            destino,
+            detalle);
     }
 
     private async Task ArchivarExcelAsync(
