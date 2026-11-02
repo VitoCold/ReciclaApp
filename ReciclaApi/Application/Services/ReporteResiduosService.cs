@@ -453,9 +453,7 @@ public sealed class ReporteResiduosService(
                 x.FechaMovimiento > ultimoTotal.FechaRetiro);
 
             var hayRetiroPosterior = retirosResiduo.Any(x =>
-                x.FechaRetiro > ultimoTotal.FechaRetiro ||
-                (x.FechaRetiro == ultimoTotal.FechaRetiro &&
-                 x.CreadoUtc > ultimoTotal.CreadoUtc));
+                x.FechaRetiro > ultimoTotal.FechaRetiro);
 
             if (hayMovimientoPosterior || hayRetiroPosterior)
                 continue;
