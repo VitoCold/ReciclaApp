@@ -21,7 +21,9 @@ public interface IRegistroResiduoEvidenciaService
         CancellationToken cancellationToken = default);
 }
 
-public sealed class RegistroResiduoEvidenciaService(ReciclaDbContext context) : IRegistroResiduoEvidenciaService
+public sealed class RegistroResiduoEvidenciaService(
+    ReciclaDbContext context,
+    IControlAccessService controlAccess) : IRegistroResiduoEvidenciaService
 {
     public async Task<ServiceResult<IReadOnlyCollection<RegistroResiduoEvidenciaDto>>> ListarAsync(
         Guid registroId,
@@ -111,6 +113,19 @@ public sealed class RegistroResiduoEvidenciaService(ReciclaDbContext context) : 
         if (residuo.Registro.RegistradoPorUsuarioId != usuarioId)
             return ServiceResult<RegistroResiduoEvidenciaDto>.Fail("Solo quien creó el registro puede actualizar la ubicación.", StatusCodes.Status403Forbidden);
 
+        if (!residuo.Registro.ControlGeneracionId.HasValue)
+            return ServiceResult<RegistroResiduoEvidenciaDto>.Fail(
+                "La captura fuera de un Control de Generación fue retirada.",
+                StatusCodes.Status410Gone);
+
+        if (!await controlAccess.EsParticipanteOperativoVigenteAsync(
+                residuo.Registro.ControlGeneracionId.Value,
+                usuarioId,
+                cancellationToken))
+            return ServiceResult<RegistroResiduoEvidenciaDto>.Fail(
+                "No tienes una asignación vigente para operar en este Control.",
+                StatusCodes.Status403Forbidden);
+
         if (residuo.Registro.EstadoRegistro.Codigo is not ("BORRADOR" or "EN_PROCESO"))
             return ServiceResult<RegistroResiduoEvidenciaDto>.Fail("El registro ya no admite cambios.", StatusCodes.Status409Conflict);
 
@@ -175,28 +190,14 @@ public sealed class RegistroResiduoEvidenciaService(ReciclaDbContext context) : 
         if (autorId == usuarioId)
             return true;
 
-        var global = await context.UsuarioRoles
-            .AsNoTracking()
-            .AnyAsync(x =>
-                x.UsuarioId == usuarioId &&
-                x.Rol.EsActivo &&
-                (x.Rol.Codigo == "AMBIENTAL" || x.Rol.Codigo == "ADMINISTRADOR"),
-                cancellationToken);
-        if (global)
+        if (await controlAccess.EsGlobalAsync(usuarioId, cancellationToken))
             return true;
 
-        if (!controlId.HasValue)
-            return false;
-
-        var now = DateTime.UtcNow;
-        return await context.Set<ControlGeneracionUsuario>()
-            .AsNoTracking()
-            .AnyAsync(x =>
-                x.ControlGeneracionId == controlId.Value &&
-                x.UsuarioId == usuarioId &&
-                x.EsActivo &&
-                x.FechaDesde <= now &&
-                (!x.FechaHasta.HasValue || x.FechaHasta.Value >= now),
-                cancellationToken);
+        return controlId.HasValue &&
+               await controlAccess.TieneAsignacionVigenteAsync(
+                   controlId.Value,
+                   usuarioId,
+                   cancellationToken: cancellationToken);
     }
+
 }
