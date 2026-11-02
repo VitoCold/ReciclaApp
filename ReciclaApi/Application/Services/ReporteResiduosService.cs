@@ -218,7 +218,14 @@ public sealed class ReporteResiduosService(
             .ToListAsync(cancellationToken);
 
         if (residuos.Count == 0)
-            return new ReporteResiduosDto(desde, hasta, Array.Empty<ReporteResumenUnidadDto>(), Array.Empty<ReporteResiduoItemDto>());
+            return new ReporteResiduosDto(
+                desde,
+                hasta,
+                Array.Empty<ReporteResumenUnidadDto>(),
+                new ReporteCumplimientoDocumentalDto(0, 0, 0, 0),
+                Array.Empty<ReporteConciliacionUnidadDto>(),
+                Array.Empty<ReporteDestinoUnidadDto>(),
+                Array.Empty<ReporteResiduoItemDto>());
 
         var ids = residuos.Select(x => x.RegistroResiduoId).ToArray();
 
@@ -242,12 +249,36 @@ public sealed class ReporteResiduosService(
                 x.Retiro.EstadoRetiro.Codigo != "ANULADO")
             .Select(x => new
             {
+                x.RetiroId,
                 x.RegistroResiduoId,
                 x.Cantidad,
                 x.TipoRetiro,
+                x.SaldoEstimadoAntes,
+                x.DiferenciaConciliacion,
+                Unidad = x.UnidadMedida.Codigo,
                 x.Retiro.PuntoAlmacenamientoId,
                 x.Retiro.FechaRetiro,
                 x.Retiro.CreadoUtc
+            })
+            .ToListAsync(cancellationToken);
+
+        var retiroIds = retiros
+            .Select(x => x.RetiroId)
+            .Distinct()
+            .ToArray();
+
+        var disposiciones = await context.DisposicionesFinales
+            .AsNoTracking()
+            .Where(x =>
+                retiroIds.Contains(x.RetiroId) &&
+                !x.Eliminado &&
+                x.EstadoDisposicion.Codigo != "ANULADA")
+            .Select(x => new
+            {
+                x.RetiroId,
+                Estado = x.EstadoDisposicion.Codigo,
+                x.TipoTratamiento.EsValorizacion,
+                x.CreadoUtc
             })
             .ToListAsync(cancellationToken);
 
@@ -346,7 +377,124 @@ public sealed class ReporteResiduosService(
             .OrderBy(x => x.Unidad)
             .ToArray();
 
-        return new ReporteResiduosDto(desde, hasta, resumen, detalle);
+        var conciliacion = retiros
+            .GroupBy(x => x.Unidad)
+            .Select(g => new ReporteConciliacionUnidadDto(
+                g.Key,
+                g.Count(x => x.TipoRetiro == "PARCIAL"),
+                g.Count(x => x.TipoRetiro == "TOTAL"),
+                g.Where(x => x.TipoRetiro == "TOTAL")
+                    .Sum(x => x.DiferenciaConciliacion ?? 0m)))
+            .OrderBy(x => x.Unidad)
+            .ToArray();
+
+        var disposicionPorRetiro = disposiciones
+            .GroupBy(x => x.RetiroId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderByDescending(x => x.CreadoUtc).First());
+
+        var destino = retiros
+            .GroupBy(x => x.Unidad)
+            .Select(g =>
+            {
+                decimal valorizado = 0m;
+                decimal disposicionFinal = 0m;
+                decimal pendienteDocumental = 0m;
+
+                foreach (var retiro in g)
+                {
+                    if (!disposicionPorRetiro.TryGetValue(retiro.RetiroId, out var disposicion) ||
+                        disposicion.Estado != "VALIDADA")
+                    {
+                        pendienteDocumental += retiro.Cantidad;
+                        continue;
+                    }
+
+                    if (disposicion.EsValorizacion)
+                        valorizado += retiro.Cantidad;
+                    else
+                        disposicionFinal += retiro.Cantidad;
+                }
+
+                return new ReporteDestinoUnidadDto(
+                    g.Key,
+                    valorizado,
+                    disposicionFinal,
+                    pendienteDocumental);
+            })
+            .OrderBy(x => x.Unidad)
+            .ToArray();
+
+        var elegiblesCierre = 0;
+        var cierresCompletos = 0;
+        var pendientesValidacion = 0;
+        var sinDocumentacion = 0;
+
+        foreach (var registroResiduoId in ids)
+        {
+            var retirosResiduo = retiros
+                .Where(x => x.RegistroResiduoId == registroResiduoId)
+                .OrderBy(x => x.FechaRetiro)
+                .ThenBy(x => x.CreadoUtc)
+                .ToArray();
+
+            var ultimoTotal = retirosResiduo
+                .Where(x => x.TipoRetiro == "TOTAL")
+                .OrderByDescending(x => x.FechaRetiro)
+                .ThenByDescending(x => x.CreadoUtc)
+                .FirstOrDefault();
+
+            if (ultimoTotal is null)
+                continue;
+
+            var hayMovimientoPosterior = movimientos.Any(x =>
+                x.RegistroResiduoId == registroResiduoId &&
+                x.FechaMovimiento > ultimoTotal.FechaRetiro);
+
+            var hayRetiroPosterior = retirosResiduo.Any(x =>
+                x.FechaRetiro > ultimoTotal.FechaRetiro);
+
+            if (hayMovimientoPosterior || hayRetiroPosterior)
+                continue;
+
+            elegiblesCierre++;
+
+            if (!disposicionPorRetiro.TryGetValue(ultimoTotal.RetiroId, out var disposicionCierre))
+            {
+                sinDocumentacion++;
+                continue;
+            }
+
+            if (disposicionCierre.Estado == "VALIDADA")
+            {
+                cierresCompletos++;
+                continue;
+            }
+
+            if (disposicionCierre.Estado == "DOCUMENTADA")
+            {
+                pendientesValidacion++;
+                continue;
+            }
+
+            sinDocumentacion++;
+        }
+
+        var cumplimiento = new ReporteCumplimientoDocumentalDto(
+            elegiblesCierre,
+            cierresCompletos,
+            pendientesValidacion,
+            sinDocumentacion);
+
+        return new ReporteResiduosDto(
+            desde,
+            hasta,
+            resumen,
+            cumplimiento,
+            conciliacion,
+            destino,
+            detalle);
     }
 
     private async Task ArchivarExcelAsync(
@@ -475,6 +623,66 @@ public sealed class ReporteResiduosService(
         }
 
         AplicarCabecera(resumen.Range(4, 1, 4, headersResumen.Length));
+
+        fila += 1;
+        resumen.Cell(fila, 1).Value = "Cumplimiento documental";
+        resumen.Range(fila, 1, fila, 4).Merge();
+        resumen.Cell(fila, 1).Style.Font.Bold = true;
+        fila++;
+
+        var headersCumplimiento = new[] { "Elegibles a cierre", "Cierre completo", "Pendiente de validar", "Sin documentación" };
+        for (var c = 0; c < headersCumplimiento.Length; c++)
+            resumen.Cell(fila, c + 1).Value = headersCumplimiento[c];
+        AplicarCabecera(resumen.Range(fila, 1, fila, headersCumplimiento.Length));
+        fila++;
+
+        resumen.Cell(fila, 1).Value = reporte.CumplimientoDocumental.ElegiblesCierre;
+        resumen.Cell(fila, 2).Value = reporte.CumplimientoDocumental.CierresCompletos;
+        resumen.Cell(fila, 3).Value = reporte.CumplimientoDocumental.PendientesValidacion;
+        resumen.Cell(fila, 4).Value = reporte.CumplimientoDocumental.SinDocumentacion;
+
+        fila += 2;
+        resumen.Cell(fila, 1).Value = "Conciliación EO-RS";
+        resumen.Range(fila, 1, fila, 4).Merge();
+        resumen.Cell(fila, 1).Style.Font.Bold = true;
+        fila++;
+
+        var headersConciliacion = new[] { "Unidad", "Retiros parciales", "Retiros totales", "Diferencia de conciliación" };
+        for (var c = 0; c < headersConciliacion.Length; c++)
+            resumen.Cell(fila, c + 1).Value = headersConciliacion[c];
+        AplicarCabecera(resumen.Range(fila, 1, fila, headersConciliacion.Length));
+        fila++;
+
+        foreach (var item in reporte.Conciliacion)
+        {
+            resumen.Cell(fila, 1).Value = item.Unidad;
+            resumen.Cell(fila, 2).Value = item.RetirosParciales;
+            resumen.Cell(fila, 3).Value = item.RetirosTotales;
+            resumen.Cell(fila, 4).Value = item.DiferenciaConciliacion;
+            fila++;
+        }
+
+        fila += 1;
+        resumen.Cell(fila, 1).Value = "Destino de lo retirado";
+        resumen.Range(fila, 1, fila, 4).Merge();
+        resumen.Cell(fila, 1).Style.Font.Bold = true;
+        fila++;
+
+        var headersDestino = new[] { "Unidad", "Valorizado", "Disposición final", "Pendiente documental" };
+        for (var c = 0; c < headersDestino.Length; c++)
+            resumen.Cell(fila, c + 1).Value = headersDestino[c];
+        AplicarCabecera(resumen.Range(fila, 1, fila, headersDestino.Length));
+        fila++;
+
+        foreach (var item in reporte.Destino)
+        {
+            resumen.Cell(fila, 1).Value = item.Unidad;
+            resumen.Cell(fila, 2).Value = item.Valorizado;
+            resumen.Cell(fila, 3).Value = item.DisposicionFinal;
+            resumen.Cell(fila, 4).Value = item.PendienteDocumental;
+            fila++;
+        }
+
         resumen.SheetView.FreezeRows(4);
         resumen.Columns().AdjustToContents();
 
