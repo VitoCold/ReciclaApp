@@ -44,10 +44,9 @@ public partial class NuevaDisposicionFinalPage : ContentPage
         }
 
         var usuario = session.CurrentUser;
-        if (usuario?.Roles.Contains("AMBIENTAL") != true &&
-            usuario?.Roles.Contains("RESPONSABLE_OPERATIVO") != true)
+        if (usuario?.Roles.Contains("AMBIENTAL") != true)
         {
-            MostrarError("Tu rol no tiene permiso para documentar el destino final.");
+            MostrarError("Solo Ambiental puede documentar el destino final.");
             GuardarButton.IsEnabled = false;
             return;
         }
