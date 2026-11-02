@@ -41,9 +41,21 @@ public sealed class RegistroService(
         CancellationToken cancellationToken = default)
     {
         var registro = await unitOfWork.Registros.ObtenerDetalleAsync(registroId, usuarioId, false, cancellationToken);
-        return registro is null
-            ? ServiceResult<RegistroDetalleDto>.Fail("Registro no encontrado.", StatusCodes.Status404NotFound)
-            : ServiceResult<RegistroDetalleDto>.Ok(MapDetalle(registro));
+        if (registro is null)
+            return ServiceResult<RegistroDetalleDto>.Fail("Registro no encontrado.", StatusCodes.Status404NotFound);
+
+        if (registro.ControlGeneracionId.HasValue &&
+            !await controlAccess.TieneAsignacionVigenteAsync(
+                registro.ControlGeneracionId.Value,
+                usuarioId,
+                cancellationToken: cancellationToken))
+        {
+            return ServiceResult<RegistroDetalleDto>.Fail(
+                "Registro no encontrado o sin acceso vigente al Control.",
+                StatusCodes.Status404NotFound);
+        }
+
+        return ServiceResult<RegistroDetalleDto>.Ok(MapDetalle(registro));
     }
 
     public Task<ServiceResult<RegistroDetalleDto>> CrearAsync(
