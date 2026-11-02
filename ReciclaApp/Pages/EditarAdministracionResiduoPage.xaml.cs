@@ -43,8 +43,8 @@ public partial class EditarAdministracionResiduoPage : ContentPage
                 tipos.Add(new TipoResiduoDto(_item.TipoResiduoId, _item.TipoCodigo, _item.TipoNombre));
 
             TipoPicker.ItemsSource = tipos.OrderBy(x => x.Nombre).ToArray();
-            ClasificacionPicker.ItemsSource = cat.Clasificaciones;
-            UnidadPicker.ItemsSource = cat.UnidadesMedida;
+            ClasificacionPicker.ItemsSource = cat.Clasificaciones.ToArray();
+            UnidadPicker.ItemsSource = cat.UnidadesMedida.ToArray();
 
             if (_item is null) return;
 
