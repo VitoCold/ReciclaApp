@@ -21,7 +21,9 @@ public interface IInventarioResiduoService
         CancellationToken cancellationToken = default);
 }
 
-public sealed class InventarioResiduoService(IUnitOfWork unitOfWork) : IInventarioResiduoService
+public sealed class InventarioResiduoService(
+    IUnitOfWork unitOfWork,
+    IControlAccessService controlAccess) : IInventarioResiduoService
 {
     public async Task<InventarioResiduosDto> ListarAsync(
         Guid usuarioId,
@@ -70,23 +72,17 @@ public sealed class InventarioResiduoService(IUnitOfWork unitOfWork) : IInventar
         if (residuo is null)
             return ServiceResult<TrazabilidadResiduoDto>.Fail("Residuo no encontrado.", StatusCodes.Status404NotFound);
 
-        var esGlobal = await TieneRolAsync(usuarioId, "AMBIENTAL", cancellationToken) ||
-                       await TieneRolAsync(usuarioId, "ADMINISTRADOR", cancellationToken);
+        var esGlobal = await controlAccess.EsGlobalAsync(usuarioId, cancellationToken);
 
-        if (!esGlobal)
+        if (!esGlobal &&
+            !await controlAccess.TieneAsignacionVigenteAsync(
+                residuo.Registro.ControlGeneracionId!.Value,
+                usuarioId,
+                cancellationToken: cancellationToken))
         {
-            var now = DateTime.UtcNow;
-            var tieneAcceso = await unitOfWork.Repository<ControlGeneracionUsuario>().Query()
-                .AnyAsync(x =>
-                    x.ControlGeneracionId == residuo.Registro.ControlGeneracionId!.Value &&
-                    x.UsuarioId == usuarioId &&
-                    x.EsActivo &&
-                    x.FechaDesde <= now &&
-                    (!x.FechaHasta.HasValue || x.FechaHasta.Value >= now),
-                    cancellationToken);
-
-            if (!tieneAcceso)
-                return ServiceResult<TrazabilidadResiduoDto>.Fail("Residuo no encontrado o sin acceso.", StatusCodes.Status404NotFound);
+            return ServiceResult<TrazabilidadResiduoDto>.Fail(
+                "Residuo no encontrado o sin acceso.",
+                StatusCodes.Status404NotFound);
         }
 
         var movimientos = await unitOfWork.Repository<MovimientoResiduo>().Query()
@@ -327,9 +323,8 @@ public sealed class InventarioResiduoService(IUnitOfWork unitOfWork) : IInventar
         Guid? registroResiduoId,
         CancellationToken cancellationToken)
     {
-        var esGlobal = await TieneRolAsync(usuarioId, "AMBIENTAL", cancellationToken) ||
-                       await TieneRolAsync(usuarioId, "ADMINISTRADOR", cancellationToken);
-        var now = DateTime.UtcNow;
+        var esGlobal = await controlAccess.EsGlobalAsync(usuarioId, cancellationToken);
+        var hoy = DateTime.UtcNow.Date;
 
         IQueryable<RegistroResiduo> query = unitOfWork.Repository<RegistroResiduo>().Query()
             .Where(x =>
@@ -351,8 +346,8 @@ public sealed class InventarioResiduoService(IUnitOfWork unitOfWork) : IInventar
             query = query.Where(x => x.Registro.ControlGeneracion!.Usuarios.Any(u =>
                 u.UsuarioId == usuarioId &&
                 u.EsActivo &&
-                u.FechaDesde <= now &&
-                (!u.FechaHasta.HasValue || u.FechaHasta.Value >= now)));
+                u.FechaDesde <= hoy &&
+                (!u.FechaHasta.HasValue || u.FechaHasta.Value >= hoy)));
         }
 
         var residuos = await query.ToListAsync(cancellationToken);
@@ -469,22 +464,14 @@ public sealed class InventarioResiduoService(IUnitOfWork unitOfWork) : IInventar
         CancellationToken cancellationToken)
     {
         var tieneRolOperativo =
-            await TieneRolAsync(usuarioId, "RESPONSABLE_OPERATIVO", cancellationToken) ||
-            await TieneRolAsync(usuarioId, "REGISTRADOR", cancellationToken);
+            await controlAccess.TieneRolAsync(usuarioId, "RESPONSABLE_OPERATIVO", cancellationToken) ||
+            await controlAccess.TieneRolAsync(usuarioId, "REGISTRADOR", cancellationToken);
 
-        if (!tieneRolOperativo)
-            return false;
-
-        var now = DateTime.UtcNow;
-        return await unitOfWork.Repository<ControlGeneracionUsuario>().Query()
-            .AnyAsync(x =>
-                x.ControlGeneracionId == controlId &&
-                x.UsuarioId == usuarioId &&
-                (x.RolControl == "RESPONSABLE" || x.RolControl == "REGISTRADOR") &&
-                x.EsActivo &&
-                x.FechaDesde <= now &&
-                (!x.FechaHasta.HasValue || x.FechaHasta.Value >= now),
-                cancellationToken);
+        return tieneRolOperativo &&
+               await controlAccess.EsParticipanteOperativoVigenteAsync(
+                   controlId,
+                   usuarioId,
+                   cancellationToken);
     }
 
     private static string EstadoOperativoCodigo(
@@ -531,7 +518,4 @@ public sealed class InventarioResiduoService(IUnitOfWork unitOfWork) : IInventar
             ? empresa.RazonSocial
             : empresa.NombreComercial;
 
-    private Task<bool> TieneRolAsync(Guid usuarioId, string rol, CancellationToken cancellationToken) =>
-        unitOfWork.Repository<UsuarioRol>().Query()
-            .AnyAsync(x => x.UsuarioId == usuarioId && x.Rol.Codigo == rol && x.Rol.EsActivo, cancellationToken);
 }
