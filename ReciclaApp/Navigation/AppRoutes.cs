@@ -24,7 +24,6 @@ public static class AppRoutes
     public const string DetalleRegistro = "detalle-registro";
     public const string DetalleResiduoDetalle = "detalle-residuo-detalle";
     public const string DetalleResiduoFotos = "detalle-residuo-fotos";
-    public const string InicioRegistro = "inicio-registro";
     public const string RegistrarResiduo = "registrar-residuo";
     public const string AdministracionUsuarios = "administracion-usuarios";
     public const string EditarAdministracionUsuario = "editar-administracion-usuario";
