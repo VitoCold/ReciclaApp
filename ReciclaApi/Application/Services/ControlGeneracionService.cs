@@ -373,17 +373,47 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
         if (control.EstadoControlGeneracion.Codigo != "ACTIVO")
             return ServiceResult<ControlGeneracionDetalleDto>.Fail("Solo se puede finalizar un control activo.", StatusCodes.Status409Conflict);
 
+        var borradoresTecnicos = await unitOfWork.Repository<Registro>().Query(tracking: true)
+            .Include(x => x.EstadoRegistro)
+            .Where(x =>
+                x.ControlGeneracionId == controlId &&
+                !x.Eliminado &&
+                (x.EstadoRegistro.Codigo == "BORRADOR" || x.EstadoRegistro.Codigo == "EN_PROCESO") &&
+                !x.Residuos.Any(r => !r.Eliminado))
+            .ToListAsync(cancellationToken);
+
+        if (borradoresTecnicos.Count > 0)
+        {
+            var ahora = DateTime.UtcNow;
+            foreach (var borrador in borradoresTecnicos)
+            {
+                borrador.Eliminado = true;
+                borrador.ActualizadoUtc = ahora;
+            }
+
+            await AuditarAsync(
+                controlId,
+                usuarioId,
+                "LIMPIAR_BORRADORES_TECNICOS",
+                new { Cantidad = borradoresTecnicos.Count },
+                new { EliminadosLogicamente = borradoresTecnicos.Count },
+                cancellationToken);
+
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+
         var tieneRegistrosAbiertos = await unitOfWork.Repository<Registro>().Query()
             .Include(x => x.EstadoRegistro)
             .AnyAsync(x =>
                 x.ControlGeneracionId == controlId &&
                 !x.Eliminado &&
-                (x.EstadoRegistro.Codigo == "BORRADOR" || x.EstadoRegistro.Codigo == "EN_PROCESO"),
+                (x.EstadoRegistro.Codigo == "BORRADOR" || x.EstadoRegistro.Codigo == "EN_PROCESO") &&
+                x.Residuos.Any(r => !r.Eliminado),
                 cancellationToken);
 
         if (tieneRegistrosAbiertos)
             return ServiceResult<ControlGeneracionDetalleDto>.Fail(
-                "No se puede finalizar el control mientras existan registros de residuos en proceso.",
+                "No se puede finalizar el control mientras existan registros de residuos en proceso con detalle.",
                 StatusCodes.Status409Conflict);
 
         var finalizado = await GetEstadoAsync("FINALIZADO", cancellationToken);
