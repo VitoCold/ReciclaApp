@@ -126,8 +126,6 @@ public static class AppNavigator
 
     public static Task IrAFotosResiduoAsync() => ApilarAsync(AppRoutes.DetalleResiduoFotos);
 
-    public static Task IrAInicioRegistroAsync() => ApilarAsync(AppRoutes.InicioRegistro);
-
     public static Task IrARegistrarResiduoAsync(Guid registroId) =>
         ApilarAsync($"{AppRoutes.RegistrarResiduo}?registroId={registroId}");
 
