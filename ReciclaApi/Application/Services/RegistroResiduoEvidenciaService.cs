@@ -187,17 +187,16 @@ public sealed class RegistroResiduoEvidenciaService(
         Guid usuarioId,
         CancellationToken cancellationToken)
     {
-        if (autorId == usuarioId)
-            return true;
+        if (!controlId.HasValue)
+            return autorId == usuarioId;
 
         if (await controlAccess.EsGlobalAsync(usuarioId, cancellationToken))
             return true;
 
-        return controlId.HasValue &&
-               await controlAccess.TieneAsignacionVigenteAsync(
-                   controlId.Value,
-                   usuarioId,
-                   cancellationToken: cancellationToken);
+        return await controlAccess.TieneAsignacionVigenteAsync(
+            controlId.Value,
+            usuarioId,
+            cancellationToken: cancellationToken);
     }
 
 }
