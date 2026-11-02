@@ -267,22 +267,20 @@ public sealed class ReporteResiduosService(
             .Distinct()
             .ToArray();
 
-        var disposiciones = retiroIds.Length == 0
-            ? []
-            : await context.DisposicionesFinales
-                .AsNoTracking()
-                .Where(x =>
-                    retiroIds.Contains(x.RetiroId) &&
-                    !x.Eliminado &&
-                    x.EstadoDisposicion.Codigo != "ANULADA")
-                .Select(x => new
-                {
-                    x.RetiroId,
-                    Estado = x.EstadoDisposicion.Codigo,
-                    x.TipoTratamiento.EsValorizacion,
-                    x.CreadoUtc
-                })
-                .ToListAsync(cancellationToken);
+        var disposiciones = await context.DisposicionesFinales
+            .AsNoTracking()
+            .Where(x =>
+                retiroIds.Contains(x.RetiroId) &&
+                !x.Eliminado &&
+                x.EstadoDisposicion.Codigo != "ANULADA")
+            .Select(x => new
+            {
+                x.RetiroId,
+                Estado = x.EstadoDisposicion.Codigo,
+                x.TipoTratamiento.EsValorizacion,
+                x.CreadoUtc
+            })
+            .ToListAsync(cancellationToken);
 
         var ubicaciones = await context.Set<RegistroResiduoUbicacion>()
             .AsNoTracking()
