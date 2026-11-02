@@ -194,8 +194,29 @@ public partial class ReportesPage : ContentPage
                 $"Pendiente de almacenar: {x.PendienteAlmacenamiento:0.###} {x.Unidad}"))
                 .ToArray();
 
+            var cumplimiento = new CumplimientoVisual(
+                _ultimoReporte.CumplimientoDocumental.ElegiblesCierre.ToString(),
+                _ultimoReporte.CumplimientoDocumental.CierresCompletos.ToString(),
+                _ultimoReporte.CumplimientoDocumental.PendientesValidacion.ToString(),
+                _ultimoReporte.CumplimientoDocumental.SinDocumentacion.ToString());
+
+            var conciliacion = _ultimoReporte.Conciliacion
+                .Select(x => new ConciliacionVisual(
+                    x.Unidad,
+                    $"{x.RetirosParciales} / {x.RetirosTotales}",
+                    $"{x.DiferenciaConciliacion:+0.###;-0.###;0} {x.Unidad}"))
+                .ToArray();
+
+            var destino = _ultimoReporte.Destino
+                .Select(x => new DestinoVisual(
+                    x.Unidad,
+                    $"{x.Valorizado:0.###} {x.Unidad}",
+                    $"{x.DisposicionFinal:0.###} {x.Unidad}",
+                    $"{x.PendienteDocumental:0.###} {x.Unidad}"))
+                .ToArray();
+
             var detalle = _ultimoReporte.Detalle.Select(MapDetalle).ToArray();
-            BindingContext = new ReporteBinding(resumen, detalle);
+            BindingContext = new ReporteBinding(resumen, cumplimiento, conciliacion, destino, detalle);
 
             PeriodoLabel.Text = $"{_ultimoReporte.Desde:dd/MM/yyyy} al {_ultimoReporte.Hasta:dd/MM/yyyy}";
             CantidadLabel.Text = detalle.Length == 1 ? "1 residuo registrado" : $"{detalle.Length} residuos registrados";
@@ -323,6 +344,23 @@ public partial class ReportesPage : ContentPage
         string Saldo,
         string Pendiente);
 
+    private sealed record CumplimientoVisual(
+        string ElegiblesCierre,
+        string CierresCompletos,
+        string PendientesValidacion,
+        string SinDocumentacion);
+
+    private sealed record ConciliacionVisual(
+        string Unidad,
+        string RetirosTexto,
+        string Diferencia);
+
+    private sealed record DestinoVisual(
+        string Unidad,
+        string Valorizado,
+        string DisposicionFinal,
+        string PendienteDocumental);
+
     private sealed record DetalleVisual(
         string Residuo,
         string Clasificacion,
@@ -339,5 +377,8 @@ public partial class ReportesPage : ContentPage
 
     private sealed record ReporteBinding(
         IReadOnlyCollection<ResumenVisual> Resumen,
+        CumplimientoVisual Cumplimiento,
+        IReadOnlyCollection<ConciliacionVisual> Conciliacion,
+        IReadOnlyCollection<DestinoVisual> Destino,
         IReadOnlyCollection<DetalleVisual> Detalle);
 }
