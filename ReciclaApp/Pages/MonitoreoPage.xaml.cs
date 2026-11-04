@@ -48,8 +48,8 @@ public partial class MonitoreoPage : ContentPage
             return;
         }
 
-        var roles = session.CurrentUser?.Roles ?? Array.Empty<string>();
-        if (!roles.Contains("AMBIENTAL") && !roles.Contains("ADMINISTRADOR"))
+        var roles = session.CurrentUser?.Roles;
+        if (roles is null || (!roles.Contains("AMBIENTAL") && !roles.Contains("ADMINISTRADOR")))
         {
             await AppNavigator.IrAControlesGeneracionAsync();
             return;
