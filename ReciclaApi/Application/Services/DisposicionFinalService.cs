@@ -27,7 +27,8 @@ public interface IDisposicionFinalService
 
 public sealed class DisposicionFinalService(
     ReciclaDbContext context,
-    IFileStorageService fileStorage) : IDisposicionFinalService
+    IFileStorageService fileStorage,
+    IControlAccessService controlAccess) : IDisposicionFinalService
 {
     public async Task<IReadOnlyCollection<TipoTratamientoDto>> ListarTiposTratamientoAsync(CancellationToken cancellationToken = default) =>
         await context.TiposTratamiento
@@ -58,19 +59,16 @@ public sealed class DisposicionFinalService(
         CrearDisposicionFinalRequest request,
         CancellationToken cancellationToken = default)
     {
-        var esAmbiental = await TieneRolAsync(usuarioId, "AMBIENTAL", cancellationToken);
-        var esResponsable = await TieneRolAsync(usuarioId, "RESPONSABLE_OPERATIVO", cancellationToken);
-        if (!esAmbiental && !esResponsable)
-            return ServiceResult<DisposicionFinalDto>.Fail("No tienes permiso para documentar la disposición del retiro.", StatusCodes.Status403Forbidden);
+        if (!await controlAccess.TieneRolAsync(usuarioId, "AMBIENTAL", cancellationToken))
+            return ServiceResult<DisposicionFinalDto>.Fail(
+                "Solo Ambiental puede documentar la disposición final o valorización.",
+                StatusCodes.Status403Forbidden);
 
         await using var transaction = await context.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
 
         var retiro = await CargarRetiroAsync(retiroId, cancellationToken, tracking: true);
         if (retiro is null)
             return await FailRollbackAsync("Retiro no encontrado.", StatusCodes.Status404NotFound, transaction, cancellationToken);
-
-        if (!esAmbiental && !await EsResponsableDeTodosLosControlesAsync(retiro, usuarioId, cancellationToken))
-            return await FailRollbackAsync("No tienes permiso para documentar este retiro.", StatusCodes.Status403Forbidden, transaction, cancellationToken);
 
         if (retiro.EstadoRetiro.Codigo != "RETIRADO")
             return await FailRollbackAsync("Solo un retiro confirmado puede documentar disposición final o valorización.", StatusCodes.Status409Conflict, transaction, cancellationToken);
@@ -160,14 +158,10 @@ public sealed class DisposicionFinalService(
         if (disposicion.EstadoDisposicion.Codigo == "VALIDADA")
             return ServiceResult<DisposicionFinalDto>.Fail("La disposición ya fue validada y no admite nuevas evidencias.", StatusCodes.Status409Conflict);
 
-        var esAmbiental = await TieneRolAsync(usuarioId, "AMBIENTAL", cancellationToken);
-        var esResponsable = await TieneRolAsync(usuarioId, "RESPONSABLE_OPERATIVO", cancellationToken);
-        if (!esAmbiental && !esResponsable)
-            return ServiceResult<DisposicionFinalDto>.Fail("No tienes permiso para adjuntar evidencias.", StatusCodes.Status403Forbidden);
-
-        var retiro = await CargarRetiroAsync(disposicion.RetiroId, cancellationToken);
-        if (retiro is null || (!esAmbiental && !await EsResponsableDeTodosLosControlesAsync(retiro, usuarioId, cancellationToken)))
-            return ServiceResult<DisposicionFinalDto>.Fail("No tienes permiso para adjuntar evidencia a este retiro.", StatusCodes.Status403Forbidden);
+        if (!await controlAccess.TieneRolAsync(usuarioId, "AMBIENTAL", cancellationToken))
+            return ServiceResult<DisposicionFinalDto>.Fail(
+                "Solo Ambiental puede adjuntar evidencias de disposición final o valorización.",
+                StatusCodes.Status403Forbidden);
 
         var stored = await fileStorage.SaveAsync(
             content,
@@ -224,7 +218,7 @@ public sealed class DisposicionFinalService(
         Guid usuarioId,
         CancellationToken cancellationToken = default)
     {
-        if (!await TieneRolAsync(usuarioId, "AMBIENTAL", cancellationToken))
+        if (!await controlAccess.TieneRolAsync(usuarioId, "AMBIENTAL", cancellationToken))
             return ServiceResult<DisposicionFinalDto>.Fail("Solo Ambiental puede validar la disposición final o valorización.", StatusCodes.Status403Forbidden);
 
         var disposicion = await CargarDisposicionAsync(disposicionFinalId, cancellationToken, tracking: true);
@@ -291,16 +285,12 @@ public sealed class DisposicionFinalService(
 
     private async Task<bool> PuedeConsultarAsync(Retiro retiro, Guid usuarioId, CancellationToken cancellationToken)
     {
-        if (await TieneRolAsync(usuarioId, "AMBIENTAL", cancellationToken) ||
-            await TieneRolAsync(usuarioId, "ADMINISTRADOR", cancellationToken))
+        if (await controlAccess.EsGlobalAsync(usuarioId, cancellationToken))
             return true;
 
-        return await TieneRolAsync(usuarioId, "RESPONSABLE_OPERATIVO", cancellationToken) &&
-               await EsResponsableDeTodosLosControlesAsync(retiro, usuarioId, cancellationToken);
-    }
+        if (!await controlAccess.TieneRolAsync(usuarioId, "RESPONSABLE_OPERATIVO", cancellationToken))
+            return false;
 
-    private async Task<bool> EsResponsableDeTodosLosControlesAsync(Retiro retiro, Guid usuarioId, CancellationToken cancellationToken)
-    {
         var controlIds = retiro.Detalles
             .Select(x => x.RegistroResiduo.Registro.ControlGeneracionId)
             .Where(x => x.HasValue)
@@ -308,30 +298,11 @@ public sealed class DisposicionFinalService(
             .Distinct()
             .ToArray();
 
-        if (controlIds.Length == 0)
-            return false;
-
-        var now = DateTime.UtcNow;
-        var autorizados = await context.Set<ControlGeneracionUsuario>()
-            .AsNoTracking()
-            .Where(x =>
-                controlIds.Contains(x.ControlGeneracionId) &&
-                x.UsuarioId == usuarioId &&
-                x.RolControl == "RESPONSABLE" &&
-                x.EsActivo &&
-                x.FechaDesde <= now &&
-                (!x.FechaHasta.HasValue || x.FechaHasta.Value >= now))
-            .Select(x => x.ControlGeneracionId)
-            .Distinct()
-            .CountAsync(cancellationToken);
-
-        return autorizados == controlIds.Length;
+        return await controlAccess.EsResponsableDeTodosAsync(
+            controlIds,
+            usuarioId,
+            cancellationToken);
     }
-
-    private Task<bool> TieneRolAsync(Guid usuarioId, string codigo, CancellationToken cancellationToken) =>
-        context.UsuarioRoles
-            .AsNoTracking()
-            .AnyAsync(x => x.UsuarioId == usuarioId && x.Rol.EsActivo && x.Rol.Codigo == codigo, cancellationToken);
 
     private static DisposicionFinalDto Map(DisposicionFinal disposicion)
     {

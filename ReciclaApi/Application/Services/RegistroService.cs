@@ -24,7 +24,8 @@ public interface IRegistroService
 
 public sealed class RegistroService(
     IUnitOfWork unitOfWork,
-    IFileStorageService fileStorage) : IRegistroService
+    IFileStorageService fileStorage,
+    IControlAccessService controlAccess) : IRegistroService
 {
     public async Task<IReadOnlyCollection<RegistroListItemDto>> ListarAsync(
         Guid usuarioId,
@@ -40,73 +41,39 @@ public sealed class RegistroService(
         CancellationToken cancellationToken = default)
     {
         var registro = await unitOfWork.Registros.ObtenerDetalleAsync(registroId, usuarioId, false, cancellationToken);
-        return registro is null
-            ? ServiceResult<RegistroDetalleDto>.Fail("Registro no encontrado.", StatusCodes.Status404NotFound)
-            : ServiceResult<RegistroDetalleDto>.Ok(MapDetalle(registro));
-    }
-
-    public async Task<ServiceResult<RegistroDetalleDto>> CrearAsync(
-        Guid usuarioId,
-        CrearRegistroRequest request,
-        CancellationToken cancellationToken = default)
-    {
-        var validation = await ValidarCabeceraAsync(request.ProyectoId, request.ActividadId, request.SedeId, cancellationToken);
-        if (validation is not null)
-            return ServiceResult<RegistroDetalleDto>.Fail(validation, StatusCodes.Status400BadRequest);
-
-        var estadoBorrador = await GetEstadoRegistroAsync("BORRADOR", cancellationToken);
-        var estadoSync = await GetEstadoSyncAsync(cancellationToken);
-
-        var registro = new Registro
-        {
-            CodigoLocal = request.CodigoLocal,
-            FechaRegistro = request.FechaRegistro,
-            RegistradoPorUsuarioId = usuarioId,
-            ProyectoId = request.ProyectoId,
-            ActividadId = request.ActividadId,
-            SedeId = request.SedeId,
-            EstadoRegistroId = estadoBorrador.EstadoRegistroId,
-            EstadoSincronizacionId = estadoSync.EstadoSincronizacionId,
-            Observacion = request.Observacion,
-            OrigenDispositivo = request.OrigenDispositivo
-        };
-
-        await unitOfWork.Repository<Registro>().AddAsync(registro, cancellationToken);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-
-        var detalle = await unitOfWork.Registros.ObtenerDetalleAsync(registro.RegistroId, usuarioId, false, cancellationToken);
-        return ServiceResult<RegistroDetalleDto>.Ok(MapDetalle(detalle!), StatusCodes.Status201Created);
-    }
-
-    public async Task<ServiceResult<RegistroDetalleDto>> ActualizarAsync(
-        Guid registroId,
-        Guid usuarioId,
-        ActualizarRegistroRequest request,
-        CancellationToken cancellationToken = default)
-    {
-        var registro = await unitOfWork.Registros.ObtenerDetalleAsync(registroId, usuarioId, true, cancellationToken);
         if (registro is null)
             return ServiceResult<RegistroDetalleDto>.Fail("Registro no encontrado.", StatusCodes.Status404NotFound);
 
-        if (!EsBorrador(registro))
-            return ServiceResult<RegistroDetalleDto>.Fail("Solo se pueden editar registros en borrador.", StatusCodes.Status409Conflict);
+        if (registro.ControlGeneracionId.HasValue &&
+            !await controlAccess.TieneAsignacionVigenteAsync(
+                registro.ControlGeneracionId.Value,
+                usuarioId,
+                cancellationToken: cancellationToken))
+        {
+            return ServiceResult<RegistroDetalleDto>.Fail(
+                "Registro no encontrado o sin acceso vigente al Control.",
+                StatusCodes.Status404NotFound);
+        }
 
-        var validation = await ValidarCabeceraAsync(request.ProyectoId, request.ActividadId, request.SedeId, cancellationToken);
-        if (validation is not null)
-            return ServiceResult<RegistroDetalleDto>.Fail(validation, StatusCodes.Status400BadRequest);
-
-        registro.FechaRegistro = request.FechaRegistro;
-        registro.ProyectoId = request.ProyectoId;
-        registro.ActividadId = request.ActividadId;
-        registro.SedeId = request.SedeId;
-        registro.Observacion = request.Observacion;
-        registro.ActualizadoUtc = DateTime.UtcNow;
-
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-
-        var detalle = await unitOfWork.Registros.ObtenerDetalleAsync(registroId, usuarioId, false, cancellationToken);
-        return ServiceResult<RegistroDetalleDto>.Ok(MapDetalle(detalle!));
+        return ServiceResult<RegistroDetalleDto>.Ok(MapDetalle(registro));
     }
+
+    public Task<ServiceResult<RegistroDetalleDto>> CrearAsync(
+        Guid usuarioId,
+        CrearRegistroRequest request,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(ServiceResult<RegistroDetalleDto>.Fail(
+            "El registro independiente fue retirado. Inicia el registro desde un Control de Generación activo.",
+            StatusCodes.Status410Gone));
+
+    public Task<ServiceResult<RegistroDetalleDto>> ActualizarAsync(
+        Guid registroId,
+        Guid usuarioId,
+        ActualizarRegistroRequest request,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(ServiceResult<RegistroDetalleDto>.Fail(
+            "La edición independiente de la cabecera fue retirada. La cabecera operativa se administra desde el Control de Generación.",
+            StatusCodes.Status410Gone));
 
     public async Task<ServiceResult<RegistroResiduoDto>> AgregarResiduoAsync(
         Guid registroId,
@@ -120,6 +87,10 @@ public sealed class RegistroService(
         var registro = await unitOfWork.Registros.ObtenerDetalleAsync(registroId, usuarioId, true, cancellationToken);
         if (registro is null)
             return ServiceResult<RegistroResiduoDto>.Fail("Registro no encontrado.", StatusCodes.Status404NotFound);
+
+        var acceso = await ValidarOperacionControlAsync(registro, usuarioId, cancellationToken);
+        if (acceso is not null)
+            return ServiceResult<RegistroResiduoDto>.Fail(acceso, StatusCodes.Status403Forbidden);
 
         if (!EsBorrador(registro))
             return ServiceResult<RegistroResiduoDto>.Fail("Solo se pueden agregar residuos a un registro en borrador.", StatusCodes.Status409Conflict);
@@ -168,6 +139,10 @@ public sealed class RegistroService(
         if (registro is null)
             return ServiceResult<RegistroResiduoDto>.Fail("Registro no encontrado.", StatusCodes.Status404NotFound);
 
+        var acceso = await ValidarOperacionControlAsync(registro, usuarioId, cancellationToken);
+        if (acceso is not null)
+            return ServiceResult<RegistroResiduoDto>.Fail(acceso, StatusCodes.Status403Forbidden);
+
         if (!EsBorrador(registro))
             return ServiceResult<RegistroResiduoDto>.Fail("Solo se pueden editar residuos de un registro en borrador.", StatusCodes.Status409Conflict);
 
@@ -199,6 +174,10 @@ public sealed class RegistroService(
         if (registro is null)
             return ServiceResult.Fail("Registro no encontrado.", StatusCodes.Status404NotFound);
 
+        var acceso = await ValidarOperacionControlAsync(registro, usuarioId, cancellationToken);
+        if (acceso is not null)
+            return ServiceResult.Fail(acceso, StatusCodes.Status403Forbidden);
+
         if (!EsBorrador(registro))
             return ServiceResult.Fail("Solo se pueden eliminar residuos de un registro en borrador.", StatusCodes.Status409Conflict);
 
@@ -221,6 +200,10 @@ public sealed class RegistroService(
         if (registro is null)
             return ServiceResult<RegistroDetalleDto>.Fail("Registro no encontrado.", StatusCodes.Status404NotFound);
 
+        var acceso = await ValidarOperacionControlAsync(registro, usuarioId, cancellationToken);
+        if (acceso is not null)
+            return ServiceResult<RegistroDetalleDto>.Fail(acceso, StatusCodes.Status403Forbidden);
+
         if (!EsBorrador(registro))
             return ServiceResult<RegistroDetalleDto>.Fail("El registro ya no se encuentra en borrador.", StatusCodes.Status409Conflict);
 
@@ -238,41 +221,14 @@ public sealed class RegistroService(
         return ServiceResult<RegistroDetalleDto>.Ok(MapDetalle(detalle!));
     }
 
-    public async Task<ServiceResult<DisposicionDto>> GuardarDisposicionAsync(
+    public Task<ServiceResult<DisposicionDto>> GuardarDisposicionAsync(
         Guid registroId,
         Guid usuarioId,
         CrearDisposicionRequest request,
-        CancellationToken cancellationToken = default)
-    {
-        var registro = await unitOfWork.Registros.ObtenerDetalleAsync(registroId, usuarioId, true, cancellationToken);
-        if (registro is null)
-            return ServiceResult<DisposicionDto>.Fail("Registro no encontrado.", StatusCodes.Status404NotFound);
-
-        if (EsBorrador(registro))
-            return ServiceResult<DisposicionDto>.Fail("Complete el registro antes de registrar la disposición.", StatusCodes.Status409Conflict);
-
-        var disposicion = registro.Disposiciones.FirstOrDefault(x => !x.Eliminado);
-        if (disposicion is null)
-        {
-            var estadoSync = await GetEstadoSyncAsync(cancellationToken);
-            disposicion = new Disposicion
-            {
-                RegistroId = registroId,
-                CreadoPorUsuarioId = usuarioId,
-                EstadoSincronizacionId = estadoSync.EstadoSincronizacionId
-            };
-            await unitOfWork.Repository<Disposicion>().AddAsync(disposicion, cancellationToken);
-        }
-
-        disposicion.CodigoDocumento = request.CodigoDocumento;
-        disposicion.FechaDisposicion = request.FechaDisposicion;
-        disposicion.EmpresaDisposicion = request.EmpresaDisposicion;
-        disposicion.Observacion = request.Observacion;
-        disposicion.ActualizadoUtc = DateTime.UtcNow;
-
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-        return ServiceResult<DisposicionDto>.Ok(MapDisposicion(disposicion));
-    }
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(ServiceResult<DisposicionDto>.Fail(
+            "La disposición legacy fue retirada. El destino final se documenta desde un Retiro EO-RS.",
+            StatusCodes.Status410Gone));
 
     public async Task<ServiceResult<RegistroResiduoFotoDto>> SubirFotoAsync(
         Guid registroId,
@@ -286,6 +242,10 @@ public sealed class RegistroService(
         var registro = await unitOfWork.Registros.ObtenerDetalleAsync(registroId, usuarioId, true, cancellationToken);
         if (registro is null)
             return ServiceResult<RegistroResiduoFotoDto>.Fail("Registro no encontrado.", StatusCodes.Status404NotFound);
+
+        var acceso = await ValidarOperacionControlAsync(registro, usuarioId, cancellationToken);
+        if (acceso is not null)
+            return ServiceResult<RegistroResiduoFotoDto>.Fail(acceso, StatusCodes.Status403Forbidden);
 
         var residuo = registro.Residuos.FirstOrDefault(x => x.RegistroResiduoId == registroResiduoId && !x.Eliminado);
         if (residuo is null)
@@ -313,46 +273,45 @@ public sealed class RegistroService(
         return ServiceResult<RegistroResiduoFotoDto>.Ok(MapFoto(foto), StatusCodes.Status201Created);
     }
 
-    public async Task<ServiceResult<DisposicionEvidenciaDto>> SubirEvidenciaAsync(
+    public Task<ServiceResult<DisposicionEvidenciaDto>> SubirEvidenciaAsync(
         Guid disposicionId,
         Guid usuarioId,
         Stream content,
         string fileName,
         string? contentType,
         string tipoEvidencia,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(ServiceResult<DisposicionEvidenciaDto>.Fail(
+            "La evidencia de disposición legacy fue retirada. Usa el cierre documental del Retiro EO-RS.",
+            StatusCodes.Status410Gone));
+
+    private async Task<string?> ValidarOperacionControlAsync(
+        Registro registro,
+        Guid usuarioId,
+        CancellationToken cancellationToken)
     {
-        var disposicion = await unitOfWork.Repository<Disposicion>().Query(tracking: true)
-            .Include(x => x.Registro)
+        if (!registro.ControlGeneracionId.HasValue)
+            return "El registro no pertenece a un Control de Generación operativo.";
+
+        var control = await unitOfWork.Repository<ControlGeneracion>().Query()
+            .Include(x => x.EstadoControlGeneracion)
             .FirstOrDefaultAsync(
-                x => x.DisposicionId == disposicionId && !x.Eliminado &&
-                     x.Registro.RegistradoPorUsuarioId == usuarioId && !x.Registro.Eliminado,
+                x => x.ControlGeneracionId == registro.ControlGeneracionId.Value && !x.Eliminado,
                 cancellationToken);
 
-        if (disposicion is null)
-            return ServiceResult<DisposicionEvidenciaDto>.Fail("Disposición no encontrada.", StatusCodes.Status404NotFound);
+        if (control is null)
+            return "El Control de Generación asociado no existe.";
 
-        var stored = await fileStorage.SaveAsync(content, fileName, $"uploads/disposiciones/{disposicionId:N}", cancellationToken);
-        var estadoSync = await GetEstadoSyncAsync(cancellationToken);
+        if (control.EstadoControlGeneracion.Codigo != "ACTIVO")
+            return "Solo se pueden modificar registros mientras el Control de Generación está ACTIVO.";
 
-        var evidencia = new DisposicionEvidencia
-        {
-            DisposicionId = disposicionId,
-            TipoEvidencia = string.IsNullOrWhiteSpace(tipoEvidencia) ? "ARCHIVO" : tipoEvidencia.Trim(),
-            NombreArchivo = stored.NombreArchivo,
-            RutaLocal = stored.RutaLocal,
-            UrlNube = stored.UrlPublica,
-            ContentType = contentType,
-            HashArchivo = stored.HashSha256,
-            TamanoBytes = stored.TamanoBytes,
-            EstadoSincronizacionId = estadoSync.EstadoSincronizacionId,
-            CreadoPorUsuarioId = usuarioId
-        };
+        if (!await controlAccess.EsParticipanteOperativoVigenteAsync(
+                control.ControlGeneracionId,
+                usuarioId,
+                cancellationToken))
+            return "No tienes una asignación vigente para operar en este Control.";
 
-        await unitOfWork.Repository<DisposicionEvidencia>().AddAsync(evidencia, cancellationToken);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-
-        return ServiceResult<DisposicionEvidenciaDto>.Ok(MapEvidencia(evidencia), StatusCodes.Status201Created);
+        return null;
     }
 
     private async Task<string?> ValidarCabeceraAsync(

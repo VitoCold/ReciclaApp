@@ -26,7 +26,9 @@ public interface IControlGeneracionService
     Task<ServiceResult<RegistroControlCreadoDto>> CrearRegistroAsync(Guid controlId, Guid usuarioId, CrearRegistroEnControlRequest request, CancellationToken cancellationToken = default);
 }
 
-public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlGeneracionService
+public sealed class ControlGeneracionService(
+    IUnitOfWork unitOfWork,
+    IControlAccessService controlAccess) : IControlGeneracionService
 {
     private static readonly string[] RolesControl = ["RESPONSABLE", "REGISTRADOR"];
 
@@ -737,51 +739,26 @@ public sealed class ControlGeneracionService(IUnitOfWork unitOfWork) : IControlG
 
     private async Task<bool> PuedeVerControlAsync(Guid controlId, Guid usuarioId, CancellationToken cancellationToken)
     {
-        if (await TieneRolAsync(usuarioId, "AMBIENTAL", cancellationToken) ||
-            await TieneRolAsync(usuarioId, "ADMINISTRADOR", cancellationToken))
+        if (await controlAccess.EsGlobalAsync(usuarioId, cancellationToken))
             return true;
 
-        var hoy = DateTime.UtcNow.Date;
-        return await unitOfWork.Repository<ControlGeneracion>().Query()
-            .AnyAsync(x =>
-                x.ControlGeneracionId == controlId &&
-                !x.Eliminado &&
-                (x.CreadoPorUsuarioId == usuarioId ||
-                 x.Usuarios.Any(u =>
-                    u.UsuarioId == usuarioId &&
-                    u.EsActivo &&
-                    u.FechaDesde <= hoy &&
-                    (!u.FechaHasta.HasValue || u.FechaHasta.Value >= hoy))),
-                cancellationToken);
+        return await controlAccess.TieneAsignacionVigenteAsync(
+            controlId,
+            usuarioId,
+            cancellationToken: cancellationToken);
     }
 
-    private async Task<bool> EsResponsableActivoAsync(Guid controlId, Guid usuarioId, CancellationToken cancellationToken)
-    {
-        var hoy = DateTime.UtcNow.Date;
-        return await unitOfWork.Repository<ControlGeneracionUsuario>().Query()
-            .AnyAsync(x =>
-                x.ControlGeneracionId == controlId &&
-                x.UsuarioId == usuarioId &&
-                x.RolControl == "RESPONSABLE" &&
-                x.EsActivo &&
-                (!x.FechaHasta.HasValue || x.FechaHasta.Value >= hoy) &&
-                (x.FechaDesde <= hoy || x.ControlGeneracion.CreadoPorUsuarioId == usuarioId),
-                cancellationToken);
-    }
+    private Task<bool> EsResponsableActivoAsync(
+        Guid controlId,
+        Guid usuarioId,
+        CancellationToken cancellationToken) =>
+        controlAccess.EsResponsableVigenteAsync(controlId, usuarioId, cancellationToken);
 
-    private async Task<bool> EsParticipanteOperativoActivoAsync(Guid controlId, Guid usuarioId, CancellationToken cancellationToken)
-    {
-        var hoy = DateTime.UtcNow.Date;
-        return await unitOfWork.Repository<ControlGeneracionUsuario>().Query()
-            .AnyAsync(x =>
-                x.ControlGeneracionId == controlId &&
-                x.UsuarioId == usuarioId &&
-                (x.RolControl == "RESPONSABLE" || x.RolControl == "REGISTRADOR") &&
-                x.EsActivo &&
-                x.FechaDesde <= hoy &&
-                (!x.FechaHasta.HasValue || x.FechaHasta.Value >= hoy),
-                cancellationToken);
-    }
+    private Task<bool> EsParticipanteOperativoActivoAsync(
+        Guid controlId,
+        Guid usuarioId,
+        CancellationToken cancellationToken) =>
+        controlAccess.EsParticipanteOperativoVigenteAsync(controlId, usuarioId, cancellationToken);
 
     private Task<bool> TieneRolAsync(Guid usuarioId, string rol, CancellationToken cancellationToken) =>
         unitOfWork.Repository<UsuarioRol>().Query()

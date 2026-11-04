@@ -39,7 +39,8 @@ public sealed record ReporteArchivoHistoricoContenido(
 public sealed class ReporteResiduosService(
     ReciclaDbContext context,
     IWebHostEnvironment environment,
-    ILogger<ReporteResiduosService> logger) : IReporteResiduosService
+    ILogger<ReporteResiduosService> logger,
+    IControlAccessService controlAccess) : IReporteResiduosService
 {
     private const string ExcelContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
@@ -167,7 +168,8 @@ public sealed class ReporteResiduosService(
         var desde = filtro.Desde.Date;
         var hasta = filtro.Hasta.Date;
         var hastaExclusiva = hasta.AddDays(1);
-        var esGlobal = await EsGlobalAsync(usuarioId, cancellationToken);
+        var esGlobal = await controlAccess.EsGlobalAsync(usuarioId, cancellationToken);
+        var hoy = DateTime.UtcNow.Date;
 
         IQueryable<RegistroResiduo> query = context.RegistroResiduos
             .AsNoTracking()
@@ -193,7 +195,9 @@ public sealed class ReporteResiduosService(
             query = query.Where(x => x.Registro.ControlGeneracion!.Usuarios.Any(u =>
                 u.UsuarioId == usuarioId &&
                 u.RolControl == "RESPONSABLE" &&
-                u.EsActivo));
+                u.EsActivo &&
+                u.FechaDesde <= hoy &&
+                (!u.FechaHasta.HasValue || u.FechaHasta.Value >= hoy)));
         }
 
         if (filtro.SedeId.HasValue)
@@ -748,24 +752,12 @@ public sealed class ReporteResiduosService(
     }
 
     private async Task<bool> PuedeConsultarReportesAsync(Guid usuarioId, CancellationToken cancellationToken) =>
-        await context.UsuarioRoles
-            .AsNoTracking()
-            .AnyAsync(x =>
-                x.UsuarioId == usuarioId &&
-                x.Rol.EsActivo &&
-                (x.Rol.Codigo == "ADMINISTRADOR" ||
-                 x.Rol.Codigo == "AMBIENTAL" ||
-                 x.Rol.Codigo == "RESPONSABLE_OPERATIVO"),
-                cancellationToken);
+        await controlAccess.TieneRolAsync(usuarioId, "ADMINISTRADOR", cancellationToken) ||
+        await controlAccess.TieneRolAsync(usuarioId, "AMBIENTAL", cancellationToken) ||
+        await controlAccess.TieneRolAsync(usuarioId, "RESPONSABLE_OPERATIVO", cancellationToken);
 
-    private async Task<bool> EsGlobalAsync(Guid usuarioId, CancellationToken cancellationToken) =>
-        await context.UsuarioRoles
-            .AsNoTracking()
-            .AnyAsync(x =>
-                x.UsuarioId == usuarioId &&
-                x.Rol.EsActivo &&
-                (x.Rol.Codigo == "ADMINISTRADOR" || x.Rol.Codigo == "AMBIENTAL"),
-                cancellationToken);
+    private Task<bool> EsGlobalAsync(Guid usuarioId, CancellationToken cancellationToken) =>
+        controlAccess.EsGlobalAsync(usuarioId, cancellationToken);
 
     private static string? ValidarFiltro(ReporteResiduosFiltroRequest filtro)
     {

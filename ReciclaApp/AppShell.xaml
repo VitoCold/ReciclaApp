@@ -59,6 +59,7 @@
     <ShellContent
         Title="Mis registros"
         Route="registros"
+        Shell.FlyoutItemIsVisible="False"
         ContentTemplate="{DataTemplate pages:RegistrosPage}" />
 
     <ShellContent

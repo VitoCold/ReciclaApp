@@ -15,7 +15,9 @@ public interface IRetiroService
     Task<ServiceResult<RetiroDetalleDto>> CrearAsync(Guid usuarioId, CrearRetiroRequest request, CancellationToken cancellationToken = default);
 }
 
-public sealed class RetiroService(ReciclaDbContext context) : IRetiroService
+public sealed class RetiroService(
+    ReciclaDbContext context,
+    IControlAccessService controlAccess) : IRetiroService
 {
     private const string Parcial = "PARCIAL";
     private const string Total = "TOTAL";
@@ -24,8 +26,7 @@ public sealed class RetiroService(ReciclaDbContext context) : IRetiroService
         Guid usuarioId,
         CancellationToken cancellationToken = default)
     {
-        var esGlobal = await EsGlobalAsync(usuarioId, cancellationToken);
-        var hoy = DateTime.UtcNow;
+        var esGlobal = await controlAccess.EsGlobalAsync(usuarioId, cancellationToken);
 
         IQueryable<Retiro> query = context.Retiros
             .AsNoTracking()
@@ -35,24 +36,34 @@ public sealed class RetiroService(ReciclaDbContext context) : IRetiroService
             .Include(x => x.EmpresaGestora)
             .Include(x => x.EstadoRetiro)
             .Include(x => x.Detalles)
-                .ThenInclude(x => x.UnidadMedida);
-
-        if (!esGlobal)
-        {
-            query = query.Where(x => x.Detalles.Any(d =>
-                d.RegistroResiduo.Registro.ControlGeneracionId != null &&
-                d.RegistroResiduo.Registro.ControlGeneracion!.Usuarios.Any(u =>
-                    u.UsuarioId == usuarioId &&
-                    u.RolControl == "RESPONSABLE" &&
-                    u.EsActivo &&
-                    u.FechaDesde <= hoy &&
-                    (!u.FechaHasta.HasValue || u.FechaHasta.Value >= hoy))));
-        }
+                .ThenInclude(x => x.UnidadMedida)
+            .Include(x => x.Detalles)
+                .ThenInclude(x => x.RegistroResiduo)
+                    .ThenInclude(x => x.Registro);
 
         var retiros = await query
             .OrderByDescending(x => x.FechaRetiro)
             .ThenByDescending(x => x.CreadoUtc)
             .ToListAsync(cancellationToken);
+
+        if (!esGlobal)
+        {
+            var visibles = new List<Retiro>();
+            foreach (var retiro in retiros)
+            {
+                var controlIds = retiro.Detalles
+                    .Select(x => x.RegistroResiduo.Registro.ControlGeneracionId)
+                    .Where(x => x.HasValue)
+                    .Select(x => x!.Value)
+                    .Distinct()
+                    .ToArray();
+
+                if (await controlAccess.EsResponsableDeTodosAsync(controlIds, usuarioId, cancellationToken))
+                    visibles.Add(retiro);
+            }
+
+            retiros = visibles;
+        }
 
         return retiros.Select(MapListItem).ToArray();
     }
@@ -76,7 +87,7 @@ public sealed class RetiroService(ReciclaDbContext context) : IRetiroService
         CrearRetiroRequest request,
         CancellationToken cancellationToken = default)
     {
-        if (!await TieneRolAsync(usuarioId, "AMBIENTAL", cancellationToken))
+        if (!await controlAccess.TieneRolAsync(usuarioId, "AMBIENTAL", cancellationToken))
             return ServiceResult<RetiroDetalleDto>.Fail("Solo Ambiental puede registrar retiros de la EO-RS.", StatusCodes.Status403Forbidden);
 
         if (request.Detalles is null || request.Detalles.Count == 0)
@@ -294,23 +305,23 @@ public sealed class RetiroService(ReciclaDbContext context) : IRetiroService
         Guid usuarioId,
         CancellationToken cancellationToken)
     {
-        if (await EsGlobalAsync(usuarioId, cancellationToken))
+        if (await controlAccess.EsGlobalAsync(usuarioId, cancellationToken))
             return true;
 
-        var hoy = DateTime.UtcNow;
-        return await context.RetiroDetalles
+        var controlIds = await context.RetiroDetalles
             .AsNoTracking()
-            .AnyAsync(x =>
+            .Where(x =>
                 x.RetiroId == retiroId &&
                 !x.Retiro.Eliminado &&
-                x.RegistroResiduo.Registro.ControlGeneracionId != null &&
-                x.RegistroResiduo.Registro.ControlGeneracion!.Usuarios.Any(u =>
-                    u.UsuarioId == usuarioId &&
-                    u.RolControl == "RESPONSABLE" &&
-                    u.EsActivo &&
-                    u.FechaDesde <= hoy &&
-                    (!u.FechaHasta.HasValue || u.FechaHasta.Value >= hoy)),
-                cancellationToken);
+                x.RegistroResiduo.Registro.ControlGeneracionId != null)
+            .Select(x => x.RegistroResiduo.Registro.ControlGeneracionId!.Value)
+            .Distinct()
+            .ToArrayAsync(cancellationToken);
+
+        return await controlAccess.EsResponsableDeTodosAsync(
+            controlIds,
+            usuarioId,
+            cancellationToken);
     }
 
     private async Task<Retiro?> CargarDetalleAsync(Guid retiroId, CancellationToken cancellationToken) =>
@@ -333,20 +344,6 @@ public sealed class RetiroService(ReciclaDbContext context) : IRetiroService
                     .ThenInclude(x => x.Registro)
                         .ThenInclude(x => x.ControlGeneracion)
             .FirstOrDefaultAsync(cancellationToken);
-
-    private async Task<bool> EsGlobalAsync(Guid usuarioId, CancellationToken cancellationToken) =>
-        await context.UsuarioRoles
-            .AsNoTracking()
-            .AnyAsync(x =>
-                x.UsuarioId == usuarioId &&
-                x.Rol.EsActivo &&
-                (x.Rol.Codigo == "AMBIENTAL" || x.Rol.Codigo == "ADMINISTRADOR"),
-                cancellationToken);
-
-    private async Task<bool> TieneRolAsync(Guid usuarioId, string codigo, CancellationToken cancellationToken) =>
-        await context.UsuarioRoles
-            .AsNoTracking()
-            .AnyAsync(x => x.UsuarioId == usuarioId && x.Rol.EsActivo && x.Rol.Codigo == codigo, cancellationToken);
 
     private static RetiroListItemDto MapListItem(Retiro retiro) => new(
         retiro.RetiroId,

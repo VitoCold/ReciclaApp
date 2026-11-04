@@ -143,8 +143,7 @@ public partial class RetiroDetallePage : ContentPage
     private EvidenciaVisual[] PintarDestinoFinal()
     {
         var esAmbiental = _usuario?.Roles.Contains("AMBIENTAL") == true;
-        var esResponsable = _usuario?.Roles.Contains("RESPONSABLE_OPERATIVO") == true;
-        var puedeDocumentar = esAmbiental || esResponsable;
+        var puedeDocumentar = esAmbiental;
 
         if (_disposicion is null)
         {

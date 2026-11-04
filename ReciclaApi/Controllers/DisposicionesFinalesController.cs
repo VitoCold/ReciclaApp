@@ -25,7 +25,7 @@ public sealed class DisposicionesFinalesController(
     }
 
     [HttpPost("retiro/{retiroId:guid}")]
-    [Authorize(Roles = "AMBIENTAL,RESPONSABLE_OPERATIVO")]
+    [Authorize(Roles = "AMBIENTAL")]
     public async Task<IActionResult> Crear(
         Guid retiroId,
         [FromBody] CrearDisposicionFinalRequest request,
@@ -36,7 +36,7 @@ public sealed class DisposicionesFinalesController(
     }
 
     [HttpPost("{id:guid}/evidencias")]
-    [Authorize(Roles = "AMBIENTAL,RESPONSABLE_OPERATIVO")]
+    [Authorize(Roles = "AMBIENTAL")]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> SubirEvidencia(
         Guid id,
