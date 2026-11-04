@@ -57,6 +57,12 @@
         ContentTemplate="{DataTemplate pages:ReportesPage}" />
 
     <ShellContent
+        x:Name="MonitoreoShellContent"
+        Title="Monitoreo"
+        Route="monitoreo"
+        ContentTemplate="{DataTemplate pages:MonitoreoPage}" />
+
+    <ShellContent
         Title="Mis registros"
         Route="registros"
         Shell.FlyoutItemIsVisible="False"

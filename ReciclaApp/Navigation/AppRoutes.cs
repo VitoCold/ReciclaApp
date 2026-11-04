@@ -8,6 +8,7 @@ public static class AppRoutes
     public const string StockResiduos = "//stock-residuos";
     public const string Retiros = "//retiros";
     public const string Reportes = "//reportes";
+    public const string Monitoreo = "//monitoreo";
     public const string Registros = "//registros";
     public const string Administracion = "//administracion";
     public const string Perfil = "//perfil";
