@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Recicla.Shared.Contracts;
+using ReciclaApi.Domain;
 using ReciclaApi.Infrastructure.Persistence;
 
 namespace ReciclaApi.Application.Services;
@@ -57,23 +58,19 @@ public sealed class MonitoreoService(ReciclaDbContext context) : IMonitoreoServi
 
         var ids = residuos.Select(x => x.RegistroResiduoId).ToArray();
 
-        var movimientos = ids.Length == 0
-            ? []
-            : await context.MovimientosResiduo
-                .AsNoTracking()
-                .Where(x => ids.Contains(x.RegistroResiduoId) && !x.Eliminado)
-                .ToListAsync(cancellationToken);
+        var movimientos = await context.MovimientosResiduo
+            .AsNoTracking()
+            .Where(x => ids.Contains(x.RegistroResiduoId) && !x.Eliminado)
+            .ToListAsync(cancellationToken);
 
-        var retiros = ids.Length == 0
-            ? []
-            : await context.RetiroDetalles
-                .AsNoTracking()
-                .Where(x =>
-                    ids.Contains(x.RegistroResiduoId) &&
-                    !x.Retiro.Eliminado &&
-                    x.Retiro.EstadoRetiro.Codigo != "ANULADO")
-                .Include(x => x.Retiro)
-                .ToListAsync(cancellationToken);
+        var retiros = await context.RetiroDetalles
+            .AsNoTracking()
+            .Where(x =>
+                ids.Contains(x.RegistroResiduoId) &&
+                !x.Retiro.Eliminado &&
+                x.Retiro.EstadoRetiro.Codigo != "ANULADO")
+            .Include(x => x.Retiro)
+            .ToListAsync(cancellationToken);
 
         var conFoto = ids.Length == 0
             ? new HashSet<Guid>()
@@ -87,7 +84,7 @@ public sealed class MonitoreoService(ReciclaDbContext context) : IMonitoreoServi
 
         var conGps = ids.Length == 0
             ? new HashSet<Guid>()
-            : (await context.Set<Domain.RegistroResiduoUbicacion>()
+            : (await context.Set<RegistroResiduoUbicacion>()
                 .AsNoTracking()
                 .Where(x => ids.Contains(x.RegistroResiduoId))
                 .Select(x => x.RegistroResiduoId)
@@ -192,8 +189,8 @@ public sealed class MonitoreoService(ReciclaDbContext context) : IMonitoreoServi
     }
 
     private static decimal CalcularSaldoAlmacen(
-        IReadOnlyCollection<Domain.MovimientoResiduo> movimientos,
-        IReadOnlyCollection<Domain.RetiroDetalle> retiros)
+        IReadOnlyCollection<MovimientoResiduo> movimientos,
+        IReadOnlyCollection<RetiroDetalle> retiros)
     {
         decimal total = 0m;
 
@@ -255,7 +252,7 @@ public sealed class MonitoreoService(ReciclaDbContext context) : IMonitoreoServi
         _ => "Registrado"
     };
 
-    private static string NombreUsuario(Domain.Usuario usuario) =>
+    private static string NombreUsuario(Usuario usuario) =>
         string.Join(" ", new[] { usuario.Nombres, usuario.Apellidos }
             .Where(x => !string.IsNullOrWhiteSpace(x)));
 }
