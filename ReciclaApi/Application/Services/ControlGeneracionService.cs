@@ -31,6 +31,7 @@ public sealed class ControlGeneracionService(
     IControlAccessService controlAccess) : IControlGeneracionService
 {
     private static readonly string[] RolesControl = ["RESPONSABLE", "REGISTRADOR"];
+    private static readonly SemaphoreSlim CodigoLock = new(1, 1);
 
     public async Task<IReadOnlyCollection<ControlGeneracionListItemDto>> ListarAsync(
         Guid usuarioId,
@@ -95,55 +96,67 @@ public sealed class ControlGeneracionService(
         if (error is not null)
             return ServiceResult<ControlGeneracionDetalleDto>.Fail(error, StatusCodes.Status400BadRequest);
 
-        var hoy = DateTime.UtcNow.Date;
-        var fechaInicio = request.FechaInicio.Date;
-        var fechaFin = request.FechaFin?.Date;
-        var estado = await GetEstadoAsync("BORRADOR", cancellationToken);
-        var control = new ControlGeneracion
+        await CodigoLock.WaitAsync(cancellationToken);
+        try
         {
-            Codigo = GenerarCodigo(),
-            SedeId = request.SedeId,
-            EmpresaResponsableId = request.EmpresaResponsableId,
-            ProyectoId = request.ProyectoId,
-            ActividadId = request.ActividadId,
-            PuntoGeneracionId = request.PuntoGeneracionId,
-            DescripcionTrabajo = request.DescripcionTrabajo,
-            FechaInicio = fechaInicio,
-            FechaFin = fechaFin,
-            EstadoControlGeneracionId = estado.EstadoControlGeneracionId,
-            Observacion = request.Observacion,
-            CreadoPorUsuarioId = usuarioId
-        };
+            var hoy = DateTime.UtcNow.Date;
+            var fechaInicio = request.FechaInicio.Date;
+            var fechaFin = request.FechaFin?.Date;
+            var estado = await GetEstadoAsync("BORRADOR", cancellationToken);
+            var control = new ControlGeneracion
+            {
+                Codigo = await GenerarCodigoAsync(request.SedeId, fechaInicio.Year, cancellationToken),
+                SedeId = request.SedeId,
+                EmpresaResponsableId = request.EmpresaResponsableId,
+                ProyectoId = request.ProyectoId,
+                ActividadId = request.ActividadId,
+                PuntoGeneracionId = request.PuntoGeneracionId,
+                DescripcionTrabajo = request.DescripcionTrabajo,
+                FechaInicio = fechaInicio,
+                FechaFin = fechaFin,
+                EstadoControlGeneracionId = estado.EstadoControlGeneracionId,
+                Observacion = request.Observacion,
+                CreadoPorUsuarioId = usuarioId
+            };
 
-        await unitOfWork.Repository<ControlGeneracion>().AddAsync(control, cancellationToken);
-        await unitOfWork.Repository<ControlGeneracionUsuario>().AddAsync(new ControlGeneracionUsuario
+            await unitOfWork.Repository<ControlGeneracion>().AddAsync(control, cancellationToken);
+            await unitOfWork.Repository<ControlGeneracionUsuario>().AddAsync(new ControlGeneracionUsuario
+            {
+                ControlGeneracionId = control.ControlGeneracionId,
+                UsuarioId = usuarioId,
+                RolControl = "RESPONSABLE",
+                EsPrincipal = true,
+                // El creador debe poder preparar el equipo aunque la operación empiece en una fecha futura.
+                FechaDesde = fechaInicio <= hoy ? fechaInicio : hoy,
+                AsignadoPorUsuarioId = usuarioId
+            }, cancellationToken);
+
+            await AuditarAsync(control.ControlGeneracionId, usuarioId, "CREAR", null, new
+            {
+                control.Codigo,
+                control.SedeId,
+                control.EmpresaResponsableId,
+                control.ProyectoId,
+                control.ActividadId,
+                control.PuntoGeneracionId,
+                control.FechaInicio,
+                control.FechaFin,
+                Estado = "BORRADOR"
+            }, cancellationToken);
+
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+
+            var creado = await QueryControles()
+                .FirstAsync(x => x.ControlGeneracionId == control.ControlGeneracionId, cancellationToken);
+
+            return ServiceResult<ControlGeneracionDetalleDto>.Ok(
+                MapDetalle(creado),
+                StatusCodes.Status201Created);
+        }
+        finally
         {
-            ControlGeneracionId = control.ControlGeneracionId,
-            UsuarioId = usuarioId,
-            RolControl = "RESPONSABLE",
-            EsPrincipal = true,
-            // El creador debe poder preparar el equipo aunque la operación empiece en una fecha futura.
-            FechaDesde = fechaInicio <= hoy ? fechaInicio : hoy,
-            AsignadoPorUsuarioId = usuarioId
-        }, cancellationToken);
-
-        await AuditarAsync(control.ControlGeneracionId, usuarioId, "CREAR", null, new
-        {
-            control.Codigo,
-            control.SedeId,
-            control.EmpresaResponsableId,
-            control.ProyectoId,
-            control.ActividadId,
-            control.PuntoGeneracionId,
-            control.FechaInicio,
-            control.FechaFin,
-            Estado = "BORRADOR"
-        }, cancellationToken);
-
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-
-        var creado = await QueryControles().FirstAsync(x => x.ControlGeneracionId == control.ControlGeneracionId, cancellationToken);
-        return ServiceResult<ControlGeneracionDetalleDto>.Ok(MapDetalle(creado), StatusCodes.Status201Created);
+            CodigoLock.Release();
+        }
     }
 
     public async Task<ServiceResult<ControlGeneracionDetalleDto>> ActualizarCabeceraAsync(
@@ -178,47 +191,72 @@ public sealed class ControlGeneracionService(
         if (error is not null)
             return ServiceResult<ControlGeneracionDetalleDto>.Fail(error, StatusCodes.Status400BadRequest);
 
-        var antes = new
+        var nuevoPrefijo = await ConstruirPrefijoCodigoAsync(
+            request.SedeId,
+            request.FechaInicio.Year,
+            cancellationToken);
+
+        var prefijoActual = ObtenerPrefijoCodigoHumano(control.Codigo);
+        var regenerarCodigo = prefijoActual is not null &&
+                              !string.Equals(prefijoActual, nuevoPrefijo, StringComparison.Ordinal);
+
+        if (regenerarCodigo)
+            await CodigoLock.WaitAsync(cancellationToken);
+
+        try
         {
-            control.SedeId,
-            control.EmpresaResponsableId,
-            control.ProyectoId,
-            control.ActividadId,
-            control.PuntoGeneracionId,
-            control.DescripcionTrabajo,
-            control.FechaInicio,
-            control.FechaFin,
-            control.Observacion
-        };
+            var antes = new
+            {
+                control.Codigo,
+                control.SedeId,
+                control.EmpresaResponsableId,
+                control.ProyectoId,
+                control.ActividadId,
+                control.PuntoGeneracionId,
+                control.DescripcionTrabajo,
+                control.FechaInicio,
+                control.FechaFin,
+                control.Observacion
+            };
 
-        control.SedeId = request.SedeId;
-        control.EmpresaResponsableId = request.EmpresaResponsableId;
-        control.ProyectoId = request.ProyectoId;
-        control.ActividadId = request.ActividadId;
-        control.PuntoGeneracionId = request.PuntoGeneracionId;
-        control.DescripcionTrabajo = request.DescripcionTrabajo;
-        control.FechaInicio = request.FechaInicio.Date;
-        control.FechaFin = request.FechaFin?.Date;
-        control.Observacion = request.Observacion;
-        control.MotivoUltimoCambio = request.MotivoModificacion.Trim();
-        control.ActualizadoUtc = DateTime.UtcNow;
+            if (regenerarCodigo)
+                control.Codigo = await GenerarCodigoAsync(request.SedeId, request.FechaInicio.Year, cancellationToken);
 
-        await AuditarAsync(controlId, usuarioId, "MODIFICAR_CABECERA", antes, new
+            control.SedeId = request.SedeId;
+            control.EmpresaResponsableId = request.EmpresaResponsableId;
+            control.ProyectoId = request.ProyectoId;
+            control.ActividadId = request.ActividadId;
+            control.PuntoGeneracionId = request.PuntoGeneracionId;
+            control.DescripcionTrabajo = request.DescripcionTrabajo;
+            control.FechaInicio = request.FechaInicio.Date;
+            control.FechaFin = request.FechaFin?.Date;
+            control.Observacion = request.Observacion;
+            control.MotivoUltimoCambio = request.MotivoModificacion.Trim();
+            control.ActualizadoUtc = DateTime.UtcNow;
+
+            await AuditarAsync(controlId, usuarioId, "MODIFICAR_CABECERA", antes, new
+            {
+                control.Codigo,
+                control.SedeId,
+                control.EmpresaResponsableId,
+                control.ProyectoId,
+                control.ActividadId,
+                control.PuntoGeneracionId,
+                control.DescripcionTrabajo,
+                control.FechaInicio,
+                control.FechaFin,
+                control.Observacion,
+                Motivo = request.MotivoModificacion
+            }, cancellationToken);
+
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+            return ServiceResult<ControlGeneracionDetalleDto>.Ok(MapDetalle(control));
+        }
+        finally
         {
-            control.SedeId,
-            control.EmpresaResponsableId,
-            control.ProyectoId,
-            control.ActividadId,
-            control.PuntoGeneracionId,
-            control.DescripcionTrabajo,
-            control.FechaInicio,
-            control.FechaFin,
-            control.Observacion,
-            Motivo = request.MotivoModificacion
-        }, cancellationToken);
-
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-        return ServiceResult<ControlGeneracionDetalleDto>.Ok(MapDetalle(control));
+            if (regenerarCodigo)
+                CodigoLock.Release();
+        }
     }
 
     public async Task<ServiceResult<ControlGeneracionDetalleDto>> EnviarARevisionAsync(
@@ -845,8 +883,70 @@ public sealed class ControlGeneracionService(
         _ => false
     };
 
-    private static string GenerarCodigo() =>
-        $"CG-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid().ToString("N")[..6].ToUpperInvariant()}";
+    private async Task<string> GenerarCodigoAsync(
+        Guid sedeId,
+        int anio,
+        CancellationToken cancellationToken)
+    {
+        var prefijo = await ConstruirPrefijoCodigoAsync(sedeId, anio, cancellationToken);
+
+        var codigos = await unitOfWork.Repository<ControlGeneracion>().Query()
+            .Where(x => x.Codigo.StartsWith(prefijo))
+            .Select(x => x.Codigo)
+            .ToListAsync(cancellationToken);
+
+        var maximo = 0;
+        foreach (var codigo in codigos)
+        {
+            var correlativoTexto = codigo[prefijo.Length..];
+            if (int.TryParse(correlativoTexto, out var correlativo) && correlativo > maximo)
+                maximo = correlativo;
+        }
+
+        return $"{prefijo}{maximo + 1:D4}";
+    }
+
+    private async Task<string> ConstruirPrefijoCodigoAsync(
+        Guid sedeId,
+        int anio,
+        CancellationToken cancellationToken)
+    {
+        var codigoSede = await unitOfWork.Repository<Sede>().Query()
+            .Where(x => x.SedeId == sedeId)
+            .Select(x => x.Codigo)
+            .FirstAsync(cancellationToken);
+
+        return $"CG-{AbreviarSede(codigoSede)}-{anio % 100:D2}-";
+    }
+
+    private static string AbreviarSede(string codigo)
+    {
+        var abreviatura = new string(codigo
+            .Where(char.IsLetterOrDigit)
+            .Take(3)
+            .ToArray())
+            .ToUpperInvariant();
+
+        return string.IsNullOrWhiteSpace(abreviatura)
+            ? "SED"
+            : abreviatura;
+    }
+
+    private static string? ObtenerPrefijoCodigoHumano(string codigo)
+    {
+        var partes = codigo.Split('-');
+        if (partes.Length != 4 ||
+            partes[0] != "CG" ||
+            partes[1].Length is < 1 or > 3 ||
+            partes[2].Length != 2 ||
+            !int.TryParse(partes[2], out _) ||
+            !int.TryParse(partes[3], out _))
+        {
+            return null;
+        }
+
+        return $"{partes[0]}-{partes[1]}-{partes[2]}-";
+    }
 
     private static string NombreUsuario(Usuario usuario) =>
         string.Join(" ", new[] { usuario.Nombres, usuario.Apellidos }.Where(x => !string.IsNullOrWhiteSpace(x)));
