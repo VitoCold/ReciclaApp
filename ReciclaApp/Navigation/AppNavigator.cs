@@ -14,6 +14,8 @@ public static class AppNavigator
 
     public static Task IrAReportesAsync() => IrARaizAsync(AppRoutes.Reportes);
 
+    public static Task IrAMonitoreoAsync() => IrARaizAsync(AppRoutes.Monitoreo);
+
     public static Task IrARegistrosAsync() => IrARaizAsync(AppRoutes.Registros);
 
     public static Task IrAAdministracionAsync() => IrARaizAsync(AppRoutes.Administracion);

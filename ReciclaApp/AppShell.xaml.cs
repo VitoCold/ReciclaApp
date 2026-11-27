@@ -14,6 +14,7 @@ namespace ReciclaApp
             "stock-residuos",
             "retiros",
             "reportes",
+            "monitoreo",
             "administracion",
             "perfil"
         };
@@ -102,6 +103,11 @@ namespace ReciclaApp
 
             Shell.SetFlyoutItemIsVisible(RetirosShellContent, puedeGestionarSalidaYReportes);
             Shell.SetFlyoutItemIsVisible(ReportesShellContent, puedeGestionarSalidaYReportes);
+
+            var puedeMonitorear = usuario is not null &&
+                (usuario.Roles.Contains("ADMINISTRADOR") ||
+                 usuario.Roles.Contains("AMBIENTAL"));
+            Shell.SetFlyoutItemIsVisible(MonitoreoShellContent, puedeMonitorear);
             Shell.SetFlyoutItemIsVisible(
                 AdministracionShellContent,
                 usuario?.Roles.Contains("ADMINISTRADOR") == true);

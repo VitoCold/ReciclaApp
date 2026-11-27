@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ReciclaApp.Pages.MonitoreoPage"
+             Style="{StaticResource BasePage}"
+             Shell.NavBarIsVisible="False">
+
+    <Grid RowDefinitions="Auto,*">
+        <Grid Style="{StaticResource AppHeader}" ColumnDefinitions="Auto,*,Auto">
+            <Label Text="☰" TextColor="White" FontSize="24" VerticalOptions="Center">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnMenuTapped" />
+                </Label.GestureRecognizers>
+            </Label>
+
+            <VerticalStackLayout Grid.Column="1" Spacing="0" VerticalOptions="Center">
+                <Label Text="Monitoreo" Style="{StaticResource HeaderTitle}" />
+                <Label Text="Actividad reciente" TextColor="#D7E9FA" FontSize="10" />
+            </VerticalStackLayout>
+
+            <Label Grid.Column="2"
+                   Text="⟳"
+                   TextColor="White"
+                   FontSize="22"
+                   VerticalOptions="Center">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnActualizarTapped" />
+                </Label.GestureRecognizers>
+            </Label>
+        </Grid>
+
+        <Grid Grid.Row="1" Padding="16,16,16,22" RowDefinitions="Auto,Auto,Auto,*" RowSpacing="12">
+
+            <Grid Grid.Row="0"
+                  ColumnDefinitions="*,*"
+                  RowDefinitions="Auto,Auto"
+                  ColumnSpacing="8"
+                  RowSpacing="8">
+                <Border Style="{StaticResource SoftCard}" Padding="12">
+                    <VerticalStackLayout Spacing="1">
+                        <Label Text="Registros" Style="{StaticResource TinyMutedText}" />
+                        <Label x:Name="TotalLabel" Text="0" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource ColorText}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Grid.Column="1" Style="{StaticResource SoftCard}" Padding="12">
+                    <VerticalStackLayout Spacing="1">
+                        <Label Text="Peligrosos" Style="{StaticResource TinyMutedText}" />
+                        <Label x:Name="PeligrososLabel" Text="0" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource ColorDanger}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Grid.Row="1" Style="{StaticResource SoftCard}" Padding="12">
+                    <VerticalStackLayout Spacing="1">
+                        <Label Text="No peligrosos" Style="{StaticResource TinyMutedText}" />
+                        <Label x:Name="NoPeligrososLabel" Text="0" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource ColorAccent}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource SoftCard}" Padding="12">
+                    <VerticalStackLayout Spacing="1">
+                        <Label Text="Pend. traslado" Style="{StaticResource TinyMutedText}" />
+                        <Label x:Name="PendientesLabel" Text="0" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource ColorWarning}" />
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <Border Grid.Row="1" Style="{StaticResource SoftCard}" Padding="12">
+                <VerticalStackLayout Spacing="9">
+                    <SearchBar x:Name="BuscarSearchBar"
+                               Placeholder="Residuo, control, sede, proyecto o usuario"
+                               SearchButtonPressed="OnBuscarPressed" />
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="Período" Style="{StaticResource TinyMutedText}" />
+                            <Picker x:Name="PeriodoPicker"
+                                    ItemDisplayBinding="{Binding Nombre}" />
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                            <Label Text="Sede" Style="{StaticResource TinyMutedText}" />
+                            <Picker x:Name="SedePicker"
+                                    ItemDisplayBinding="{Binding Nombre}" />
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="Clasificación" Style="{StaticResource TinyMutedText}" />
+                            <Picker x:Name="ClasificacionPicker"
+                                    ItemDisplayBinding="{Binding Nombre}" />
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                            <Label Text="Estado" Style="{StaticResource TinyMutedText}" />
+                            <Picker x:Name="EstadoPicker"
+                                    ItemDisplayBinding="{Binding Nombre}" />
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <Button Text="Aplicar filtros"
+                            Style="{StaticResource SmallPrimaryButton}"
+                            Clicked="OnAplicarFiltrosClicked" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Grid Grid.Row="2" ColumnDefinitions="*,Auto">
+                <Label Text="Cronología" Style="{StaticResource SectionTitle}" VerticalOptions="Center" />
+                <Label x:Name="ResultadosLabel" Grid.Column="1" Text="0 resultados" Style="{StaticResource TinyMutedText}" VerticalOptions="Center" />
+            </Grid>
+
+            <Grid Grid.Row="3">
+                <RefreshView x:Name="Refresh" Refreshing="OnRefreshRequested">
+                    <CollectionView x:Name="Collection"
+                                    SelectionMode="None"
+                                    ItemsLayout="VerticalList">
+                        <CollectionView.EmptyView>
+                            <VerticalStackLayout Padding="20,42" Spacing="8" HorizontalOptions="Center">
+                                <Label Text="📡" FontSize="30" HorizontalOptions="Center" />
+                                <Label Text="Sin actividad para estos filtros"
+                                       FontAttributes="Bold"
+                                       TextColor="{StaticResource ColorText}"
+                                       HorizontalTextAlignment="Center" />
+                                <Label Text="Prueba ampliando el período o cambiando los filtros."
+                                       Style="{StaticResource MutedText}"
+                                       HorizontalTextAlignment="Center" />
+                            </VerticalStackLayout>
+                        </CollectionView.EmptyView>
+
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource SoftCard}" Margin="0,0,0,10">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnItemTapped"
+                                                              CommandParameter="{Binding RegistroResiduoId}" />
+                                    </Border.GestureRecognizers>
+
+                                    <VerticalStackLayout Spacing="7">
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                            <VerticalStackLayout Spacing="1">
+                                                <Label Text="{Binding FechaTexto}" Style="{StaticResource TinyMutedText}" />
+                                                <Label Text="{Binding Residuo}"
+                                                       FontSize="15"
+                                                       FontAttributes="Bold"
+                                                       TextColor="{StaticResource ColorText}" />
+                                            </VerticalStackLayout>
+
+                                            <Border Grid.Column="1"
+                                                    Style="{StaticResource Chip}"
+                                                    BackgroundColor="{StaticResource ColorBlueSoft}"
+                                                    VerticalOptions="Start">
+                                                <Label Text="{Binding Clasificacion}"
+                                                       FontSize="10"
+                                                       FontAttributes="Bold"
+                                                       TextColor="{StaticResource ColorPrimary}" />
+                                            </Border>
+                                        </Grid>
+
+                                        <Label Text="{Binding CantidadTexto}"
+                                               FontSize="13"
+                                               FontAttributes="Bold"
+                                               TextColor="{StaticResource ColorText}" />
+
+                                        <Label Text="{Binding OrigenTexto}" Style="{StaticResource TinyMutedText}" />
+                                        <Label Text="{Binding UsuarioTexto}" Style="{StaticResource TinyMutedText}" />
+
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                            <Label Text="{Binding EstadoOperativo}"
+                                                   FontSize="11"
+                                                   FontAttributes="Bold"
+                                                   TextColor="{StaticResource ColorPrimary}"
+                                                   VerticalOptions="Center" />
+                                            <Label Grid.Column="1"
+                                                   Text="{Binding EvidenciaTexto}"
+                                                   Style="{StaticResource TinyMutedText}"
+                                                   VerticalOptions="Center" />
+                                        </Grid>
+
+                                        <Label Text="Ver trazabilidad ›"
+                                               FontSize="11"
+                                               FontAttributes="Bold"
+                                               TextColor="{StaticResource ColorPrimary}"
+                                               HorizontalOptions="End" />
+                                    </VerticalStackLayout>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </RefreshView>
+
+                <ActivityIndicator x:Name="ActivityIndicator"
+                                   IsVisible="False"
+                                   IsRunning="False"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center" />
+
+                <Border x:Name="ErrorBorder"
+                        IsVisible="False"
+                        BackgroundColor="{StaticResource ColorDangerSoft}"
+                        Stroke="Transparent"
+                        StrokeShape="RoundRectangle 12"
+                        Padding="12"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="Start"
+                        Margin="0,8">
+                    <Label x:Name="ErrorLabel"
+                           Text="No se pudo cargar Monitoreo."
+                           TextColor="{StaticResource ColorDanger}"
+                           FontSize="12" />
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</ContentPage>
